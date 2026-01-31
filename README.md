@@ -1,49 +1,55 @@
 # JSON Forge
 
-**JSON Forge** is a professional-grade JSON editor, validator, and visualizer built for developers who demand both aesthetics and functionality. It combines the power of the Monaco Editor (VS Code's engine) with an interactive graph visualization tool, all wrapped in a sleek, Vercel-inspired dark mode interface.
+**JSON Forge** is a high-performance, professional-grade JSON editor, validator, and visualizer built for developers who handle complex data structures. It combines the power of the Monaco Editor (VS Code's engine) with an interactive, lazy-loaded graph visualization tool, all wrapped in a sleek, Vercel-inspired dark interface.
 
 ![JSON Forge Preview](https://json-forge-rose.vercel.app/json-forge-og-image.png)
 
-## ✨ Features
+## ✨ Key Features
 
-### 🛠 Professional Editor
-*   **Monaco Editor Integration**: Full-featured code editing experience with syntax highlighting, code folding, and line numbers.
-*   **Real-time Validation**: Instant error detection with helpful inline error messages overlay.
-*   **Custom Indentation**: Switch between 2 spaces, 4 spaces, or Tabs for formatting.
+### 🛠 Professional Editor Environment
+*   **Monaco Editor Integration**: Full-featured code editing with syntax highlighting, code folding, and smart indentation.
+*   **Real-time Validation**: Instant syntax checking with a dedicated status bar indicator and error overlay.
+*   **Smart Formatting**: Toggle between 2 spaces, 4 spaces, or Tabs. One-click Prettify and Minify.
+*   **Safe Large File Handling**: Implements input debouncing (800ms) to ensure the UI remains responsive even when editing files with 10k+ lines.
 
-### 🕸 Interactive Graph Visualization
-*   **Node-Based View**: Visualize complex nested JSON structures as an interactive tree graph.
-*   **Navigation Controls**: Pan, zoom (scroll wheel supported), and "Fit to Screen" capabilities.
-*   **Rich Tooltips**: Hover over nodes to see detailed paths, types, and values without cluttering the view.
-*   **Collapsible Nodes**: Expand and collapse objects/arrays to focus on specific data sections.
+### 🕸 High-Performance Graph Visualization
+*   **Interactive Tree**: Visualize deeply nested JSON structures as a navigable node graph.
+*   **Lazy Loading & Pagination**: Automatically limits rendering to the first 50 items of large arrays/objects to prevent DOM explosions. Includes "Show More" functionality for massive datasets.
+*   **Navigation Controls**: Smooth Pan & Zoom (0.3x to 3x) with mouse wheel support and "Fit to Screen" utility.
+*   **Rich Tooltips**: Hover over nodes to inspect values, types, and full property paths (`data.users[0].id`) without expanding the tree.
 
-### ⚡ utilities
-*   **Format & Minify**: Instantly prettify messy JSON or minify it for production use.
-*   **File Handling**: Seamlessly import `.json` files and export your edited work.
-*   **Clipboard Integration**: One-click copy functionality.
-*   **Live Statistics**: Real-time tracking of line count, character count, and file size (KB/MB).
+### 📊 Live Statistics & Utilities
+*   **Real-time Stats**: Always-visible status bar tracking Line Count, Character Count, and Memory Size.
+*   **File Operations**: Drag-and-drop import for `.json` files and one-click export.
+*   **Clipboard Manager**: Integrated copy functionality with success feedback.
 
-### 🎨 Design & Experience
-*   **Vercel-Inspired UI**: Minimalist, high-contrast dark theme designed for long coding sessions.
-*   **ASCII Loader**: distinct, retro-terminal style loading screen.
-*   **Offline Capable**: All processing is done client-side. Your data never leaves your browser.
+### 🎨 Design System
+*   **Vercel-Inspired UI**: Minimalist, high-contrast dark theme optimized for focus.
+*   **Responsive**: Adaptive layout that works on desktop and tablets.
+*   **ASCII Loader**: Retro-terminal style loading sequence for a distinct developer experience.
 
-## 🚀 Tech Stack
+## 🚀 Performance Strategy
 
-*   **Framework**: React 18
-*   **Language**: TypeScript
+JSON Forge is engineered to handle large datasets that crash typical web-based formatters:
+
+1.  **Debounced Parsing**: Heavy operations (Stats calculation, Graph generation, Validation) are debounced. You can type freely without lag; computations only trigger when you stop typing.
+2.  **Graph Virtualization/Pagination**: The Graph View does not attempt to render 10,000 nodes at once. It employs a budget system, expanding only the first ~50 nodes initially and paginating large arrays to keep the DOM light.
+
+## 🛠 Tech Stack
+
+*   **Core**: React 18, TypeScript, Vite
 *   **Styling**: Tailwind CSS
-*   **Editor Engine**: `@monaco-editor/react`
+*   **Editor**: `@monaco-editor/react`
 *   **Icons**: `lucide-react`
-*   **Build Tooling**: Vite (Recommended for local dev)
+*   **State**: React Hooks (Context, Memo, UseState)
 
 ## 📦 Installation
 
-To run this project locally:
+To run JSON Forge locally:
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/yourusername/json-forge.git
+    git clone https://github.com/phalla-doll/json-forge.git
     cd json-forge
     ```
 
@@ -57,12 +63,28 @@ To run this project locally:
     npm run dev
     ```
 
-## 🎮 Usage
+4.  **Build for production**
+    ```bash
+    npm run build
+    ```
 
-1.  **Code View**: Paste your JSON or click "Import" to load a file. Use the toolbar to Format (Prettify) or Minify.
-2.  **Graph View**: Switch modes using the toggle in the header. Use the mouse wheel to zoom in/out and click-drag to pan around the data structure. Hover over nodes for details.
-3.  **Export**: Click "Export JSON" to save your work as a `.json` file.
+## 📂 Project Structure
+
+```
+src/
+├── components/         # UI Components
+│   ├── Editor.tsx      # Monaco Editor wrapper
+│   ├── JsonTreeView.tsx # The complex graph visualization logic
+│   ├── StatusBar.tsx   # Footer stats and validation
+│   ├── Toolbar.tsx     # Actions (Format, Minify, etc.)
+│   └── ...
+├── lib/
+│   └── utils.ts        # Helper functions (Stats, File I/O)
+├── types.ts            # TypeScript definitions
+├── App.tsx             # Main application layout and state
+└── index.tsx           # Entry point
+```
 
 ## 📄 License
 
-MIT License. Free to use for personal and commercial projects.
+MIT License. Open source and free to use for personal and commercial projects.
