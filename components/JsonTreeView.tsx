@@ -10,7 +10,7 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  Scan
+  Shrink
 } from 'lucide-react';
 import { trackEvent } from '../lib/utils';
 
@@ -442,7 +442,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
             <RotateCcw size={16} />
           </button>
           <button onClick={handleFitScreen} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Fit to Screen">
-            <Scan size={16} />
+            <Shrink size={16} />
           </button>
         </div>
 
