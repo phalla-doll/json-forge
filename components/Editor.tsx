@@ -13,18 +13,28 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error }) =>
   };
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
-    // Define a custom Vercel-like theme
+    // Define a custom Vercel-like theme with consistent colors to Graph View
     monaco.editor.defineTheme('vercel-dark', {
       base: 'vs-dark',
       inherit: true,
-      rules: [],
+      rules: [
+        { token: 'string.key.json', foreground: 'A1A1A1' }, // Keys (Gray)
+        { token: 'string.value.json', foreground: '4ADE80' }, // Strings (Green)
+        { token: 'number', foreground: 'FB923C' }, // Numbers (Orange)
+        { token: 'keyword.json', foreground: 'C084FC' }, // Booleans/Null (Purple)
+        { token: 'delimiter', foreground: '444444' }, // Brackets/Commas
+      ],
       colors: {
         'editor.background': '#000000',
+        'editor.foreground': '#eaeaea',
         'editor.lineHighlightBackground': '#111111',
         'editorCursor.foreground': '#ffffff',
         'editor.selectionBackground': '#333333',
         'editorLineNumber.foreground': '#444444',
         'editorLineNumber.activeForeground': '#888888',
+        'scrollbarSlider.background': '#333333',
+        'scrollbarSlider.hoverBackground': '#444444',
+        'scrollbarSlider.activeBackground': '#555555',
       }
     });
     monaco.editor.setTheme('vercel-dark');
@@ -40,6 +50,10 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error }) =>
         onMount={handleEditorDidMount}
         options={{
           minimap: { enabled: false },
+          lineNumbers: 'on',
+          folding: true,
+          lineDecorationsWidth: 10,
+          lineNumbersMinChars: 3,
           fontSize: 13,
           fontFamily: "'JetBrains Mono', monospace",
           lineHeight: 24,
@@ -50,10 +64,15 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error }) =>
           contextmenu: true,
           smoothScrolling: true,
           cursorBlinking: "smooth",
+          mouseWheelZoom: true,
           guides: {
             indentation: true,
             bracketPairs: true,
           },
+          scrollbar: {
+            verticalScrollbarSize: 10,
+            horizontalScrollbarSize: 10,
+          }
         }}
         theme="vs-dark" // Fallback, we set custom theme on mount
       />
