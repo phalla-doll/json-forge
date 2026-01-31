@@ -5,6 +5,7 @@ import { JsonEditor } from './components/Editor';
 import { JsonGraphView } from './components/JsonTreeView';
 import { Toast } from './components/Toast';
 import { Loader } from './components/Loader';
+import { StatusBar } from './components/StatusBar';
 import { getStats, downloadFile, isValidJson, trackEvent } from './lib/utils';
 import { ToastMessage } from './types';
 
@@ -357,23 +358,6 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4 md:gap-6 pl-2 shrink-0">
-            <div className="hidden md:flex items-center gap-6 text-xs font-mono text-accents-5">
-              <div className="flex flex-col items-end">
-                <span className="text-accents-3 uppercase tracking-wider text-[10px]">Lines</span>
-                <span className="text-accents-6">{stats.lines}</span>
-              </div>
-              <div className="flex flex-col items-end">
-                <span className="text-accents-3 uppercase tracking-wider text-[10px]">Chars</span>
-                <span className="text-accents-6">{stats.chars}</span>
-              </div>
-              <div className="flex flex-col items-end">
-                 <span className="text-accents-3 uppercase tracking-wider text-[10px]">Size</span>
-                 <span className="text-accents-6">{stats.size}</span>
-              </div>
-            </div>
-            
-            <div className="h-4 w-px bg-accents-2 hidden md:block"></div>
-
             <a 
               href="https://github.com/phalla-doll/json-forge" target="_blank"
               onClick={() => trackEvent('click_github')}
@@ -414,6 +398,8 @@ const App: React.FC = () => {
              </div>
           </div>
         </main>
+        
+        <StatusBar stats={stats} error={error} />
 
         <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 flex flex-col gap-2 z-50 pointer-events-none items-center md:items-end">
           <div className="pointer-events-auto flex flex-col gap-3 w-full max-w-sm">
