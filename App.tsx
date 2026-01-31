@@ -7,8 +7,112 @@ import { Toast } from './components/Toast';
 import { getStats, downloadFile, isValidJson } from './lib/utils';
 import { ToastMessage } from './types';
 
+const INITIAL_DATA = {
+  "manufacturers": [
+    {
+      "id": "bmw",
+      "name": "BMW Group",
+      "country": "Germany",
+      "isActive": true,
+      "foundedYear": 1916,
+      "website": "https://www.bmwgroup.com",
+      "rating": 4.6,
+      "lastUpdated": "2025-01-15T10:30:00Z",
+      "brands": [
+        {
+          "id": "bmw-brand",
+          "name": "BMW",
+          "isLuxury": true,
+          "supportsEV": true,
+          "models": [
+            {
+              "id": "bmw-3-series",
+              "name": "3 Series",
+              "segment": "Sedan",
+              "isDiscontinued": false,
+              "releaseYears": [2021, 2022, 2023, 2024],
+              "availableMarkets": ["US", "EU", "JP"],
+              "defaultCurrency": "USD",
+              "trims": [
+                {
+                  "id": "330i",
+                  "name": "330i",
+                  "isPopular": true,
+                  "engine": {
+                    "type": "Inline-4",
+                    "fuel": "Petrol",
+                    "turbocharged": true,
+                    "displacementL": 2.0,
+                    "horsepower": 255,
+                    "electricAssist": null
+                  },
+                  "transmission": {
+                    "type": "Automatic",
+                    "gears": 8,
+                    "hasPaddleShifters": true
+                  },
+                  "drivetrain": "RWD",
+                  "performance": {
+                    "zeroToSixtySec": 5.6,
+                    "topSpeedKph": 250,
+                    "isSpeedLimited": true
+                  },
+                  "dimensions": {
+                    "lengthMm": 4709,
+                    "widthMm": 1827,
+                    "heightMm": 1442
+                  },
+                  "features": {
+                    "safety": {
+                      "abs": true,
+                      "tractionControl": true,
+                      "laneAssist": true,
+                      "blindSpotMonitoring": true
+                    },
+                    "comfort": {
+                      "climateZones": 3,
+                      "heatedSeats": true,
+                      "ventilatedSeats": false
+                    },
+                    "infotainment": {
+                      "screenSizeInch": 14.9,
+                      "supportsAppleCarPlay": true,
+                      "supportsAndroidAuto": true,
+                      "voiceAssistant": "BMW Intelligent Assistant"
+                    }
+                  },
+                  "pricing": {
+                    "msrp": 43500,
+                    "taxIncluded": false,
+                    "discount": {
+                      "isAvailable": true,
+                      "percentage": 5
+                    }
+                  },
+                  "availability": {
+                    "inStock": true,
+                    "estimatedDeliveryDays": 30,
+                    "isPreOrder": false
+                  },
+                  "media": {
+                    "images": [
+                      "330i-front.jpg",
+                      "330i-interior.jpg"
+                    ],
+                    "videoUrl": null
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
 const App: React.FC = () => {
-  const [jsonInput, setJsonInput] = useState<string>('');
+  const [jsonInput, setJsonInput] = useState<string>(JSON.stringify(INITIAL_DATA, null, 2));
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [viewMode, setViewMode] = useState<'code' | 'graph'>('code');
