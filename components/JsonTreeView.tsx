@@ -11,7 +11,9 @@ import {
   ZoomOut,
   RotateCcw,
   Shrink,
-  MoreHorizontal
+  MoreHorizontal,
+  ChevronsDown,
+  ChevronsUp
 } from 'lucide-react';
 import { trackEvent } from '../lib/utils';
 
@@ -27,7 +29,7 @@ const getDataType = (value: any): DataType => {
   return typeof value as DataType;
 };
 
-// --- Context for Tooltips ---
+// --- Context ---
 interface TooltipData {
   rect: DOMRect;
   path: string;
@@ -36,10 +38,21 @@ interface TooltipData {
   name?: string;
 }
 
-const GraphContext = createContext<{
+// Global action type to signal all nodes
+type GlobalActionType = 'expand' | 'collapse' | 'idle';
+
+interface GraphContextType {
   showTooltip: (data: TooltipData) => void;
   hideTooltip: () => void;
-}>({ showTooltip: () => {}, hideTooltip: () => {} });
+  // State to broadcast expand/collapse to all nodes
+  globalAction: { type: GlobalActionType; id: number };
+}
+
+const GraphContext = createContext<GraphContextType>({ 
+  showTooltip: () => {}, 
+  hideTooltip: () => {},
+  globalAction: { type: 'idle', id: 0 }
+});
 
 // Helper to generate safe property paths
 const getChildPath = (parentPath: string, key: string, parentType: DataType) => {
@@ -69,6 +82,8 @@ const GraphNode: React.FC<{
   // Determine type for initialization logic
   const type = getDataType(value);
   const isExpandable = type === 'object' || type === 'array';
+  
+  const { showTooltip, hideTooltip, globalAction } = useContext(GraphContext);
 
   const [isExpanded, setIsExpanded] = useState<boolean>(() => {
     // Always expand root
@@ -82,8 +97,17 @@ const GraphNode: React.FC<{
     return false;
   });
 
+  // Listen for global expand/collapse signals
+  useEffect(() => {
+    if (globalAction.type === 'expand') {
+      if (isExpandable) setIsExpanded(true);
+    } else if (globalAction.type === 'collapse') {
+      // Don't collapse root
+      if (depth !== 0) setIsExpanded(false);
+    }
+  }, [globalAction, isExpandable, depth]);
+
   const [visibleItems, setVisibleItems] = useState(50); // PAGINATION: Start with 50 items
-  const { showTooltip, hideTooltip } = useContext(GraphContext);
   const nodeRef = useRef<HTMLDivElement>(null);
 
   const keys = isExpandable ? Object.keys(value) : [];
@@ -317,6 +341,8 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 40, y: 40 });
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
+  const [globalAction, setGlobalAction] = useState<{ type: GlobalActionType; id: number }>({ type: 'idle', id: 0 });
+  
   const isPanningRef = useRef(false);
   const isWheelingRef = useRef(false);
   const wheelTimeoutRef = useRef<any>(null);
@@ -328,12 +354,28 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   // 1. Calculate Data & Generate Key
   // We generate a unique graphKey when data successfully parses.
   // This key is used on the Root Node to force a full re-mount (and thus re-run initial expansion logic)
-  const { parsedData, graphKey } = useMemo(() => {
+  const { parsedData, graphKey, expandableNodeCount } = useMemo(() => {
     try {
       const data = JSON.parse(value);
-      return { parsedData: data, graphKey: Math.random().toString(36) };
+      
+      // Calculate total expandable nodes (objects/arrays) for warning logic
+      let count = 0;
+      const traverse = (obj: any) => {
+        if (typeof obj === 'object' && obj !== null) {
+          count++;
+          Object.values(obj).forEach(val => traverse(val));
+        }
+      };
+      // Simple traversal - in a production app with circular refs (unlikely in JSON.parse), guard this.
+      traverse(data);
+
+      return { 
+        parsedData: data, 
+        graphKey: Math.random().toString(36),
+        expandableNodeCount: count
+      };
     } catch (e) {
-      return { parsedData: null, graphKey: 'error' };
+      return { parsedData: null, graphKey: 'error', expandableNodeCount: 0 };
     }
   }, [value]);
 
@@ -354,8 +396,9 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
       timeoutRef.current = setTimeout(() => {
         setTooltipData(null);
       }, 300);
-    }
-  }), []);
+    },
+    globalAction
+  }), [globalAction]);
 
   const handleTooltipMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -464,6 +507,22 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
     }
   };
 
+  const handleExpandAll = () => {
+    trackEvent('graph_expand_all');
+    if (expandableNodeCount > 5000) {
+      const confirmed = window.confirm(
+        `This JSON contains ${expandableNodeCount} expandable nodes. Expanding all may significantly slow down or freeze your browser. Are you sure you want to continue?`
+      );
+      if (!confirmed) return;
+    }
+    setGlobalAction(prev => ({ type: 'expand', id: prev.id + 1 }));
+  };
+
+  const handleCollapseAll = () => {
+    trackEvent('graph_collapse_all');
+    setGlobalAction(prev => ({ type: 'collapse', id: prev.id + 1 }));
+  };
+
   return (
     <GraphContext.Provider value={contextValue}>
       <div className="relative w-full h-full overflow-hidden bg-[#050505] select-none">
@@ -480,6 +539,15 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
           </button>
           <button onClick={handleFitScreen} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Fit to Screen">
             <Shrink size={16} />
+          </button>
+          
+          <div className="h-px bg-accents-2 mx-1 my-0.5" />
+          
+          <button onClick={handleExpandAll} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Expand All Nodes">
+            <ChevronsDown size={16} />
+          </button>
+           <button onClick={handleCollapseAll} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Collapse All Nodes">
+            <ChevronsUp size={16} />
           </button>
         </div>
 
