@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Scan
 } from 'lucide-react';
+import { trackEvent } from '../lib/utils';
 
 interface JsonGraphViewProps {
   value: string;
@@ -393,14 +394,22 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   };
 
   // Zoom Handlers
-  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.1, 3));
-  const handleZoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.3));
+  const handleZoomIn = () => {
+    trackEvent('graph_zoom_in');
+    setScale(prev => Math.min(prev + 0.1, 3));
+  };
+  const handleZoomOut = () => {
+    trackEvent('graph_zoom_out');
+    setScale(prev => Math.max(prev - 0.1, 0.3));
+  };
   const handleReset = () => {
+    trackEvent('graph_reset_scale');
     setScale(1);
     setPosition({ x: 40, y: 40 });
   };
   
   const handleFitScreen = () => {
+    trackEvent('graph_fit_screen');
     if (containerRef.current && contentRef.current) {
       const container = containerRef.current.getBoundingClientRect();
       const contentWidth = contentRef.current.offsetWidth;

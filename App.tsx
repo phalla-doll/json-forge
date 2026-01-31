@@ -5,7 +5,7 @@ import { JsonEditor } from './components/Editor';
 import { JsonGraphView } from './components/JsonTreeView';
 import { Toast } from './components/Toast';
 import { Loader } from './components/Loader';
-import { getStats, downloadFile, isValidJson } from './lib/utils';
+import { getStats, downloadFile, isValidJson, trackEvent } from './lib/utils';
 import { ToastMessage } from './types';
 
 const INITIAL_DATA = {
@@ -149,6 +149,7 @@ const App: React.FC = () => {
   };
 
   const handleIndentChange = (newIndent: number | string) => {
+    trackEvent('change_indentation', { value: newIndent === '\t' ? 'tab' : newIndent });
     setIndentation(newIndent);
     // Auto-reformat if valid to give instant feedback
     if (jsonInput.trim() && isValidJson(jsonInput)) {
@@ -162,6 +163,7 @@ const App: React.FC = () => {
   };
 
   const handleFormat = () => {
+    trackEvent('click_prettify');
     try {
       if (!jsonInput.trim()) return;
       const parsed = JSON.parse(jsonInput);
@@ -175,6 +177,7 @@ const App: React.FC = () => {
   };
 
   const handleMinify = () => {
+    trackEvent('click_minify');
     try {
       if (!jsonInput.trim()) return;
       const parsed = JSON.parse(jsonInput);
@@ -188,6 +191,7 @@ const App: React.FC = () => {
   };
 
   const handleCopy = async () => {
+    trackEvent('click_copy');
     if (!jsonInput) return;
     try {
       await navigator.clipboard.writeText(jsonInput);
@@ -199,21 +203,25 @@ const App: React.FC = () => {
   };
 
   const handleClear = () => {
+    trackEvent('click_clear_attempt');
     if (!jsonInput) return;
     
     // Only confirm if there's significant content to prevent accidental data loss
     if (jsonInput.length > 50) {
       if (!window.confirm('Are you sure you want to clear the editor?')) {
+        trackEvent('click_clear_cancel');
         return;
       }
     }
     
+    trackEvent('click_clear_confirm');
     setJsonInput('');
     setError(null);
     addToast('info', 'Editor cleared');
   };
 
   const handleDownload = () => {
+    trackEvent('click_export');
     if (!jsonInput) return;
     try {
       JSON.parse(jsonInput);
@@ -221,12 +229,14 @@ const App: React.FC = () => {
       addToast('success', 'File downloaded');
     } catch (e) {
       if (window.confirm('The JSON is invalid. Save anyway?')) {
+        trackEvent('click_export_invalid');
         downloadFile(jsonInput, 'invalid-data.json');
       }
     }
   };
 
   const handleUpload = (file: File) => {
+    trackEvent('click_import', { file_type: file.type });
     // Validate file extension
     if (!file.name.toLowerCase().endsWith('.json') && file.type !== 'application/json') {
       addToast('error', 'Invalid file type. Only .json files are allowed.');
@@ -273,7 +283,10 @@ const App: React.FC = () => {
             {/* View Mode Toggle */}
             <div className="flex items-center bg-accents-1 p-0.5 rounded-md border border-accents-2">
               <button
-                onClick={() => setViewMode('code')}
+                onClick={() => {
+                  setViewMode('code');
+                  trackEvent('switch_view', { mode: 'code' });
+                }}
                 className={`flex items-center gap-2 px-3 py-1 rounded text-xs font-medium transition-all ${
                   viewMode === 'code' 
                     ? 'bg-accents-4 text-white shadow-sm' 
@@ -284,7 +297,10 @@ const App: React.FC = () => {
                 <span>Code</span>
               </button>
               <button
-                onClick={() => setViewMode('graph')}
+                onClick={() => {
+                  setViewMode('graph');
+                  trackEvent('switch_view', { mode: 'graph' });
+                }}
                 className={`flex items-center gap-2 px-3 py-1 rounded text-xs font-medium transition-all ${
                   viewMode === 'graph' 
                     ? 'bg-accents-4 text-white shadow-sm' 
@@ -318,6 +334,7 @@ const App: React.FC = () => {
 
             <a 
               href="https://github.com/phalla-doll/json-forge" target="_blank"
+              onClick={() => trackEvent('click_github')}
               className="p-2 rounded-full hover:bg-accents-1 text-accents-5 hover:text-white transition-colors"
             >
               <Github className="w-5 h-5" />

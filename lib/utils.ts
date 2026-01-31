@@ -1,5 +1,21 @@
 import { EditorStats } from '../types';
 
+declare global {
+  interface Window {
+    gtag: (
+      command: 'event',
+      action: string,
+      params?: { [key: string]: any }
+    ) => void;
+  }
+}
+
+export const trackEvent = (action: string, params?: { [key: string]: any }) => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', action, params);
+  }
+};
+
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 B';
   const k = 1024;
