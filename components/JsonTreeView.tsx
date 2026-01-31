@@ -239,7 +239,7 @@ const Tooltip: React.FC<TooltipProps> = ({ data, onMouseEnter, onMouseLeave }) =
 
   return (
     <div 
-      className="fixed z-50 w-80 bg-accents-1/95 border border-accents-2 rounded-lg shadow-2xl backdrop-blur-md p-3 text-xs font-mono pointer-events-auto flex flex-col gap-2 animate-in fade-in zoom-in-95 slide-in-from-left-2 duration-200"
+      className="fixed z-50 w-[80vw] md:w-80 bg-accents-1/95 border border-accents-2 rounded-lg shadow-2xl backdrop-blur-md p-3 text-xs font-mono pointer-events-auto flex flex-col gap-2 animate-in fade-in zoom-in-95 slide-in-from-left-2 duration-200"
       style={{ top: position.top, left: position.left }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -470,7 +470,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
         </div>
         
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-accents-1/80 backdrop-blur border border-accents-2 px-3 py-2 rounded-md flex gap-4 text-[10px] text-accents-5 pointer-events-none">
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto bg-accents-1/80 backdrop-blur border border-accents-2 px-3 py-2 rounded-md flex flex-wrap gap-x-4 gap-y-2 text-[10px] text-accents-5 pointer-events-none justify-center md:justify-start">
           <div className="flex items-center gap-1"><Box size={10} className="text-blue-400" /> Object</div>
           <div className="flex items-center gap-1"><List size={10} className="text-yellow-400" /> Array</div>
           <div className="flex items-center gap-1"><Type size={10} className="text-green-400" /> String</div>

@@ -92,10 +92,10 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
       
       {/* Visual Error Indicator Overlay */}
       {error && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 max-w-lg w-full px-4 animate-in slide-in-from-bottom-2 fade-in duration-200 z-10">
-          <div className="bg-error/10 text-error border border-error/20 px-4 py-3 rounded-lg shadow-2xl backdrop-blur-md flex items-center gap-3 text-xs font-mono">
+        <div className="absolute bottom-6 left-0 right-0 px-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:max-w-lg w-full animate-in slide-in-from-bottom-2 fade-in duration-200 z-10 flex justify-center pointer-events-none">
+          <div className="bg-error/10 text-error border border-error/20 px-4 py-3 rounded-lg shadow-2xl backdrop-blur-md flex items-center gap-3 text-xs font-mono pointer-events-auto max-w-full">
             <div className="w-2 h-2 rounded-full bg-error shrink-0 animate-pulse" />
-            <span className="break-all">{error}</span>
+            <span className="break-all line-clamp-2 md:line-clamp-none">{error}</span>
           </div>
         </div>
       )}

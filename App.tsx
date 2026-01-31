@@ -264,57 +264,57 @@ const App: React.FC = () => {
       
       <div className={`flex flex-col h-[100dvh] bg-background text-accents-8 font-sans selection:bg-accents-2 transition-opacity duration-700 ${isEditorReady ? 'opacity-100' : 'opacity-0'}`}>
         {/* Vercel-style Header */}
-        <header className="h-16 flex items-center justify-between px-6 border-b border-accents-2 bg-background/50 backdrop-blur-md z-20">
-          <div className="flex items-center gap-4">
-            <div className="bg-green-600 text-white p-1.5 rounded-md shadow-sm">
+        <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-accents-2 bg-background/50 backdrop-blur-md z-20 shrink-0">
+          <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+            <div className="bg-green-600 text-white p-1.5 rounded-md shadow-sm shrink-0">
               <Braces className="w-4 h-4" />
             </div>
-            <div className="flex flex-col">
-              <h1 className="text-sm font-semibold text-white tracking-wide">JSON Forge</h1>
-              <span className="text-xs text-accents-4">Development Environment</span>
+            <div className="flex flex-col min-w-0">
+              <h1 className="text-sm font-semibold text-white tracking-wide truncate">JSON Forge</h1>
+              <span className="text-xs text-accents-4 hidden sm:block">Development Environment</span>
             </div>
-            <div className="h-6 w-px bg-accents-2 mx-2 hidden md:block"></div>
+            <div className="h-6 w-px bg-accents-2 mx-1 md:mx-2 hidden md:block"></div>
             
-            <div className="hidden md:flex items-center gap-2 px-2 py-1 bg-accents-1 rounded border border-accents-2">
+            <div className="hidden lg:flex items-center gap-2 px-2 py-1 bg-accents-1 rounded border border-accents-2">
               <span className="w-2 h-2 rounded-full bg-success"></span>
               <span className="text-xs font-mono text-accents-5">Ready</span>
             </div>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center bg-accents-1 p-0.5 rounded-md border border-accents-2">
+            <div className="flex items-center bg-accents-1 p-0.5 rounded-md border border-accents-2 ml-2 md:ml-0 shrink-0">
               <button
                 onClick={() => {
                   setViewMode('code');
                   trackEvent('switch_view', { mode: 'code' });
                 }}
-                className={`flex items-center gap-2 px-3 py-1 rounded text-xs font-medium transition-all ${
+                className={`flex items-center gap-2 px-2 md:px-3 py-1 rounded text-xs font-medium transition-all ${
                   viewMode === 'code' 
                     ? 'bg-accents-4 text-white shadow-sm' 
                     : 'text-accents-5 hover:text-accents-8'
                 }`}
               >
                 <Code size={14} />
-                <span>Code</span>
+                <span className="hidden sm:inline">Code</span>
               </button>
               <button
                 onClick={() => {
                   setViewMode('graph');
                   trackEvent('switch_view', { mode: 'graph' });
                 }}
-                className={`flex items-center gap-2 px-3 py-1 rounded text-xs font-medium transition-all ${
+                className={`flex items-center gap-2 px-2 md:px-3 py-1 rounded text-xs font-medium transition-all ${
                   viewMode === 'graph' 
                     ? 'bg-accents-4 text-white shadow-sm' 
                     : 'text-accents-5 hover:text-accents-8'
                 }`}
               >
                 <GitGraph size={14} />
-                <span>Graph</span>
+                <span className="hidden sm:inline">Graph</span>
               </button>
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
-            {/* Stats Display */}
+          <div className="flex items-center gap-4 md:gap-6 pl-2 shrink-0">
+            {/* Stats Display - Hidden on Mobile */}
             <div className="hidden md:flex items-center gap-6 text-xs font-mono text-accents-5">
               <div className="flex flex-col items-end">
                 <span className="text-accents-3 uppercase tracking-wider text-[10px]">Lines</span>
@@ -343,7 +343,7 @@ const App: React.FC = () => {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col min-h-0 bg-background relative">
+        <main className="flex-1 flex flex-col min-h-0 bg-background relative overflow-hidden">
           <Toolbar 
             onFormat={handleFormat}
             onMinify={handleMinify}
@@ -374,9 +374,9 @@ const App: React.FC = () => {
           </div>
         </main>
 
-        {/* Toast Overlay */}
-        <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50 pointer-events-none">
-          <div className="pointer-events-auto flex flex-col gap-3">
+        {/* Toast Overlay - Responsive Positioning */}
+        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 flex flex-col gap-2 z-50 pointer-events-none items-center md:items-end">
+          <div className="pointer-events-auto flex flex-col gap-3 w-full max-w-sm">
             {toasts.map(toast => (
               <Toast key={toast.id} toast={toast} onClose={removeToast} />
             ))}

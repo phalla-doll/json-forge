@@ -43,8 +43,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   };
 
   return (
-    <div className="h-14 flex items-center justify-between px-4 bg-background border-b border-accents-2 shrink-0">
-      <div className="flex items-center gap-2">
+    <div className="h-14 flex items-center justify-between px-4 bg-background border-b border-accents-2 shrink-0 overflow-x-auto scrollbar-hide">
+      <div className="flex items-center gap-2 min-w-max">
         <div className="flex items-center gap-1 pr-3 border-r border-accents-2">
           {/* Indentation Selector */}
           <div className="relative mr-2 group">
@@ -54,20 +54,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                     const val = e.target.value;
                     onIndentChange(val === 'tab' ? '\t' : Number(val));
                 }}
-                className="appearance-none bg-black border border-accents-2 text-accents-5 text-xs py-1.5 pl-3 pr-8 rounded-md hover:border-accents-5 focus:outline-none focus:ring-2 focus:ring-accents-5 transition-all cursor-pointer font-medium"
+                className="appearance-none bg-black border border-accents-2 text-accents-5 text-xs py-1.5 pl-3 pr-6 md:pr-8 rounded-md hover:border-accents-5 focus:outline-none focus:ring-2 focus:ring-accents-5 transition-all cursor-pointer font-medium"
             >
-                <option value="2">2 Spaces</option>
-                <option value="4">4 Spaces</option>
+                <option value="2">2 Sp</option>
+                <option value="4">4 Sp</option>
                 <option value="tab">Tabs</option>
             </select>
-            <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-accents-5 pointer-events-none group-hover:text-accents-8 transition-colors" />
+            <ChevronDown className="w-3.5 h-3.5 absolute right-1.5 md:right-2.5 top-1/2 -translate-y-1/2 text-accents-5 pointer-events-none group-hover:text-accents-8 transition-colors" />
           </div>
 
           <Button size="sm" onClick={onFormat} disabled={!hasContent} icon={<Braces className="w-3.5 h-3.5"/>}>
-            Prettify
+            <span className="hidden sm:inline">Prettify</span>
           </Button>
           <Button size="sm" onClick={onMinify} disabled={!hasContent} icon={<Minimize2 className="w-3.5 h-3.5"/>}>
-            Minify
+            <span className="hidden sm:inline">Minify</span>
           </Button>
         </div>
 
@@ -80,20 +80,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             accept=".json,application/json"
           />
           <Button size="sm" onClick={() => fileInputRef.current?.click()} icon={<Upload className="w-3.5 h-3.5"/>}>
-            Import
+            <span className="hidden sm:inline">Import</span>
           </Button>
           <Button size="sm" onClick={onDownload} disabled={!hasContent} icon={<Download className="w-3.5 h-3.5"/>}>
-            Export JSON
+            <span className="hidden sm:inline">Export</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 ml-4 min-w-max">
         <Button size="sm" onClick={onClear} disabled={!hasContent} variant="ghost" className="text-accents-4 hover:text-error" icon={<Trash2 className="w-3.5 h-3.5"/>}>
-          Clear
+          <span className="hidden sm:inline">Clear</span>
         </Button>
         <Button size="sm" onClick={onCopy} disabled={!hasContent} variant="primary" icon={<Copy className="w-3.5 h-3.5"/>}>
-          Copy
+          <span className="hidden sm:inline">Copy</span>
         </Button>
       </div>
     </div>
