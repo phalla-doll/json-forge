@@ -11,8 +11,7 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize,
-  Scan,
-  Copy
+  Scan
 } from 'lucide-react';
 
 interface JsonGraphViewProps {
@@ -39,8 +38,7 @@ interface TooltipData {
 const GraphContext = createContext<{
   showTooltip: (data: TooltipData) => void;
   hideTooltip: () => void;
-  cancelHide: () => void;
-}>({ showTooltip: () => {}, hideTooltip: () => {}, cancelHide: () => {} });
+}>({ showTooltip: () => {}, hideTooltip: () => {} });
 
 // --- Graph Node Component ---
 const GraphNode: React.FC<{ 
@@ -185,72 +183,45 @@ const GraphNode: React.FC<{
 };
 
 // --- Tooltip Component ---
-const Tooltip: React.FC<{ 
-  data: TooltipData; 
-  onMouseEnter: () => void; 
-  onMouseLeave: () => void;
-}> = ({ data, onMouseEnter, onMouseLeave }) => {
+const Tooltip: React.FC<{ data: TooltipData }> = ({ data }) => {
   const [position, setPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     // Basic positioning to the right of the node
     let left = data.rect.right + 12;
     let top = data.rect.top;
 
-    // Viewport check
+    // Viewport check (simplistic)
     if (left + 300 > window.innerWidth) {
       left = data.rect.left - 310; // Flip to left
     }
     if (top + 200 > window.innerHeight) {
       top = window.innerHeight - 210; // Cap bottom
     }
-    // Ensure top isn't negative
-    top = Math.max(10, top);
 
     setPosition({ top, left });
   }, [data.rect]);
 
-  const handleCopyPath = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(data.path);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <div 
-      className="fixed z-50 w-72 bg-accents-1 border border-accents-2 rounded-lg shadow-2xl backdrop-blur-md p-3 text-xs font-mono flex flex-col gap-3 animate-in fade-in duration-150 pointer-events-auto"
+      className="fixed z-50 w-72 bg-accents-1/95 border border-accents-2 rounded-lg shadow-2xl backdrop-blur-md p-3 text-xs font-mono pointer-events-none flex flex-col gap-2 animate-in fade-in duration-150"
       style={{ top: position.top, left: position.left }}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
     >
-      <div className="flex items-center justify-between border-b border-accents-2 pb-2">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-accents-8 break-all max-w-[160px] truncate">{data.name || 'root'}</span>
-          <span className="text-accents-8 px-1.5 py-0.5 rounded-full bg-accents-2 text-[10px] uppercase font-bold">
-            {data.type}
-          </span>
-        </div>
-        <button 
-          onClick={handleCopyPath}
-          className="flex items-center gap-1 text-[10px] text-accents-5 hover:text-white transition-colors"
-          title="Copy Path"
-        >
-          {copied ? <span className="text-success">Copied</span> : <Copy size={12} />}
-        </button>
+      <div className="flex items-center gap-2 border-b border-accents-2 pb-2">
+        <span className="font-semibold text-accents-8 break-all">{data.name || 'root'}</span>
+        <span className="text-accents-4 px-1.5 py-0.5 rounded-full bg-accents-2 text-[10px] uppercase">
+          {data.type}
+        </span>
       </div>
       
       <div className="flex flex-col gap-1">
-        <span className="text-accents-4 text-[10px] uppercase tracking-wider">Full Path</span>
-        <div className="text-accents-6 break-all bg-accents-2/50 p-1.5 rounded select-text selection:bg-accents-5 selection:text-black">
-          {data.path}
-        </div>
+        <span className="text-accents-4 text-[10px]">Path</span>
+        <div className="text-accents-6 break-all bg-black/20 p-1 rounded">{data.path}</div>
       </div>
 
       <div className="flex flex-col gap-1">
-        <span className="text-accents-4 text-[10px] uppercase tracking-wider">Value</span>
-        <div className="text-accents-7 max-h-48 overflow-y-auto break-words bg-accents-2/50 p-1.5 rounded scrollbar-thin scrollbar-thumb-accents-4 select-text selection:bg-accents-5 selection:text-black">
+        <span className="text-accents-4 text-[10px]">Value</span>
+        <div className="text-accents-7 max-h-32 overflow-hidden break-words">
           {typeof data.value === 'object' && data.value !== null ? (
             <span className="italic text-accents-5">
               {Array.isArray(data.value) 
@@ -258,9 +229,7 @@ const Tooltip: React.FC<{
                 : `Object (${Object.keys(data.value).length} keys)`}
             </span>
           ) : (
-            <span className={data.type === 'string' ? 'text-green-400' : data.type === 'number' ? 'text-orange-400' : 'text-purple-400'}>
-              {String(data.value)}
-            </span>
+            String(data.value)
           )}
         </div>
       </div>
@@ -273,7 +242,6 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const [panning, setPanning] = useState(false);
   const [position, setPosition] = useState({ x: 40, y: 40 });
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
-  const hoverTimeoutRef = useRef<any>(null); // Use any for timeout to handle both Node and Browser types easily
   
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -298,28 +266,10 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
     );
   }
 
-  // Tooltip Logic
-  const showTooltip = (d: TooltipData) => {
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    if (!panning) {
-      setTooltipData(d);
-    }
-  };
-
-  const hideTooltip = () => {
-    hoverTimeoutRef.current = setTimeout(() => {
-      setTooltipData(null);
-    }, 300); // Delay to allow moving to tooltip
-  };
-
-  const cancelHide = () => {
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-  };
-
   // Pan Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     setPanning(true);
-    setTooltipData(null); 
+    setTooltipData(null); // Hide tooltip when panning starts
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -336,8 +286,8 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   };
 
   // Zoom Handlers
-  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.1, 5));
-  const handleZoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.1));
+  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.1, 2));
+  const handleZoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.3));
   const handleReset = () => {
     setScale(1);
     setPosition({ x: 40, y: 40 });
@@ -346,13 +296,18 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const handleFitScreen = () => {
     if (containerRef.current && contentRef.current) {
       const container = containerRef.current.getBoundingClientRect();
+      // We need untransformed content dimensions. 
+      // Since contentRef contains the transform, offsetWidth/Height gives untransformed size usually
+      // if display is inline-block and content determines size.
       const contentWidth = contentRef.current.offsetWidth;
       const contentHeight = contentRef.current.offsetHeight;
       
-      const scaleX = (container.width - 80) / contentWidth;
+      // Calculate scale to fit
+      const scaleX = (container.width - 80) / contentWidth; // 80px padding
       const scaleY = (container.height - 80) / contentHeight;
-      const newScale = Math.min(scaleX, scaleY, 1);
+      const newScale = Math.min(scaleX, scaleY, 1); // Don't zoom in if it fits, just zoom out
       
+      // Center it
       const newX = (container.width - contentWidth * newScale) / 2;
       const newY = (container.height - contentHeight * newScale) / 2;
       
@@ -361,41 +316,11 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
     }
   };
 
-  // Wheel Zoom Handler
-  const handleWheel = (e: React.WheelEvent) => {
-    e.stopPropagation();
-
-    // Determine delta and normalize
-    let delta = -e.deltaY;
-    if (e.deltaMode === 1) delta *= 40; // Line
-    if (e.deltaMode === 2) delta *= 800; // Page
-
-    // Sensitivity
-    const zoomSpeed = 0.002;
-    const scaleChange = delta * zoomSpeed;
-    
-    // Calculate new scale with clamps
-    const newScale = Math.min(Math.max(0.1, scale + scaleChange), 5);
-    
-    // Calculate focal point relative to container
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      // Adjust position to keep mouse point stable
-      const scaleRatio = newScale / scale;
-      const newX = mouseX - (mouseX - position.x) * scaleRatio;
-      const newY = mouseY - (mouseY - position.y) * scaleRatio;
-
-      setScale(newScale);
-      setPosition({ x: newX, y: newY });
-      setTooltipData(null); 
-    }
-  };
-
   return (
-    <GraphContext.Provider value={{ showTooltip, hideTooltip, cancelHide }}>
+    <GraphContext.Provider value={{ 
+      showTooltip: (d) => !panning && setTooltipData(d), 
+      hideTooltip: () => setTooltipData(null) 
+    }}>
       <div className="relative w-full h-full overflow-hidden bg-[#050505] select-none">
         {/* Controls */}
         <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 bg-accents-1 border border-accents-2 p-1 rounded-lg shadow-xl">
@@ -420,13 +345,12 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          onWheel={handleWheel}
         >
           <div 
             style={{ 
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
               transformOrigin: '0 0',
-              transition: panning ? 'none' : 'transform 0.1s linear' // Faster transition for wheel zoom
+              transition: panning ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)'
             }}
             className="inline-block"
             ref={contentRef}
@@ -444,13 +368,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
         </div>
 
         {/* Tooltip Overlay */}
-        {tooltipData && (
-          <Tooltip 
-            data={tooltipData} 
-            onMouseEnter={cancelHide} 
-            onMouseLeave={hideTooltip} 
-          />
-        )}
+        {tooltipData && <Tooltip data={tooltipData} />}
       </div>
     </GraphContext.Provider>
   );
