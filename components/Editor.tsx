@@ -6,9 +6,10 @@ interface EditorProps {
   onChange: (value: string) => void;
   error: string | null;
   indentation: number | string;
+  onReady?: () => void;
 }
 
-export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, indentation }) => {
+export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, indentation, onReady }) => {
   const handleEditorChange = (value: string | undefined) => {
     onChange(value || "");
   };
@@ -39,6 +40,11 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
       }
     });
     monaco.editor.setTheme('vercel-dark');
+
+    // Signal that the editor is ready
+    if (onReady) {
+      onReady();
+    }
   };
 
   return (
@@ -49,6 +55,9 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
         value={value}
         onChange={handleEditorChange}
         onMount={handleEditorDidMount}
+        // Use an empty div for loading to prevent the default "Loading..." text
+        // The Loader component in App.tsx handles the visual loading state
+        loading={<div className="w-full h-full bg-background" />}
         options={{
           minimap: { enabled: false },
           lineNumbers: 'on',
