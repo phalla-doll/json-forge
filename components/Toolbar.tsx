@@ -55,7 +55,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             ref={fileInputRef}
             onChange={handleFileChange}
             className="hidden"
-            accept="application/json,.json,text/plain"
+            accept=".json,application/json"
           />
           <Button size="sm" onClick={() => fileInputRef.current?.click()} icon={<Upload className="w-3.5 h-3.5"/>}>
             Import

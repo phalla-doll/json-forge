@@ -98,6 +98,12 @@ const App: React.FC = () => {
   };
 
   const handleUpload = (file: File) => {
+    // Validate file extension
+    if (!file.name.toLowerCase().endsWith('.json') && file.type !== 'application/json') {
+      addToast('error', 'Invalid file type. Only .json files are allowed.');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
