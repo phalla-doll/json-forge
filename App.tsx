@@ -274,11 +274,7 @@ const App: React.FC = () => {
               <span className="text-xs text-accents-4 hidden sm:block">Development Environment</span>
             </div>
             <div className="h-6 w-px bg-accents-2 mx-1 md:mx-2 hidden md:block"></div>
-            
-            <div className="hidden lg:flex items-center gap-2 px-2 py-1 bg-accents-1 rounded border border-accents-2">
-              <span className="w-2 h-2 rounded-full bg-success"></span>
-              <span className="text-xs font-mono text-accents-5">Ready</span>
-            </div>
+
 
             {/* View Mode Toggle */}
             <div className="flex items-center bg-accents-1 p-0.5 rounded-md border border-accents-2 ml-2 md:ml-0 shrink-0">
