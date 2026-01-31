@@ -192,7 +192,13 @@ const GraphNode: React.FC<{
 });
 
 // --- Tooltip Component ---
-const Tooltip: React.FC<{ data: TooltipData }> = ({ data }) => {
+interface TooltipProps {
+  data: TooltipData;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+}
+
+const Tooltip: React.FC<TooltipProps> = ({ data, onMouseEnter, onMouseLeave }) => {
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
 
   // Use layout effect to calculate position before paint to avoid flickering
@@ -232,8 +238,10 @@ const Tooltip: React.FC<{ data: TooltipData }> = ({ data }) => {
 
   return (
     <div 
-      className="fixed z-50 w-80 bg-accents-1/95 border border-accents-2 rounded-lg shadow-2xl backdrop-blur-md p-3 text-xs font-mono pointer-events-none flex flex-col gap-2 transition-opacity duration-200 opacity-100"
+      className="fixed z-50 w-80 bg-accents-1/95 border border-accents-2 rounded-lg shadow-2xl backdrop-blur-md p-3 text-xs font-mono pointer-events-auto flex flex-col gap-2 animate-in fade-in zoom-in-95 slide-in-from-left-2 duration-200"
       style={{ top: position.top, left: position.left }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <div className="flex items-center gap-2 border-b border-accents-2 pb-2">
         <span className="font-semibold text-accents-8 break-all">{data.name || 'root'}</span>
@@ -244,14 +252,14 @@ const Tooltip: React.FC<{ data: TooltipData }> = ({ data }) => {
       
       <div className="flex flex-col gap-1">
         <span className="text-accents-4 text-[10px] uppercase tracking-wider">Path</span>
-        <div className="text-success break-all bg-black/40 p-1.5 rounded border border-accents-2/50 select-text">
+        <div className="text-success break-all bg-black/40 p-1.5 rounded border border-accents-2/50 select-text cursor-text">
             {data.path}
         </div>
       </div>
 
       <div className="flex flex-col gap-1">
         <span className="text-accents-4 text-[10px] uppercase tracking-wider">Value</span>
-        <div className="text-accents-7 max-h-48 overflow-y-auto break-words bg-black/20 p-1.5 rounded border border-accents-2/50 whitespace-pre-wrap scrollbar-thin">
+        <div className="text-accents-7 max-h-48 overflow-y-auto break-words bg-black/20 p-1.5 rounded border border-accents-2/50 whitespace-pre-wrap scrollbar-thin select-text cursor-text">
           {renderTooltipValue()}
         </div>
       </div>
@@ -264,6 +272,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const [position, setPosition] = useState({ x: 40, y: 40 });
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const isPanningRef = useRef(false);
+  const timeoutRef = useRef<any>(null); // Use any for NodeJS.Timeout/number compatibility
   
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -277,16 +286,35 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
     }
   }, [value]);
 
-  // Context value should be stable to prevent deep re-renders of GraphNode
+  // Context value should be stable
   const contextValue = useMemo(() => ({
     showTooltip: (d: TooltipData) => {
       // Don't show tooltip if we are dragging
       if (!isPanningRef.current) {
+        // Clear any pending hide timeout so tooltip stays open if we move between nodes
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setTooltipData(d);
       }
     },
-    hideTooltip: () => setTooltipData(null)
+    hideTooltip: () => {
+      // Add delay before hiding to allow moving mouse into the tooltip
+      timeoutRef.current = setTimeout(() => {
+        setTooltipData(null);
+      }, 300);
+    }
   }), []);
+
+  const handleTooltipMouseEnter = () => {
+    // If mouse enters the tooltip, cancel the hide timer
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  };
+
+  const handleTooltipMouseLeave = () => {
+    // If mouse leaves tooltip, resume hide timer
+    timeoutRef.current = setTimeout(() => {
+      setTooltipData(null);
+    }, 300);
+  };
 
   // Early return for invalid JSON
   if (parsedData === null) {
@@ -401,7 +429,13 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
         </div>
 
         {/* Tooltip Overlay */}
-        {tooltipData && <Tooltip data={tooltipData} />}
+        {tooltipData && (
+          <Tooltip 
+            data={tooltipData} 
+            onMouseEnter={handleTooltipMouseEnter}
+            onMouseLeave={handleTooltipMouseLeave}
+          />
+        )}
       </div>
     </GraphContext.Provider>
   );

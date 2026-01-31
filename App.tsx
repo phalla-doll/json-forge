@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Command, Github, Code, GitGraph } from 'lucide-react';
+import { Braces, Github, Code, GitGraph } from 'lucide-react';
 import { Toolbar } from './components/Toolbar';
 import { JsonEditor } from './components/Editor';
 import { JsonGraphView } from './components/JsonTreeView';
@@ -256,8 +256,8 @@ const App: React.FC = () => {
         {/* Vercel-style Header */}
         <header className="h-16 flex items-center justify-between px-6 border-b border-accents-2 bg-background/50 backdrop-blur-md z-20">
           <div className="flex items-center gap-4">
-            <div className="bg-white text-black p-1.5 rounded-full">
-              <Command className="w-4 h-4" />
+            <div className="bg-green-600 text-white p-1.5 rounded-md shadow-sm">
+              <Braces className="w-4 h-4" />
             </div>
             <div className="flex flex-col">
               <h1 className="text-sm font-semibold text-white tracking-wide">JSON Forge</h1>
