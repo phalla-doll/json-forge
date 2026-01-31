@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect, createContext, useContext } from 'react';
+import React, { useState, useRef, useEffect, createContext, useContext, useMemo, useLayoutEffect } from 'react';
 import { 
   ChevronRight, 
-  ChevronDown, 
   Box, 
   List, 
   Type, 
@@ -40,14 +39,25 @@ const GraphContext = createContext<{
   hideTooltip: () => void;
 }>({ showTooltip: () => {}, hideTooltip: () => {} });
 
-// --- Graph Node Component ---
+// Helper to generate safe property paths
+const getChildPath = (parentPath: string, key: string, parentType: DataType) => {
+  if (parentType === 'array') return `${parentPath}[${key}]`;
+  // Check if key is a valid identifier
+  if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)) {
+    return `${parentPath}.${key}`;
+  }
+  // Safe bracket notation with escaping
+  return `${parentPath}["${key.replace(/"/g, '\\"')}"]`;
+};
+
+// --- Graph Node Component (Memoized) ---
 const GraphNode: React.FC<{ 
   name?: string; 
   value: any; 
   depth?: number;
   isLast?: boolean;
   path?: string;
-}> = ({ name, value, depth = 0, isLast = true, path = '$' }) => {
+}> = React.memo(({ name, value, depth = 0, isLast = true, path = '$' }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const { showTooltip, hideTooltip } = useContext(GraphContext);
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -74,6 +84,7 @@ const GraphNode: React.FC<{
   };
 
   const handleMouseEnter = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (nodeRef.current) {
       const rect = nodeRef.current.getBoundingClientRect();
       showTooltip({
@@ -156,9 +167,7 @@ const GraphNode: React.FC<{
             {Object.keys(value).map((key, index, arr) => {
               const isChildLast = index === arr.length - 1;
               const childType = getDataType(value[key]);
-              const childPath = type === 'array' 
-                ? `${path}[${key}]` 
-                : `${path}.${key}`;
+              const childPath = getChildPath(path, key, type);
 
               return (
                 <div key={key} className="flex items-start pt-2 pb-2 pl-4 relative">
@@ -180,31 +189,50 @@ const GraphNode: React.FC<{
       )}
     </div>
   );
-};
+});
 
 // --- Tooltip Component ---
 const Tooltip: React.FC<{ data: TooltipData }> = ({ data }) => {
-  const [position, setPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
 
-  useEffect(() => {
-    // Basic positioning to the right of the node
+  // Use layout effect to calculate position before paint to avoid flickering
+  useLayoutEffect(() => {
+    if (!data?.rect) return;
+
     let left = data.rect.right + 12;
     let top = data.rect.top;
 
-    // Viewport check (simplistic)
-    if (left + 300 > window.innerWidth) {
-      left = data.rect.left - 310; // Flip to left
+    // Viewport check (Tooltip width approx 320px)
+    if (left + 320 > window.innerWidth) {
+      left = Math.max(10, data.rect.left - 330);
     }
+    
+    // Viewport bottom check (Tooltip height approx 200px)
     if (top + 200 > window.innerHeight) {
-      top = window.innerHeight - 210; // Cap bottom
+      top = Math.max(10, window.innerHeight - 210);
     }
 
     setPosition({ top, left });
-  }, [data.rect]);
+  }, [data]);
+
+  const renderTooltipValue = () => {
+    if (data.value === null) return 'null';
+    if (typeof data.value === 'object') {
+       if (Array.isArray(data.value)) return `Array (${data.value.length} items)`;
+       return `Object (${Object.keys(data.value).length} keys)`;
+    }
+    const str = String(data.value);
+    if (str.length > 500) {
+        return str.substring(0, 500) + '... (truncated)';
+    }
+    return str;
+  };
+
+  if (!position) return null;
 
   return (
     <div 
-      className="fixed z-50 w-72 bg-accents-1/95 border border-accents-2 rounded-lg shadow-2xl backdrop-blur-md p-3 text-xs font-mono pointer-events-none flex flex-col gap-2 animate-in fade-in duration-150"
+      className="fixed z-50 w-80 bg-accents-1/95 border border-accents-2 rounded-lg shadow-2xl backdrop-blur-md p-3 text-xs font-mono pointer-events-none flex flex-col gap-2 transition-opacity duration-200 opacity-100"
       style={{ top: position.top, left: position.left }}
     >
       <div className="flex items-center gap-2 border-b border-accents-2 pb-2">
@@ -215,22 +243,16 @@ const Tooltip: React.FC<{ data: TooltipData }> = ({ data }) => {
       </div>
       
       <div className="flex flex-col gap-1">
-        <span className="text-accents-4 text-[10px]">Path</span>
-        <div className="text-accents-6 break-all bg-black/20 p-1 rounded">{data.path}</div>
+        <span className="text-accents-4 text-[10px] uppercase tracking-wider">Path</span>
+        <div className="text-success break-all bg-black/40 p-1.5 rounded border border-accents-2/50 select-text">
+            {data.path}
+        </div>
       </div>
 
       <div className="flex flex-col gap-1">
-        <span className="text-accents-4 text-[10px]">Value</span>
-        <div className="text-accents-7 max-h-32 overflow-hidden break-words">
-          {typeof data.value === 'object' && data.value !== null ? (
-            <span className="italic text-accents-5">
-              {Array.isArray(data.value) 
-                ? `Array (${data.value.length} items)` 
-                : `Object (${Object.keys(data.value).length} keys)`}
-            </span>
-          ) : (
-            String(data.value)
-          )}
+        <span className="text-accents-4 text-[10px] uppercase tracking-wider">Value</span>
+        <div className="text-accents-7 max-h-48 overflow-y-auto break-words bg-black/20 p-1.5 rounded border border-accents-2/50 whitespace-pre-wrap scrollbar-thin">
+          {renderTooltipValue()}
         </div>
       </div>
     </div>
@@ -239,18 +261,35 @@ const Tooltip: React.FC<{ data: TooltipData }> = ({ data }) => {
 
 export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const [scale, setScale] = useState(1);
-  const [panning, setPanning] = useState(false);
   const [position, setPosition] = useState({ x: 40, y: 40 });
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
+  const isPanningRef = useRef(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Parse Data
-  let data;
-  try {
-    data = JSON.parse(value);
-  } catch (e) {
+  // Memoize data parsing to prevent expensive re-runs on every render
+  const parsedData = useMemo(() => {
+    try {
+      return JSON.parse(value);
+    } catch (e) {
+      return null;
+    }
+  }, [value]);
+
+  // Context value should be stable to prevent deep re-renders of GraphNode
+  const contextValue = useMemo(() => ({
+    showTooltip: (d: TooltipData) => {
+      // Don't show tooltip if we are dragging
+      if (!isPanningRef.current) {
+        setTooltipData(d);
+      }
+    },
+    hideTooltip: () => setTooltipData(null)
+  }), []);
+
+  // Early return for invalid JSON
+  if (parsedData === null) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-error gap-4 p-8 text-center">
         <div className="bg-error/10 p-4 rounded-full">
@@ -268,12 +307,12 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
 
   // Pan Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
-    setPanning(true);
-    setTooltipData(null); // Hide tooltip when panning starts
+    isPanningRef.current = true;
+    setTooltipData(null);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (panning) {
+    if (isPanningRef.current) {
       setPosition(prev => ({
         x: prev.x + e.movementX,
         y: prev.y + e.movementY
@@ -282,7 +321,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   };
 
   const handleMouseUp = () => {
-    setPanning(false);
+    isPanningRef.current = false;
   };
 
   // Zoom Handlers
@@ -296,18 +335,13 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const handleFitScreen = () => {
     if (containerRef.current && contentRef.current) {
       const container = containerRef.current.getBoundingClientRect();
-      // We need untransformed content dimensions. 
-      // Since contentRef contains the transform, offsetWidth/Height gives untransformed size usually
-      // if display is inline-block and content determines size.
       const contentWidth = contentRef.current.offsetWidth;
       const contentHeight = contentRef.current.offsetHeight;
       
-      // Calculate scale to fit
-      const scaleX = (container.width - 80) / contentWidth; // 80px padding
+      const scaleX = (container.width - 80) / contentWidth;
       const scaleY = (container.height - 80) / contentHeight;
-      const newScale = Math.min(scaleX, scaleY, 1); // Don't zoom in if it fits, just zoom out
+      const newScale = Math.min(scaleX, scaleY, 1);
       
-      // Center it
       const newX = (container.width - contentWidth * newScale) / 2;
       const newY = (container.height - contentHeight * newScale) / 2;
       
@@ -317,10 +351,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   };
 
   return (
-    <GraphContext.Provider value={{ 
-      showTooltip: (d) => !panning && setTooltipData(d), 
-      hideTooltip: () => setTooltipData(null) 
-    }}>
+    <GraphContext.Provider value={contextValue}>
       <div className="relative w-full h-full overflow-hidden bg-[#050505] select-none">
         {/* Controls */}
         <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 bg-accents-1 border border-accents-2 p-1 rounded-lg shadow-xl">
@@ -340,7 +371,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
 
         <div 
           ref={containerRef}
-          className={`w-full h-full ${panning ? 'cursor-grabbing' : 'cursor-grab'}`}
+          className={`w-full h-full ${isPanningRef.current ? 'cursor-grabbing' : 'cursor-grab'}`}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -350,12 +381,13 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
             style={{ 
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
               transformOrigin: '0 0',
-              transition: panning ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)'
+              // Disable transition during drag for performance
+              transition: isPanningRef.current ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)'
             }}
             className="inline-block"
             ref={contentRef}
           >
-            <GraphNode value={data} />
+            <GraphNode value={parsedData} />
           </div>
         </div>
         
