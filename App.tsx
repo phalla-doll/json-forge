@@ -317,7 +317,7 @@ const App: React.FC = () => {
             <div className="h-4 w-px bg-accents-2 hidden md:block"></div>
 
             <a 
-              href="https://github.com/phalla-doll/json-forge" 
+              href="https://github.com/phalla-doll/json-forge" target="_blank"
               className="p-2 rounded-full hover:bg-accents-1 text-accents-5 hover:text-white transition-colors"
             >
               <Github className="w-5 h-5" />
