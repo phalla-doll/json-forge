@@ -65,10 +65,69 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #444;
       }
+
+      /* ASCII Loader Styles */
+      .loader-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: #000000;
+        color: #eaeaea;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        letter-spacing: -0.5px;
+      }
+      .loader-content {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 300px;
+      }
+      .blink {
+        animation: blink 1s step-end infinite;
+      }
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+      .dim { color: #444; }
+      .blue { color: #0070f3; }
+      .green { color: #22c55e; }
     </style>
   </head>
   <body class="bg-background text-accents-8 h-[100dvh] overflow-hidden antialiased selection:bg-success selection:text-white">
-    <div id="root"></div>
+    <div id="root">
+      <div class="loader-container">
+        <div class="loader-content">
+          <div><span class="blue">➜</span> <span class="dim">~</span> json_forge --init</div>
+          <div><span class="green">✓</span> <span class="dim">core_modules_loaded</span></div>
+          <div id="loading-bar">[....................] <span class="dim">0%</span></div>
+          <div class="dim">> waiting_for_react...<span class="blink">_</span></div>
+        </div>
+      </div>
+      <script>
+        (function() {
+          const bar = document.getElementById('loading-bar');
+          if (!bar) return;
+          const total = 20;
+          let current = 0;
+          
+          const interval = setInterval(() => {
+            current++;
+            if (current > total) {
+              current = 0; // Loop seamlessly until React mounts
+            }
+            
+            const filled = '#'.repeat(current);
+            const empty = '.'.repeat(total - current);
+            const percent = Math.floor((current / total) * 100);
+            
+            bar.innerHTML = `[${filled}${empty}] <span class="dim">${percent}%</span>`;
+          }, 80);
+        })();
+      </script>
+    </div>
     <script type="module" src="./index.tsx"></script>
   </body>
 </html>
