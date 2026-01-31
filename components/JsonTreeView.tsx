@@ -286,8 +286,8 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   };
 
   // Zoom Handlers
-  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.1, 2));
-  const handleZoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.3));
+  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.1, 5));
+  const handleZoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.1));
   const handleReset = () => {
     setScale(1);
     setPosition({ x: 40, y: 40 });
@@ -296,23 +296,52 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const handleFitScreen = () => {
     if (containerRef.current && contentRef.current) {
       const container = containerRef.current.getBoundingClientRect();
-      // We need untransformed content dimensions. 
-      // Since contentRef contains the transform, offsetWidth/Height gives untransformed size usually
-      // if display is inline-block and content determines size.
       const contentWidth = contentRef.current.offsetWidth;
       const contentHeight = contentRef.current.offsetHeight;
       
-      // Calculate scale to fit
-      const scaleX = (container.width - 80) / contentWidth; // 80px padding
+      const scaleX = (container.width - 80) / contentWidth;
       const scaleY = (container.height - 80) / contentHeight;
-      const newScale = Math.min(scaleX, scaleY, 1); // Don't zoom in if it fits, just zoom out
+      const newScale = Math.min(scaleX, scaleY, 1);
       
-      // Center it
       const newX = (container.width - contentWidth * newScale) / 2;
       const newY = (container.height - contentHeight * newScale) / 2;
       
       setScale(newScale);
       setPosition({ x: newX, y: newY });
+    }
+  };
+
+  // Wheel Zoom Handler
+  const handleWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+
+    // Determine delta and normalize
+    let delta = -e.deltaY;
+    if (e.deltaMode === 1) delta *= 40; // Line
+    if (e.deltaMode === 2) delta *= 800; // Page
+
+    // Sensitivity
+    const zoomSpeed = 0.002;
+    const scaleChange = delta * zoomSpeed;
+    
+    // Calculate new scale with clamps
+    const newScale = Math.min(Math.max(0.1, scale + scaleChange), 5);
+    
+    // Calculate focal point relative to container
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Adjust position to keep mouse point stable:
+      // newPos = mousePos - (mousePos - oldPos) * (newScale / oldScale)
+      const scaleRatio = newScale / scale;
+      const newX = mouseX - (mouseX - position.x) * scaleRatio;
+      const newY = mouseY - (mouseY - position.y) * scaleRatio;
+
+      setScale(newScale);
+      setPosition({ x: newX, y: newY });
+      setTooltipData(null); 
     }
   };
 
@@ -345,12 +374,13 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
         >
           <div 
             style={{ 
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
               transformOrigin: '0 0',
-              transition: panning ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)'
+              transition: panning ? 'none' : 'transform 0.1s linear' // Faster transition for wheel zoom
             }}
             className="inline-block"
             ref={contentRef}
