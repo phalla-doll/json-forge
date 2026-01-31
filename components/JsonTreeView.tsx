@@ -11,7 +11,8 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize,
-  Scan
+  Scan,
+  Copy
 } from 'lucide-react';
 
 interface JsonGraphViewProps {
@@ -38,7 +39,8 @@ interface TooltipData {
 const GraphContext = createContext<{
   showTooltip: (data: TooltipData) => void;
   hideTooltip: () => void;
-}>({ showTooltip: () => {}, hideTooltip: () => {} });
+  cancelHide: () => void;
+}>({ showTooltip: () => {}, hideTooltip: () => {}, cancelHide: () => {} });
 
 // --- Graph Node Component ---
 const GraphNode: React.FC<{ 
@@ -183,45 +185,72 @@ const GraphNode: React.FC<{
 };
 
 // --- Tooltip Component ---
-const Tooltip: React.FC<{ data: TooltipData }> = ({ data }) => {
+const Tooltip: React.FC<{ 
+  data: TooltipData; 
+  onMouseEnter: () => void; 
+  onMouseLeave: () => void;
+}> = ({ data, onMouseEnter, onMouseLeave }) => {
   const [position, setPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     // Basic positioning to the right of the node
     let left = data.rect.right + 12;
     let top = data.rect.top;
 
-    // Viewport check (simplistic)
+    // Viewport check
     if (left + 300 > window.innerWidth) {
       left = data.rect.left - 310; // Flip to left
     }
     if (top + 200 > window.innerHeight) {
       top = window.innerHeight - 210; // Cap bottom
     }
+    // Ensure top isn't negative
+    top = Math.max(10, top);
 
     setPosition({ top, left });
   }, [data.rect]);
 
+  const handleCopyPath = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(data.path);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div 
-      className="fixed z-50 w-72 bg-accents-1/95 border border-accents-2 rounded-lg shadow-2xl backdrop-blur-md p-3 text-xs font-mono pointer-events-none flex flex-col gap-2 animate-in fade-in duration-150"
+      className="fixed z-50 w-72 bg-accents-1 border border-accents-2 rounded-lg shadow-2xl backdrop-blur-md p-3 text-xs font-mono flex flex-col gap-3 animate-in fade-in duration-150 pointer-events-auto"
       style={{ top: position.top, left: position.left }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
-      <div className="flex items-center gap-2 border-b border-accents-2 pb-2">
-        <span className="font-semibold text-accents-8 break-all">{data.name || 'root'}</span>
-        <span className="text-accents-4 px-1.5 py-0.5 rounded-full bg-accents-2 text-[10px] uppercase">
-          {data.type}
-        </span>
+      <div className="flex items-center justify-between border-b border-accents-2 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-accents-8 break-all max-w-[160px] truncate">{data.name || 'root'}</span>
+          <span className="text-accents-8 px-1.5 py-0.5 rounded-full bg-accents-2 text-[10px] uppercase font-bold">
+            {data.type}
+          </span>
+        </div>
+        <button 
+          onClick={handleCopyPath}
+          className="flex items-center gap-1 text-[10px] text-accents-5 hover:text-white transition-colors"
+          title="Copy Path"
+        >
+          {copied ? <span className="text-success">Copied</span> : <Copy size={12} />}
+        </button>
       </div>
       
       <div className="flex flex-col gap-1">
-        <span className="text-accents-4 text-[10px]">Path</span>
-        <div className="text-accents-6 break-all bg-black/20 p-1 rounded">{data.path}</div>
+        <span className="text-accents-4 text-[10px] uppercase tracking-wider">Full Path</span>
+        <div className="text-accents-6 break-all bg-accents-2/50 p-1.5 rounded select-text selection:bg-accents-5 selection:text-black">
+          {data.path}
+        </div>
       </div>
 
       <div className="flex flex-col gap-1">
-        <span className="text-accents-4 text-[10px]">Value</span>
-        <div className="text-accents-7 max-h-32 overflow-hidden break-words">
+        <span className="text-accents-4 text-[10px] uppercase tracking-wider">Value</span>
+        <div className="text-accents-7 max-h-48 overflow-y-auto break-words bg-accents-2/50 p-1.5 rounded scrollbar-thin scrollbar-thumb-accents-4 select-text selection:bg-accents-5 selection:text-black">
           {typeof data.value === 'object' && data.value !== null ? (
             <span className="italic text-accents-5">
               {Array.isArray(data.value) 
@@ -229,7 +258,9 @@ const Tooltip: React.FC<{ data: TooltipData }> = ({ data }) => {
                 : `Object (${Object.keys(data.value).length} keys)`}
             </span>
           ) : (
-            String(data.value)
+            <span className={data.type === 'string' ? 'text-green-400' : data.type === 'number' ? 'text-orange-400' : 'text-purple-400'}>
+              {String(data.value)}
+            </span>
           )}
         </div>
       </div>
@@ -242,6 +273,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const [panning, setPanning] = useState(false);
   const [position, setPosition] = useState({ x: 40, y: 40 });
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
+  const hoverTimeoutRef = useRef<any>(null); // Use any for timeout to handle both Node and Browser types easily
   
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -266,10 +298,28 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
     );
   }
 
+  // Tooltip Logic
+  const showTooltip = (d: TooltipData) => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    if (!panning) {
+      setTooltipData(d);
+    }
+  };
+
+  const hideTooltip = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setTooltipData(null);
+    }, 300); // Delay to allow moving to tooltip
+  };
+
+  const cancelHide = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+  };
+
   // Pan Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     setPanning(true);
-    setTooltipData(null); // Hide tooltip when panning starts
+    setTooltipData(null); 
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -333,8 +383,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
-      // Adjust position to keep mouse point stable:
-      // newPos = mousePos - (mousePos - oldPos) * (newScale / oldScale)
+      // Adjust position to keep mouse point stable
       const scaleRatio = newScale / scale;
       const newX = mouseX - (mouseX - position.x) * scaleRatio;
       const newY = mouseY - (mouseY - position.y) * scaleRatio;
@@ -346,10 +395,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   };
 
   return (
-    <GraphContext.Provider value={{ 
-      showTooltip: (d) => !panning && setTooltipData(d), 
-      hideTooltip: () => setTooltipData(null) 
-    }}>
+    <GraphContext.Provider value={{ showTooltip, hideTooltip, cancelHide }}>
       <div className="relative w-full h-full overflow-hidden bg-[#050505] select-none">
         {/* Controls */}
         <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 bg-accents-1 border border-accents-2 p-1 rounded-lg shadow-xl">
@@ -398,7 +444,13 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
         </div>
 
         {/* Tooltip Overlay */}
-        {tooltipData && <Tooltip data={tooltipData} />}
+        {tooltipData && (
+          <Tooltip 
+            data={tooltipData} 
+            onMouseEnter={cancelHide} 
+            onMouseLeave={hideTooltip} 
+          />
+        )}
       </div>
     </GraphContext.Provider>
   );
