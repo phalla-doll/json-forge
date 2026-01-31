@@ -272,6 +272,8 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const [position, setPosition] = useState({ x: 40, y: 40 });
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const isPanningRef = useRef(false);
+  const isWheelingRef = useRef(false);
+  const wheelTimeoutRef = useRef<any>(null);
   const timeoutRef = useRef<any>(null); // Use any for NodeJS.Timeout/number compatibility
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -289,8 +291,8 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   // Context value should be stable
   const contextValue = useMemo(() => ({
     showTooltip: (d: TooltipData) => {
-      // Don't show tooltip if we are dragging
-      if (!isPanningRef.current) {
+      // Don't show tooltip if we are dragging or wheeling
+      if (!isPanningRef.current && !isWheelingRef.current) {
         // Clear any pending hide timeout so tooltip stays open if we move between nodes
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setTooltipData(d);
@@ -351,9 +353,47 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const handleMouseUp = () => {
     isPanningRef.current = false;
   };
+  
+  // Wheel Handler for Zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!containerRef.current) return;
+
+    // Set wheeling state to true to disable transitions
+    isWheelingRef.current = true;
+    if (wheelTimeoutRef.current) clearTimeout(wheelTimeoutRef.current);
+    wheelTimeoutRef.current = setTimeout(() => {
+      isWheelingRef.current = false;
+    }, 150);
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Sensitivity for zoom
+    const zoomSensitivity = 0.001;
+    // Invert deltaY because negative delta usually means scrolling up (zooming in)
+    const delta = -e.deltaY * zoomSensitivity;
+    
+    // Calculate new scale with clamping
+    const newScale = Math.min(Math.max(scale + delta, 0.3), 3);
+    
+    // Calculate the ratio of change
+    const scaleRatio = newScale / scale;
+    
+    // Adjust position to keep the point under the cursor stationary
+    // Formula: newPos = mousePos - (mousePos - oldPos) * scaleRatio
+    const newX = mouseX - (mouseX - position.x) * scaleRatio;
+    const newY = mouseY - (mouseY - position.y) * scaleRatio;
+
+    setScale(newScale);
+    setPosition({ x: newX, y: newY });
+    
+    // Hide tooltip while zooming
+    setTooltipData(null);
+  };
 
   // Zoom Handlers
-  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.1, 2));
+  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.1, 3));
   const handleZoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.3));
   const handleReset = () => {
     setScale(1);
@@ -404,13 +444,14 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
         >
           <div 
             style={{ 
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
               transformOrigin: '0 0',
-              // Disable transition during drag for performance
-              transition: isPanningRef.current ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)'
+              // Disable transition during drag or wheel for performance and instant response
+              transition: (isPanningRef.current || isWheelingRef.current) ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)'
             }}
             className="inline-block"
             ref={contentRef}
