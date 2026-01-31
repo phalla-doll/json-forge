@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   ZoomIn,
   ZoomOut,
-  Maximize,
+  RotateCcw,
   Scan
 } from 'lucide-react';
 
@@ -331,7 +331,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
             <ZoomOut size={16} />
           </button>
           <button onClick={handleReset} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Reset Scale (100%)">
-            <Maximize size={16} />
+            <RotateCcw size={16} />
           </button>
           <button onClick={handleFitScreen} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Fit to Screen">
             <Scan size={16} />
