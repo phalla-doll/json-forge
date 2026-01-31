@@ -61,7 +61,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             Import
           </Button>
           <Button size="sm" onClick={onDownload} disabled={!hasContent} icon={<Download className="w-3.5 h-3.5"/>}>
-            Export
+            Export JSON
           </Button>
         </div>
       </div>
