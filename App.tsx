@@ -112,7 +112,10 @@ const INITIAL_DATA = {
 };
 
 const App: React.FC = () => {
-  const [jsonInput, setJsonInput] = useState<string>(JSON.stringify(INITIAL_DATA, null, 2));
+  // Set default indentation to 4 spaces
+  const [indentation, setIndentation] = useState<number | string>(4);
+  // Format initial data with 4 spaces
+  const [jsonInput, setJsonInput] = useState<string>(JSON.stringify(INITIAL_DATA, null, 4));
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [viewMode, setViewMode] = useState<'code' | 'graph'>('code');
@@ -136,11 +139,24 @@ const App: React.FC = () => {
     }
   };
 
+  const handleIndentChange = (newIndent: number | string) => {
+    setIndentation(newIndent);
+    // Auto-reformat if valid to give instant feedback
+    if (jsonInput.trim() && isValidJson(jsonInput)) {
+      try {
+        const parsed = JSON.parse(jsonInput);
+        setJsonInput(JSON.stringify(parsed, null, newIndent));
+      } catch (e) {
+        // Silent fail if something is weird, though isValidJson checked it
+      }
+    }
+  };
+
   const handleFormat = () => {
     try {
       if (!jsonInput.trim()) return;
       const parsed = JSON.parse(jsonInput);
-      setJsonInput(JSON.stringify(parsed, null, 2));
+      setJsonInput(JSON.stringify(parsed, null, indentation));
       setError(null);
       addToast('success', 'Formatted successfully');
     } catch (err) {
@@ -306,6 +322,8 @@ const App: React.FC = () => {
           onDownload={handleDownload}
           onUpload={handleUpload}
           hasContent={jsonInput.length > 0}
+          indentation={indentation}
+          onIndentChange={handleIndentChange}
         />
         
         <div className="flex-1 relative min-h-0">
@@ -316,6 +334,7 @@ const App: React.FC = () => {
                  value={jsonInput} 
                  onChange={handleInputChange} 
                  error={error} 
+                 indentation={indentation}
                />
              ) : (
                <JsonGraphView value={jsonInput} />

@@ -5,9 +5,10 @@ interface EditorProps {
   value: string;
   onChange: (value: string) => void;
   error: string | null;
+  indentation: number | string;
 }
 
-export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error }) => {
+export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, indentation }) => {
   const handleEditorChange = (value: string | undefined) => {
     onChange(value || "");
   };
@@ -72,7 +73,10 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error }) =>
           scrollbar: {
             verticalScrollbarSize: 10,
             horizontalScrollbarSize: 10,
-          }
+          },
+          tabSize: typeof indentation === 'number' ? indentation : 4,
+          insertSpaces: typeof indentation === 'number',
+          detectIndentation: false,
         }}
         theme="vs-dark" // Fallback, we set custom theme on mount
       />
