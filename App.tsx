@@ -111,7 +111,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background text-accents-8 font-sans selection:bg-accents-2">
+    <div className="flex flex-col h-[100dvh] bg-background text-accents-8 font-sans selection:bg-accents-2">
       {/* Vercel-style Header */}
       <header className="h-16 flex items-center justify-between px-6 border-b border-accents-2 bg-background/50 backdrop-blur-md z-20">
         <div className="flex items-center gap-4">
@@ -130,16 +130,24 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-6">
+          {/* Stats Display */}
           <div className="hidden md:flex items-center gap-6 text-xs font-mono text-accents-5">
             <div className="flex flex-col items-end">
               <span className="text-accents-3 uppercase tracking-wider text-[10px]">Lines</span>
               <span className="text-accents-6">{stats.lines}</span>
             </div>
             <div className="flex flex-col items-end">
+              <span className="text-accents-3 uppercase tracking-wider text-[10px]">Chars</span>
+              <span className="text-accents-6">{stats.chars}</span>
+            </div>
+            <div className="flex flex-col items-end">
                <span className="text-accents-3 uppercase tracking-wider text-[10px]">Size</span>
                <span className="text-accents-6">{stats.size}</span>
             </div>
           </div>
+          
+          <div className="h-4 w-px bg-accents-2 hidden md:block"></div>
+
           <a 
             href="#" 
             className="p-2 rounded-full hover:bg-accents-1 text-accents-5 hover:text-white transition-colors"
