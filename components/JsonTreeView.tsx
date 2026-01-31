@@ -365,6 +365,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
           <div className="flex items-center gap-1"><List size={10} className="text-yellow-400" /> Array</div>
           <div className="flex items-center gap-1"><Type size={10} className="text-green-400" /> String</div>
           <div className="flex items-center gap-1"><Hash size={10} className="text-orange-400" /> Number</div>
+          <div className="flex items-center gap-1.5"><ToggleLeft size={12} className="text-purple-400" /> Boolean</div>
         </div>
 
         {/* Tooltip Overlay */}
