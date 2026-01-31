@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { Command, Github } from 'lucide-react';
+import { Command, Github, Code, GitGraph } from 'lucide-react';
 import { Toolbar } from './components/Toolbar';
 import { JsonEditor } from './components/Editor';
+import { JsonGraphView } from './components/JsonTreeView';
 import { Toast } from './components/Toast';
 import { getStats, downloadFile, isValidJson } from './lib/utils';
 import { ToastMessage } from './types';
@@ -10,6 +11,7 @@ const App: React.FC = () => {
   const [jsonInput, setJsonInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [viewMode, setViewMode] = useState<'code' | 'graph'>('code');
 
   const stats = getStats(jsonInput);
 
@@ -123,9 +125,36 @@ const App: React.FC = () => {
             <span className="text-xs text-accents-4">Development Environment</span>
           </div>
           <div className="h-6 w-px bg-accents-2 mx-2 hidden md:block"></div>
+          
           <div className="hidden md:flex items-center gap-2 px-2 py-1 bg-accents-1 rounded border border-accents-2">
             <span className="w-2 h-2 rounded-full bg-success"></span>
             <span className="text-xs font-mono text-accents-5">Ready</span>
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-accents-1 p-0.5 rounded-md border border-accents-2">
+            <button
+              onClick={() => setViewMode('code')}
+              className={`flex items-center gap-2 px-3 py-1 rounded text-xs font-medium transition-all ${
+                viewMode === 'code' 
+                  ? 'bg-accents-4 text-white shadow-sm' 
+                  : 'text-accents-5 hover:text-accents-8'
+              }`}
+            >
+              <Code size={14} />
+              <span>Code</span>
+            </button>
+            <button
+              onClick={() => setViewMode('graph')}
+              className={`flex items-center gap-2 px-3 py-1 rounded text-xs font-medium transition-all ${
+                viewMode === 'graph' 
+                  ? 'bg-accents-4 text-white shadow-sm' 
+                  : 'text-accents-5 hover:text-accents-8'
+              }`}
+            >
+              <GitGraph size={14} />
+              <span>Graph</span>
+            </button>
           </div>
         </div>
         
@@ -170,13 +199,17 @@ const App: React.FC = () => {
         />
         
         <div className="flex-1 relative min-h-0">
-           {/* Editor with minimal padding for Vercel 'code' feel */}
+           {/* Content Area */}
            <div className="absolute inset-0">
-             <JsonEditor 
-               value={jsonInput} 
-               onChange={handleInputChange} 
-               error={error} 
-             />
+             {viewMode === 'code' ? (
+               <JsonEditor 
+                 value={jsonInput} 
+                 onChange={handleInputChange} 
+                 error={error} 
+               />
+             ) : (
+               <JsonGraphView value={jsonInput} />
+             )}
            </div>
         </div>
       </main>
