@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Braces, Github, Code, GitGraph } from 'lucide-react';
 import { Toolbar } from './components/Toolbar';
 import { JsonEditor } from './components/Editor';
@@ -115,14 +115,32 @@ const INITIAL_DATA = {
 const App: React.FC = () => {
   // Set default indentation to 4 spaces
   const [indentation, setIndentation] = useState<number | string>(4);
-  // Format initial data with 4 spaces
+  
+  // jsonInput is the immediate value (for the Editor)
   const [jsonInput, setJsonInput] = useState<string>(JSON.stringify(INITIAL_DATA, null, 4));
+  
+  // debouncedInput is the delayed value (for Graph, Stats, Validation)
+  // This prevents the app from freezing on every keystroke with large files
+  const [debouncedInput, setDebouncedInput] = useState<string>(jsonInput);
+
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [viewMode, setViewMode] = useState<'code' | 'graph'>('code');
   const [isEditorReady, setIsEditorReady] = useState(false);
 
-  const stats = getStats(jsonInput);
+  // Debounce effect
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedInput(jsonInput);
+    }, 800); // Wait 800ms after typing stops
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [jsonInput]);
+
+  // Calculate stats based on the debounced input to save performance
+  const stats = getStats(debouncedInput);
 
   const addToast = useCallback((type: ToastMessage['type'], message: string) => {
     const id = Math.random().toString(36).substring(7);
@@ -142,11 +160,32 @@ const App: React.FC = () => {
 
   const handleInputChange = (value: string) => {
     setJsonInput(value);
-    // Clear error if input becomes valid or empty
-    if (!value || isValidJson(value)) {
+    // Error checking is now done on debounce or explicit actions to keep typing fast,
+    // but we can clear errors immediately if the user clears the input
+    if (!value) {
       setError(null);
     }
   };
+
+  // Check validity on the debounced input
+  useEffect(() => {
+    if (!debouncedInput.trim()) {
+      setError(null);
+      return;
+    }
+    if (isValidJson(debouncedInput)) {
+      setError(null);
+    } else {
+      // We generally don't want to show aggressive error messages while typing,
+      // but if the user stops typing and it's invalid, the Editor component
+      // might show markers. We'll update our error state for the floating banner.
+      try {
+        JSON.parse(debouncedInput);
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    }
+  }, [debouncedInput]);
 
   const handleIndentChange = (newIndent: number | string) => {
     trackEvent('change_indentation', { value: newIndent === '\t' ? 'tab' : newIndent });
@@ -155,9 +194,11 @@ const App: React.FC = () => {
     if (jsonInput.trim() && isValidJson(jsonInput)) {
       try {
         const parsed = JSON.parse(jsonInput);
-        setJsonInput(JSON.stringify(parsed, null, newIndent));
+        const formatted = JSON.stringify(parsed, null, newIndent);
+        setJsonInput(formatted);
+        setDebouncedInput(formatted); // Update immediately for formatting actions
       } catch (e) {
-        // Silent fail if something is weird, though isValidJson checked it
+        // Silent fail
       }
     }
   };
@@ -167,7 +208,9 @@ const App: React.FC = () => {
     try {
       if (!jsonInput.trim()) return;
       const parsed = JSON.parse(jsonInput);
-      setJsonInput(JSON.stringify(parsed, null, indentation));
+      const formatted = JSON.stringify(parsed, null, indentation);
+      setJsonInput(formatted);
+      setDebouncedInput(formatted);
       setError(null);
       addToast('success', 'Formatted successfully');
     } catch (err) {
@@ -181,7 +224,9 @@ const App: React.FC = () => {
     try {
       if (!jsonInput.trim()) return;
       const parsed = JSON.parse(jsonInput);
-      setJsonInput(JSON.stringify(parsed));
+      const minified = JSON.stringify(parsed);
+      setJsonInput(minified);
+      setDebouncedInput(minified);
       setError(null);
       addToast('success', 'Minified successfully');
     } catch (err) {
@@ -206,7 +251,6 @@ const App: React.FC = () => {
     trackEvent('click_clear_attempt');
     if (!jsonInput) return;
     
-    // Only confirm if there's significant content to prevent accidental data loss
     if (jsonInput.length > 50) {
       if (!window.confirm('Are you sure you want to clear the editor?')) {
         trackEvent('click_clear_cancel');
@@ -216,6 +260,7 @@ const App: React.FC = () => {
     
     trackEvent('click_clear_confirm');
     setJsonInput('');
+    setDebouncedInput('');
     setError(null);
     addToast('info', 'Editor cleared');
   };
@@ -236,17 +281,23 @@ const App: React.FC = () => {
   };
 
   const handleUpload = (file: File) => {
-    trackEvent('click_import', { file_type: file.type });
-    // Validate file extension
+    trackEvent('click_import', { file_type: file.type, size: file.size });
+    
     if (!file.name.toLowerCase().endsWith('.json') && file.type !== 'application/json') {
       addToast('error', 'Invalid file type. Only .json files are allowed.');
       return;
     }
 
+    if (file.size > 5 * 1024 * 1024) { // 5MB warning
+       addToast('info', 'Large file detected. Graph view may be slow.');
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
-        setJsonInput(event.target.result as string);
+        const result = event.target.result as string;
+        setJsonInput(result);
+        setDebouncedInput(result); // Immediate update on upload
         setError(null);
         addToast('success', `Loaded ${file.name}`);
       }
@@ -259,11 +310,9 @@ const App: React.FC = () => {
 
   return (
     <>
-      {/* ASCII Loader Overlay */}
       {!isEditorReady && <Loader />}
       
       <div className={`flex flex-col h-[100dvh] bg-background text-accents-8 font-sans selection:bg-accents-2 transition-opacity duration-700 ${isEditorReady ? 'opacity-100' : 'opacity-0'}`}>
-        {/* Vercel-style Header */}
         <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-accents-2 bg-background/50 backdrop-blur-md z-20 shrink-0">
           <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
             <div className="bg-green-600 text-white p-1.5 rounded-md shadow-sm shrink-0">
@@ -275,8 +324,6 @@ const App: React.FC = () => {
             </div>
             <div className="h-6 w-px bg-accents-2 mx-1 md:mx-2 hidden md:block"></div>
 
-
-            {/* View Mode Toggle */}
             <div className="flex items-center bg-accents-1 p-0.5 rounded-md border border-accents-2 ml-2 md:ml-0 shrink-0">
               <button
                 onClick={() => {
@@ -310,7 +357,6 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4 md:gap-6 pl-2 shrink-0">
-            {/* Stats Display - Hidden on Mobile */}
             <div className="hidden md:flex items-center gap-6 text-xs font-mono text-accents-5">
               <div className="flex flex-col items-end">
                 <span className="text-accents-3 uppercase tracking-wider text-[10px]">Lines</span>
@@ -338,7 +384,6 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        {/* Main Content Area */}
         <main className="flex-1 flex flex-col min-h-0 bg-background relative overflow-hidden">
           <Toolbar 
             onFormat={handleFormat}
@@ -353,7 +398,6 @@ const App: React.FC = () => {
           />
           
           <div className="flex-1 relative min-h-0">
-             {/* Content Area */}
              <div className="absolute inset-0">
                {viewMode === 'code' ? (
                  <JsonEditor 
@@ -364,13 +408,13 @@ const App: React.FC = () => {
                    onReady={handleEditorReady}
                  />
                ) : (
-                 <JsonGraphView value={jsonInput} />
+                 // Graph View uses debounced input to prevent lag
+                 <JsonGraphView value={debouncedInput} />
                )}
              </div>
           </div>
         </main>
 
-        {/* Toast Overlay - Responsive Positioning */}
         <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 flex flex-col gap-2 z-50 pointer-events-none items-center md:items-end">
           <div className="pointer-events-auto flex flex-col gap-3 w-full max-w-sm">
             {toasts.map(toast => (

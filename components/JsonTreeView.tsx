@@ -10,7 +10,8 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  Shrink
+  Shrink,
+  MoreHorizontal
 } from 'lucide-react';
 import { trackEvent } from '../lib/utils';
 
@@ -51,6 +52,11 @@ const getChildPath = (parentPath: string, key: string, parentType: DataType) => 
   return `${parentPath}["${key.replace(/"/g, '\\"')}"]`;
 };
 
+// Configuration object for expansion logic (passed by reference)
+interface ExpansionConfig {
+  budget: number;
+}
+
 // --- Graph Node Component (Memoized) ---
 const GraphNode: React.FC<{ 
   name?: string; 
@@ -58,14 +64,31 @@ const GraphNode: React.FC<{
   depth?: number;
   isLast?: boolean;
   path?: string;
-}> = React.memo(({ name, value, depth = 0, isLast = true, path = '$' }) => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  expansionConfig?: ExpansionConfig;
+}> = React.memo(({ name, value, depth = 0, isLast = true, path = '$', expansionConfig }) => {
+  // Determine type for initialization logic
+  const type = getDataType(value);
+  const isExpandable = type === 'object' || type === 'array';
+
+  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+    // Always expand root
+    if (depth === 0) return true;
+    
+    // Auto-expand if we have budget
+    if (isExpandable && expansionConfig && expansionConfig.budget > 0) {
+      expansionConfig.budget--;
+      return true;
+    }
+    return false;
+  });
+
+  const [visibleItems, setVisibleItems] = useState(50); // PAGINATION: Start with 50 items
   const { showTooltip, hideTooltip } = useContext(GraphContext);
   const nodeRef = useRef<HTMLDivElement>(null);
 
-  const type = getDataType(value);
-  const isExpandable = type === 'object' || type === 'array';
-  const isEmpty = isExpandable && Object.keys(value).length === 0;
+  const keys = isExpandable ? Object.keys(value) : [];
+  const isEmpty = isExpandable && keys.length === 0;
+  const hasMore = isExpandable && keys.length > visibleItems;
 
   // Icons based on type
   const TypeIcon = () => {
@@ -82,6 +105,11 @@ const GraphNode: React.FC<{
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsExpanded(!isExpanded);
+  };
+  
+  const handleLoadMore = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setVisibleItems(prev => prev + 50);
   };
 
   const handleMouseEnter = (e: React.MouseEvent) => {
@@ -104,7 +132,7 @@ const GraphNode: React.FC<{
 
   const renderValue = () => {
     if (isExpandable) {
-      const len = Object.keys(value).length;
+      const len = keys.length;
       return <span className="text-accents-4 text-[10px] ml-2">{len} {type === 'array' ? 'items' : 'keys'}</span>;
     }
     
@@ -165,10 +193,12 @@ const GraphNode: React.FC<{
             {/* Vertical Line running down the side of children */}
             <div className="absolute left-0 top-[1.1rem] bottom-[1.1rem] w-px bg-accents-2"></div>
             
-            {Object.keys(value).map((key, index, arr) => {
-              const isChildLast = index === arr.length - 1;
+            {/* Only map up to visibleItems to prevent browser freeze on 10k lines */}
+            {keys.slice(0, visibleItems).map((key, index, arr) => {
               const childType = getDataType(value[key]);
               const childPath = getChildPath(path, key, type);
+              // It's last if it's the last in array AND we are showing all items
+              const isChildLast = index === arr.length - 1 && !hasMore;
 
               return (
                 <div key={key} className="flex items-start pt-2 pb-2 pl-4 relative">
@@ -181,10 +211,25 @@ const GraphNode: React.FC<{
                     depth={depth + 1}
                     isLast={isChildLast}
                     path={childPath}
+                    expansionConfig={expansionConfig}
                   />
                 </div>
               );
             })}
+
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="flex items-start pt-2 pb-2 pl-4 relative">
+                 <div className="absolute left-0 top-[1.6rem] w-4 h-px bg-accents-2"></div>
+                 <button 
+                  onClick={handleLoadMore}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-accents-3 bg-transparent hover:bg-accents-2 hover:border-accents-4 text-xs text-accents-5 transition-colors"
+                 >
+                   <MoreHorizontal size={14} />
+                   <span>Show next 50 items ({keys.length - visibleItems} remaining)</span>
+                 </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -275,32 +320,37 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const isPanningRef = useRef(false);
   const isWheelingRef = useRef(false);
   const wheelTimeoutRef = useRef<any>(null);
-  const timeoutRef = useRef<any>(null); // Use any for NodeJS.Timeout/number compatibility
+  const timeoutRef = useRef<any>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Memoize data parsing to prevent expensive re-runs on every render
-  const parsedData = useMemo(() => {
+  // 1. Calculate Data & Generate Key
+  // We generate a unique graphKey when data successfully parses.
+  // This key is used on the Root Node to force a full re-mount (and thus re-run initial expansion logic)
+  const { parsedData, graphKey } = useMemo(() => {
     try {
-      return JSON.parse(value);
+      const data = JSON.parse(value);
+      return { parsedData: data, graphKey: Math.random().toString(36) };
     } catch (e) {
-      return null;
+      return { parsedData: null, graphKey: 'error' };
     }
   }, [value]);
+
+  // 2. Create Expansion Budget
+  // This object is mutable and passed down the tree. 
+  // Created fresh whenever graphKey changes.
+  const expansionConfig = useMemo(() => ({ budget: 50 }), [graphKey]);
 
   // Context value should be stable
   const contextValue = useMemo(() => ({
     showTooltip: (d: TooltipData) => {
-      // Don't show tooltip if we are dragging or wheeling
       if (!isPanningRef.current && !isWheelingRef.current) {
-        // Clear any pending hide timeout so tooltip stays open if we move between nodes
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setTooltipData(d);
       }
     },
     hideTooltip: () => {
-      // Add delay before hiding to allow moving mouse into the tooltip
       timeoutRef.current = setTimeout(() => {
         setTooltipData(null);
       }, 300);
@@ -308,18 +358,15 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   }), []);
 
   const handleTooltipMouseEnter = () => {
-    // If mouse enters the tooltip, cancel the hide timer
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
   };
 
   const handleTooltipMouseLeave = () => {
-    // If mouse leaves tooltip, resume hide timer
     timeoutRef.current = setTimeout(() => {
       setTooltipData(null);
     }, 300);
   };
 
-  // Early return for invalid JSON
   if (parsedData === null) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-error gap-4 p-8 text-center">
@@ -359,7 +406,6 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   const handleWheel = (e: React.WheelEvent) => {
     if (!containerRef.current) return;
 
-    // Set wheeling state to true to disable transitions
     isWheelingRef.current = true;
     if (wheelTimeoutRef.current) clearTimeout(wheelTimeoutRef.current);
     wheelTimeoutRef.current = setTimeout(() => {
@@ -370,26 +416,17 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    // Sensitivity for zoom
     const zoomSensitivity = 0.001;
-    // Invert deltaY because negative delta usually means scrolling up (zooming in)
     const delta = -e.deltaY * zoomSensitivity;
     
-    // Calculate new scale with clamping
     const newScale = Math.min(Math.max(scale + delta, 0.3), 3);
-    
-    // Calculate the ratio of change
     const scaleRatio = newScale / scale;
     
-    // Adjust position to keep the point under the cursor stationary
-    // Formula: newPos = mousePos - (mousePos - oldPos) * scaleRatio
     const newX = mouseX - (mouseX - position.x) * scaleRatio;
     const newY = mouseY - (mouseY - position.y) * scaleRatio;
 
     setScale(newScale);
     setPosition({ x: newX, y: newY });
-    
-    // Hide tooltip while zooming
     setTooltipData(null);
   };
 
@@ -459,13 +496,16 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
             style={{ 
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
               transformOrigin: '0 0',
-              // Disable transition during drag or wheel for performance and instant response
               transition: (isPanningRef.current || isWheelingRef.current) ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)'
             }}
             className="inline-block"
             ref={contentRef}
           >
-            <GraphNode value={parsedData} />
+            <GraphNode 
+              key={graphKey} // Force remount when data changes so budget logic runs again
+              value={parsedData} 
+              expansionConfig={expansionConfig}
+            />
           </div>
         </div>
         
