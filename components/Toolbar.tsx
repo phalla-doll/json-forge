@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { 
   Sparkles, 
   Minimize2, 
@@ -43,6 +43,25 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   hasMatches
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [shortcutLabel, setShortcutLabel] = useState('Ctrl+K');
+
+  useEffect(() => {
+    // Detect OS for label
+    if (typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform)) {
+      setShortcutLabel('⌘K');
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -85,8 +104,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <div className="relative group">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-accents-5 transition-colors" />
               <input 
+                ref={searchInputRef}
                 type="text" 
-                placeholder="Search..." 
+                placeholder={`Search... (${shortcutLabel})`}
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
                 onKeyDown={(e) => {
