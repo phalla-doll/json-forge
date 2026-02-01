@@ -1,6 +1,6 @@
 # JSON Forge
 
-**JSON Forge** is a high-performance, professional-grade JSON editor, validator, and visualizer built for developers who handle complex data structures. It combines the power of the Monaco Editor (VS Code's engine) with an interactive, lazy-loaded graph visualization tool, all wrapped in a sleek, Vercel-inspired dark interface.
+**JSON Forge** is a high-performance, professional-grade JSON editor, validator, and visualizer built for developers who handle complex data structures. It combines the power of the Monaco Editor (VS Code's engine) with an interactive, lazy-loaded graph visualization tool, all wrapped in a sleek, Vercel-inspired interface.
 
 ![JSON Forge Preview](https://json-forge-rose.vercel.app/json-forge-og-image.png)
 
@@ -14,8 +14,9 @@
 
 ### 🕸 High-Performance Graph Visualization
 *   **Interactive Tree**: Visualize deeply nested JSON structures as a navigable node graph.
+*   **Search & Focus**: Powerful search within the graph view. Matches are highlighted, and navigation controls allow you to cycle through results, automatically panning to and centering the active node.
+*   **Smart Navigation**: Smooth Pan & Zoom (0.3x to 3x) with mouse wheel support. Double-click any node to focus and center it, or use the "Fit to Screen" utility.
 *   **Lazy Loading & Pagination**: Automatically limits rendering to the first 50 items of large arrays/objects to prevent DOM explosions. Includes "Show More" functionality for massive datasets.
-*   **Navigation Controls**: Smooth Pan & Zoom (0.3x to 3x) with mouse wheel support and "Fit to Screen" utility.
 *   **Rich Tooltips**: Hover over nodes to inspect values, types, and full property paths (`data.users[0].id`) without expanding the tree.
 
 ### 📊 Live Statistics & Utilities
@@ -24,7 +25,8 @@
 *   **Clipboard Manager**: Integrated copy functionality with success feedback.
 
 ### 🎨 Design System
-*   **Vercel-Inspired UI**: Minimalist, high-contrast dark theme optimized for focus.
+*   **Theme Support**: Toggle between a sleek Dark Mode and a crisp Light Mode to suit your environment.
+*   **Vercel-Inspired UI**: Minimalist, high-contrast interface optimized for focus.
 *   **Responsive**: Adaptive layout that works on desktop and tablets.
 *   **ASCII Loader**: Retro-terminal style loading sequence for a distinct developer experience.
 
