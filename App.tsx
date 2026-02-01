@@ -365,7 +365,7 @@ const App: React.FC = () => {
             </div>
             <div className="flex flex-col min-w-0">
               <h1 className="text-sm font-semibold text-accents-8 tracking-wide truncate">JSON Forge</h1>
-              <span className="text-xs text-accents-4 hidden sm:block">Development Environment</span>
+              <span className="text-xs text-accents-4 hidden sm:block">Open source JSON visualizer</span>
             </div>
             <div className="h-6 w-px bg-accents-2 mx-1 md:mx-2 hidden md:block"></div>
 
