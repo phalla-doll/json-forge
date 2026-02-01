@@ -375,6 +375,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
   // Refs for tracking state without re-triggering memoized callbacks
   const scaleRef = useRef(1);
   const positionRef = useRef({ x: 40, y: 40 });
+  const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
   
   // Sync refs
   useEffect(() => { scaleRef.current = scale; }, [scale]);
@@ -517,6 +518,36 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
   const handleMouseUp = () => {
     isPanningRef.current = false;
   };
+
+  // Touch Handlers for Mobile Panning
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      isPanningRef.current = true;
+      const touch = e.touches[0];
+      lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+      setTooltipData(null);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isPanningRef.current && e.touches.length === 1 && lastTouchRef.current) {
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - lastTouchRef.current.x;
+      const deltaY = touch.clientY - lastTouchRef.current.y;
+
+      setPosition(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+    }
+  };
+
+  const handleTouchEnd = () => {
+    isPanningRef.current = false;
+    lastTouchRef.current = null;
+  };
   
   // Wheel Handler for Zoom
   const handleWheel = (e: React.WheelEvent) => {
@@ -627,11 +658,16 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
         <div 
           ref={containerRef}
           className={`w-full h-full ${isPanningRef.current ? 'cursor-grabbing' : 'cursor-grab'}`}
+          style={{ touchAction: 'none' }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
           onWheel={handleWheel}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
         >
           <div 
             style={{ 
