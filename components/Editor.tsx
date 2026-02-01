@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Editor, { OnMount } from "@monaco-editor/react";
 
 interface EditorProps {
@@ -13,6 +13,7 @@ interface EditorProps {
 export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, indentation, onReady, searchTerm }) => {
   const editorRef = useRef<any>(null);
   const decorationsRef = useRef<string[]>([]);
+  const [isEditorReady, setIsEditorReady] = useState(false);
 
   const handleEditorChange = (value: string | undefined) => {
     onChange(value || "");
@@ -46,6 +47,9 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
       }
     });
     monaco.editor.setTheme('vercel-dark');
+    
+    // Trigger re-render to apply decorations if needed
+    setIsEditorReady(true);
 
     // Signal that the editor is ready
     if (onReady) {
@@ -55,7 +59,7 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
 
   // Search highlighting effect
   useEffect(() => {
-    if (!editorRef.current) return;
+    if (!editorRef.current || !isEditorReady) return;
     
     const editor = editorRef.current;
     const model = editor.getModel();
@@ -88,10 +92,7 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
     // Apply decorations
     decorationsRef.current = editor.deltaDecorations(decorationsRef.current, newDecorations);
 
-    // Optional: Scroll to first match if desired, but user might be typing, so auto-scroll can be annoying.
-    // We'll leave auto-scroll out for now to avoid jumping.
-
-  }, [searchTerm, value]); // Re-run when searchTerm or value changes
+  }, [searchTerm, value, isEditorReady]); // Re-run when searchTerm, value, or ready state changes
 
   return (
     <div className="relative flex-1 w-full h-full group overflow-hidden">
