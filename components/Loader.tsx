@@ -29,7 +29,7 @@ export const Loader: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background text-[#eaeaea] font-mono text-[13px] tracking-tight">
-       <div className="flex flex-col gap-2 min-w-[300px]">
+       <div className="flex flex-col gap-2 w-fit max-w-full px-6">
           <div><span className="text-success">➜</span> <span className="text-accents-3">~</span> json_forge --init</div>
           <div><span className="text-green-500">✓</span> <span className="text-accents-3">core_modules_loaded</span></div>
           <div>[{bar}] <span className="text-accents-3">{Math.min(safeProgress, 99)}%</span></div>
