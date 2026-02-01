@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Braces, Github, Code, GitGraph } from 'lucide-react';
+import { Braces, Github, Code, GitGraph, Sun, Moon } from 'lucide-react';
 import { Toolbar } from './components/Toolbar';
 import { JsonEditor } from './components/Editor';
 import { JsonGraphView } from './components/JsonTreeView';
@@ -117,6 +117,9 @@ const App: React.FC = () => {
   // Set default indentation to 4 spaces
   const [indentation, setIndentation] = useState<number | string>(4);
   
+  // Theme State
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
   // jsonInput is the immediate value (for the Editor)
   const [jsonInput, setJsonInput] = useState<string>(JSON.stringify(INITIAL_DATA, null, 4));
   
@@ -131,6 +134,21 @@ const App: React.FC = () => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [viewMode, setViewMode] = useState<'code' | 'graph'>('code');
   const [isEditorReady, setIsEditorReady] = useState(false);
+
+  // Initialize Theme
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    trackEvent('toggle_theme', { theme: newTheme });
+  };
 
   // Debounce input effect
   useEffect(() => {
@@ -328,13 +346,13 @@ const App: React.FC = () => {
       {!isEditorReady && <Loader />}
       
       <div className={`flex flex-col h-[100dvh] bg-background text-accents-8 font-sans selection:bg-accents-2 transition-opacity duration-700 ${isEditorReady ? 'opacity-100' : 'opacity-0'}`}>
-        <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-accents-2 bg-background/50 backdrop-blur-md z-20 shrink-0">
+        <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-accents-2 bg-background/50 backdrop-blur-md z-20 shrink-0 transition-colors duration-300">
           <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
             <div className="bg-green-600 text-white p-1.5 rounded-md shadow-sm shrink-0">
               <Braces className="w-4 h-4" />
             </div>
             <div className="flex flex-col min-w-0">
-              <h1 className="text-sm font-semibold text-white tracking-wide truncate">JSON Forge</h1>
+              <h1 className="text-sm font-semibold text-accents-8 tracking-wide truncate">JSON Forge</h1>
               <span className="text-xs text-accents-4 hidden sm:block">Development Environment</span>
             </div>
             <div className="h-6 w-px bg-accents-2 mx-1 md:mx-2 hidden md:block"></div>
@@ -347,7 +365,7 @@ const App: React.FC = () => {
                 }}
                 className={`flex items-center gap-2 px-2 md:px-3 py-1 rounded text-xs font-medium transition-all ${
                   viewMode === 'code' 
-                    ? 'bg-accents-4 text-white shadow-sm' 
+                    ? 'bg-accents-8 text-background shadow-sm' 
                     : 'text-accents-5 hover:text-accents-8'
                 }`}
               >
@@ -361,7 +379,7 @@ const App: React.FC = () => {
                 }}
                 className={`flex items-center gap-2 px-2 md:px-3 py-1 rounded text-xs font-medium transition-all ${
                   viewMode === 'graph' 
-                    ? 'bg-accents-4 text-white shadow-sm' 
+                    ? 'bg-accents-8 text-background shadow-sm' 
                     : 'text-accents-5 hover:text-accents-8'
                 }`}
               >
@@ -371,18 +389,26 @@ const App: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex items-center gap-4 md:gap-6 pl-2 shrink-0">
+          <div className="flex items-center gap-3 md:gap-4 pl-2 shrink-0">
+             <button 
+              onClick={toggleTheme}
+              className="p-2 rounded-full hover:bg-accents-1 text-accents-5 hover:text-accents-8 transition-colors"
+              title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            
             <a 
               href="https://github.com/phalla-doll/json-forge" target="_blank"
               onClick={() => trackEvent('click_github')}
-              className="p-2 rounded-full hover:bg-accents-1 text-accents-5 hover:text-white transition-colors"
+              className="p-2 rounded-full hover:bg-accents-1 text-accents-5 hover:text-accents-8 transition-colors"
             >
               <Github className="w-5 h-5" />
             </a>
           </div>
         </header>
 
-        <main className="flex-1 flex flex-col min-h-0 bg-background relative overflow-hidden">
+        <main className="flex-1 flex flex-col min-h-0 bg-background relative overflow-hidden transition-colors duration-300">
           <Toolbar 
             onFormat={handleFormat}
             onMinify={handleMinify}
@@ -407,6 +433,7 @@ const App: React.FC = () => {
                    indentation={indentation}
                    onReady={handleEditorReady}
                    searchTerm={debouncedSearchTerm}
+                   theme={theme}
                  />
                ) : (
                  // Graph View uses debounced input to prevent lag

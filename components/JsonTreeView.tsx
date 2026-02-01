@@ -135,14 +135,14 @@ const GraphNode: React.FC<{
   const isEmpty = isExpandable && keys.length === 0;
   const hasMore = isExpandable && keys.length > visibleItems;
 
-  // Icons based on type
+  // Icons based on type - Updated for better light/dark contrast
   const TypeIcon = () => {
     switch (type) {
-      case 'object': return <Box size={14} className="text-blue-400" />;
-      case 'array': return <List size={14} className="text-yellow-400" />;
-      case 'string': return <Type size={14} className="text-green-400" />;
-      case 'number': return <Hash size={14} className="text-orange-400" />;
-      case 'boolean': return <ToggleLeft size={14} className="text-purple-400" />;
+      case 'object': return <Box size={14} className="text-blue-600 dark:text-blue-400" />;
+      case 'array': return <List size={14} className="text-yellow-600 dark:text-yellow-400" />;
+      case 'string': return <Type size={14} className="text-green-600 dark:text-green-400" />;
+      case 'number': return <Hash size={14} className="text-orange-600 dark:text-orange-400" />;
+      case 'boolean': return <ToggleLeft size={14} className="text-purple-600 dark:text-purple-400" />;
       default: return <div className="w-3.5 h-3.5 rounded-full bg-accents-4" />;
     }
   };
@@ -191,11 +191,12 @@ const GraphNode: React.FC<{
     const valString = String(value);
     const truncated = valString.length > 30 ? valString.substring(0, 30) + '...' : valString;
 
+    // Updated colors for light mode readability while keeping dark mode pastel
     let colorClass = 'text-accents-6';
-    if (type === 'string') colorClass = 'text-green-300';
-    if (type === 'number') colorClass = 'text-orange-300';
-    if (type === 'boolean') colorClass = 'text-purple-300';
-    if (type === 'null') colorClass = 'text-red-300';
+    if (type === 'string') colorClass = 'text-green-600 dark:text-green-300';
+    if (type === 'number') colorClass = 'text-orange-600 dark:text-orange-300';
+    if (type === 'boolean') colorClass = 'text-purple-600 dark:text-purple-300';
+    if (type === 'null') colorClass = 'text-red-600 dark:text-red-300';
 
     return <span className={`ml-2 font-mono text-xs ${colorClass}`}>{String(truncated)}</span>;
   };
@@ -351,14 +352,14 @@ const Tooltip: React.FC<TooltipProps> = ({ data, onMouseEnter, onMouseLeave }) =
       
       <div className="flex flex-col gap-1">
         <span className="text-accents-4 text-[10px] uppercase tracking-wider">Path</span>
-        <div className="text-success break-all bg-black/40 p-1.5 rounded border border-accents-2/50 select-text cursor-text">
+        <div className="text-success break-all bg-accents-2 p-1.5 rounded border border-accents-2/50 select-text cursor-text">
             {data.path}
         </div>
       </div>
 
       <div className="flex flex-col gap-1">
         <span className="text-accents-4 text-[10px] uppercase tracking-wider">Value</span>
-        <div className="text-accents-7 max-h-48 overflow-y-auto break-words bg-black/20 p-1.5 rounded border border-accents-2/50 whitespace-pre-wrap scrollbar-thin select-text cursor-text">
+        <div className="text-accents-7 max-h-48 overflow-y-auto break-words bg-accents-2 p-1.5 rounded border border-accents-2/50 whitespace-pre-wrap scrollbar-thin select-text cursor-text">
           {renderTooltipValue()}
         </div>
       </div>
@@ -629,28 +630,28 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
 
   return (
     <GraphContext.Provider value={contextValue}>
-      <div className="relative w-full h-full overflow-hidden bg-[#050505] select-none">
+      <div className="relative w-full h-full overflow-hidden bg-background select-none transition-colors duration-300">
         {/* Controls */}
         <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 bg-accents-1 border border-accents-2 p-1 rounded-lg shadow-xl">
-          <button onClick={handleZoomIn} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Zoom In">
+          <button onClick={handleZoomIn} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Zoom In">
             <ZoomIn size={16} />
           </button>
-          <button onClick={handleZoomOut} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Zoom Out">
+          <button onClick={handleZoomOut} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Zoom Out">
             <ZoomOut size={16} />
           </button>
-          <button onClick={handleReset} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Reset Scale (100%)">
+          <button onClick={handleReset} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Reset Scale (100%)">
             <RotateCcw size={16} />
           </button>
-          <button onClick={handleFitScreen} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Fit to Screen">
+          <button onClick={handleFitScreen} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Fit to Screen">
             <Shrink size={16} />
           </button>
           
           <div className="h-px bg-accents-2 mx-1 my-0.5" />
           
-          <button onClick={handleExpandAll} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Expand All Nodes">
+          <button onClick={handleExpandAll} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Expand All Nodes">
             <ChevronsDown size={16} />
           </button>
-           <button onClick={handleCollapseAll} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-white" title="Collapse All Nodes">
+           <button onClick={handleCollapseAll} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Collapse All Nodes">
             <ChevronsUp size={16} />
           </button>
         </div>
@@ -688,11 +689,11 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
         
         {/* Legend */}
         <div className="absolute bottom-4 left-4 right-4 md:right-auto bg-accents-1/80 backdrop-blur border border-accents-2 px-3 py-2 rounded-md flex flex-wrap gap-x-4 gap-y-2 text-[10px] text-accents-5 pointer-events-none justify-center md:justify-start">
-          <div className="flex items-center gap-1"><Box size={10} className="text-blue-400" /> Object</div>
-          <div className="flex items-center gap-1"><List size={10} className="text-yellow-400" /> Array</div>
-          <div className="flex items-center gap-1"><Type size={10} className="text-green-400" /> String</div>
-          <div className="flex items-center gap-1"><Hash size={10} className="text-orange-400" /> Number</div>
-          <div className="flex items-center gap-1.5"><ToggleLeft size={12} className="text-purple-400" /> Boolean</div>
+          <div className="flex items-center gap-1"><Box size={10} className="text-blue-600 dark:text-blue-400" /> Object</div>
+          <div className="flex items-center gap-1"><List size={10} className="text-yellow-600 dark:text-yellow-400" /> Array</div>
+          <div className="flex items-center gap-1"><Type size={10} className="text-green-600 dark:text-green-400" /> String</div>
+          <div className="flex items-center gap-1"><Hash size={10} className="text-orange-600 dark:text-orange-400" /> Number</div>
+          <div className="flex items-center gap-1.5"><ToggleLeft size={12} className="text-purple-600 dark:text-purple-400" /> Boolean</div>
         </div>
 
         {/* Tooltip Overlay */}

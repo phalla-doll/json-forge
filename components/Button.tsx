@@ -23,14 +23,14 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const variants = {
-    // White background, black text
-    primary: "bg-white text-black hover:bg-accents-7 border border-transparent shadow-[0_0_0_1px_transparent]",
-    // Black background, gray border
-    secondary: "bg-black text-accents-8 border border-accents-2 hover:border-accents-5 hover:text-white",
+    // Primary: Inverted contrast. Dark mode = White bg/Black text. Light mode = Black bg/White text.
+    primary: "bg-accents-8 text-background hover:bg-accents-7 border border-transparent shadow-[0_0_0_1px_transparent]",
+    // Secondary: Background matches container, Bordered.
+    secondary: "bg-background text-accents-8 border border-accents-2 hover:border-accents-5 hover:text-accents-8",
     // Red text for danger
-    danger: "bg-black text-error border border-error/20 hover:bg-error/10 hover:border-error/50",
+    danger: "bg-background text-error border border-error/20 hover:bg-error/10 hover:border-error/50",
     // Ghost
-    ghost: "bg-transparent text-accents-5 hover:text-white hover:bg-accents-1",
+    ghost: "bg-transparent text-accents-5 hover:text-accents-8 hover:bg-accents-1",
   };
 
   return (

@@ -1,6 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Editor, { OnMount } from "@monaco-editor/react";
 
+declare global {
+  interface Window {
+    monaco: any;
+  }
+}
+
 interface EditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -8,9 +14,10 @@ interface EditorProps {
   indentation: number | string;
   onReady?: () => void;
   searchTerm?: string;
+  theme?: 'light' | 'dark';
 }
 
-export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, indentation, onReady, searchTerm }) => {
+export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, indentation, onReady, searchTerm, theme = 'dark' }) => {
   const editorRef = useRef<any>(null);
   const decorationsRef = useRef<string[]>([]);
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -19,10 +26,8 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
     onChange(value || "");
   };
 
-  const handleEditorDidMount: OnMount = (editor, monaco) => {
-    editorRef.current = editor;
-    
-    // Define a custom Vercel-like theme with consistent colors to Graph View
+  const defineThemes = (monaco: any) => {
+     // Vercel Dark
     monaco.editor.defineTheme('vercel-dark', {
       base: 'vs-dark',
       inherit: true,
@@ -46,7 +51,38 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
         'scrollbarSlider.activeBackground': '#555555',
       }
     });
-    monaco.editor.setTheme('vercel-dark');
+
+    // Vercel Light
+    monaco.editor.defineTheme('vercel-light', {
+      base: 'vs',
+      inherit: true,
+      rules: [
+        { token: 'string.key.json', foreground: '555555' }, // Keys (Dark Gray)
+        { token: 'string.value.json', foreground: '16A34A' }, // Strings (Green 600)
+        { token: 'number', foreground: 'EA580C' }, // Numbers (Orange 600)
+        { token: 'keyword.json', foreground: '9333EA' }, // Booleans/Null (Purple 600)
+        { token: 'delimiter', foreground: '999999' }, // Brackets/Commas
+      ],
+      colors: {
+        'editor.background': '#ffffff',
+        'editor.foreground': '#000000',
+        'editor.lineHighlightBackground': '#f5f5f5',
+        'editorCursor.foreground': '#000000',
+        'editor.selectionBackground': '#eeeeee',
+        'editorLineNumber.foreground': '#cccccc',
+        'editorLineNumber.activeForeground': '#666666',
+        'scrollbarSlider.background': '#eaeaea',
+        'scrollbarSlider.hoverBackground': '#d4d4d4',
+        'scrollbarSlider.activeBackground': '#a3a3a3',
+      }
+    });
+  }
+
+  const handleEditorDidMount: OnMount = (editor, monaco) => {
+    editorRef.current = editor;
+    
+    defineThemes(monaco);
+    monaco.editor.setTheme(theme === 'dark' ? 'vercel-dark' : 'vercel-light');
     
     // Trigger re-render to apply decorations if needed
     setIsEditorReady(true);
@@ -56,6 +92,20 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
       onReady();
     }
   };
+
+  // Watch for theme changes
+  useEffect(() => {
+    if (editorRef.current && isEditorReady) {
+      // We don't have direct access to monaco instance here easily without window or context,
+      // but editor.updateOptions isn't for themes. 
+      // We can use the global monaco object if available, or just rely on the editor instance method if valid.
+      // However, safest way in @monaco-editor/react is usually re-calling setTheme via the monaco instance passed in onMount.
+      // Since we don't store monaco instance, let's use the window.monaco global which exists when loader is used.
+      if (window.monaco) {
+        window.monaco.editor.setTheme(theme === 'dark' ? 'vercel-dark' : 'vercel-light');
+      }
+    }
+  }, [theme, isEditorReady]);
 
   // Search highlighting effect
   useEffect(() => {
@@ -134,7 +184,7 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
           insertSpaces: typeof indentation === 'number',
           detectIndentation: false,
         }}
-        theme="vs-dark" // Fallback, we set custom theme on mount
+        theme="vs-dark" // Initial fallback
       />
       
       {/* Visual Error Indicator Overlay */}

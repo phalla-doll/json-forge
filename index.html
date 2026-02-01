@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -38,8 +38,39 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        /* Light Mode Defaults */
+        --bg-background: #ffffff;
+        --accents-1: #fafafa;
+        --accents-2: #eaeaea;
+        --accents-3: #999999;
+        --accents-4: #888888;
+        --accents-5: #666666;
+        --accents-6: #444444;
+        --accents-7: #333333;
+        --accents-8: #000000;
+        --color-success: #0070f3;
+        --color-error: #ee0000;
+        --color-warning: #f5a623;
+      }
+
+      .dark {
+        /* Dark Mode Overrides */
+        --bg-background: #000000;
+        --accents-1: #111111;
+        --accents-2: #333333;
+        --accents-3: #444444;
+        --accents-4: #666666;
+        --accents-5: #888888;
+        --accents-6: #999999;
+        --accents-7: #eaeaea;
+        --accents-8: #fafafa;
+      }
+    </style>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -47,21 +78,20 @@
               mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
             },
             colors: {
-              // Vercel-inspired palette
-              background: '#000000',
+              background: 'var(--bg-background)',
               accents: {
-                1: '#111111',
-                2: '#333333',
-                3: '#444444',
-                4: '#666666',
-                5: '#888888',
-                6: '#999999',
-                7: '#eaeaea',
-                8: '#fafafa',
+                1: 'var(--accents-1)',
+                2: 'var(--accents-2)',
+                3: 'var(--accents-3)',
+                4: 'var(--accents-4)',
+                5: 'var(--accents-5)',
+                6: 'var(--accents-6)',
+                7: 'var(--accents-7)',
+                8: 'var(--accents-8)',
               },
-              success: '#0070f3', // Vercel Blue for success/brand
-              error: '#ee0000',
-              warning: '#f5a623',
+              success: 'var(--color-success)',
+              error: 'var(--color-error)',
+              warning: 'var(--color-warning)',
             }
           },
         },
@@ -87,15 +117,15 @@
         height: 10px;
       }
       ::-webkit-scrollbar-track {
-        background: #000;
+        background: var(--bg-background);
       }
       ::-webkit-scrollbar-thumb {
-        background: #333;
+        background: var(--accents-2);
         border-radius: 5px;
-        border: 2px solid #000;
+        border: 2px solid var(--bg-background);
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #444;
+        background: var(--accents-3);
       }
 
       /* ASCII Loader Styles */
@@ -139,7 +169,7 @@
       }
     </style>
   </head>
-  <body class="bg-background text-accents-8 h-[100dvh] overflow-hidden antialiased selection:bg-success selection:text-white">
+  <body class="bg-background text-accents-8 h-[100dvh] overflow-hidden antialiased selection:bg-success selection:text-white transition-colors duration-300">
     <div id="root">
       <div class="loader-container">
         <div class="loader-content">

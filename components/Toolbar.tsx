@@ -48,7 +48,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   };
 
   return (
-    <div className="h-14 flex items-center justify-between px-4 bg-background border-b border-accents-2 shrink-0 overflow-x-auto scrollbar-hide">
+    <div className="h-14 flex items-center justify-between px-4 bg-background border-b border-accents-2 shrink-0 overflow-x-auto scrollbar-hide transition-colors duration-300">
       <div className="flex items-center gap-2 min-w-max">
         <div className="flex items-center gap-1 pr-3 border-r border-accents-2">
           {/* Indentation Selector */}
@@ -59,7 +59,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                     const val = e.target.value;
                     onIndentChange(val === 'tab' ? '\t' : Number(val));
                 }}
-                className="appearance-none bg-black border border-accents-2 text-accents-5 text-xs py-1.5 pl-3 pr-6 md:pr-8 rounded-md hover:border-accents-5 focus:outline-none focus:ring-2 focus:ring-accents-5 transition-all cursor-pointer font-medium"
+                className="appearance-none bg-background border border-accents-2 text-accents-5 text-xs py-1.5 pl-3 pr-6 md:pr-8 rounded-md hover:border-accents-5 focus:outline-none focus:ring-2 focus:ring-accents-5 transition-all cursor-pointer font-medium"
             >
                 <option value="2">2 Sp</option>
                 <option value="4">4 Sp</option>
@@ -85,7 +85,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 placeholder="Search..." 
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="bg-black border border-accents-2 rounded-md pl-8 pr-3 py-1.5 text-xs text-accents-8 placeholder:text-accents-4 focus:outline-none focus:ring-2 focus:ring-accents-5 focus:border-transparent w-32 focus:w-48 lg:focus:w-64 transition-all"
+                className="bg-background border border-accents-2 rounded-md pl-8 pr-3 py-1.5 text-xs text-accents-8 placeholder:text-accents-4 focus:outline-none focus:ring-2 focus:ring-accents-5 focus:border-transparent w-32 focus:w-48 lg:focus:w-64 transition-all"
               />
             </div>
         </div>
