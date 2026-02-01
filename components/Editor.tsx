@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import Editor, { OnMount } from "@monaco-editor/react";
 
 interface EditorProps {
@@ -7,14 +7,20 @@ interface EditorProps {
   error: string | null;
   indentation: number | string;
   onReady?: () => void;
+  searchTerm?: string;
 }
 
-export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, indentation, onReady }) => {
+export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, indentation, onReady, searchTerm }) => {
+  const editorRef = useRef<any>(null);
+  const decorationsRef = useRef<string[]>([]);
+
   const handleEditorChange = (value: string | undefined) => {
     onChange(value || "");
   };
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
+    editorRef.current = editor;
+    
     // Define a custom Vercel-like theme with consistent colors to Graph View
     monaco.editor.defineTheme('vercel-dark', {
       base: 'vs-dark',
@@ -46,6 +52,46 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
       onReady();
     }
   };
+
+  // Search highlighting effect
+  useEffect(() => {
+    if (!editorRef.current) return;
+    
+    const editor = editorRef.current;
+    const model = editor.getModel();
+    
+    if (!model) return;
+
+    // Clear previous decorations
+    if (!searchTerm) {
+      decorationsRef.current = editor.deltaDecorations(decorationsRef.current, []);
+      return;
+    }
+
+    // Find matches
+    // findMatches(searchString, searchOnlyEditableRange, isRegex, matchCase, wordSeparators, captureMatches)
+    const matches = model.findMatches(searchTerm, false, false, false, null, true);
+    
+    // Create new decorations
+    const newDecorations = matches.map((match: any) => ({
+      range: match.range,
+      options: {
+        isWholeLine: false,
+        className: 'editor-match-highlight',
+        overviewRuler: {
+          color: 'rgba(234, 179, 8, 0.8)',
+          position: 4 // OverviewRulerLane.Full
+        }
+      }
+    }));
+
+    // Apply decorations
+    decorationsRef.current = editor.deltaDecorations(decorationsRef.current, newDecorations);
+
+    // Optional: Scroll to first match if desired, but user might be typing, so auto-scroll can be annoying.
+    // We'll leave auto-scroll out for now to avoid jumping.
+
+  }, [searchTerm, value]); // Re-run when searchTerm or value changes
 
   return (
     <div className="relative flex-1 w-full h-full group overflow-hidden">

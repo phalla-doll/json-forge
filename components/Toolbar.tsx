@@ -6,7 +6,8 @@ import {
   Download, 
   Upload, 
   Trash2,
-  ChevronDown
+  ChevronDown,
+  Search
 } from 'lucide-react';
 import { Button } from './Button';
 
@@ -20,6 +21,8 @@ interface ToolbarProps {
   hasContent: boolean;
   indentation: number | string;
   onIndentChange: (value: number | string) => void;
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -31,7 +34,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onUpload,
   hasContent,
   indentation,
-  onIndentChange
+  onIndentChange,
+  searchTerm,
+  onSearchChange
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -69,6 +74,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <Button size="sm" onClick={onMinify} disabled={!hasContent} icon={<Minimize2 className="w-3.5 h-3.5"/>}>
             <span className="hidden sm:inline">Minify</span>
           </Button>
+        </div>
+
+        <div className="flex items-center gap-2 pl-1 pr-3 border-r border-accents-2">
+            {/* Search Bar */}
+            <div className="relative group">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-accents-5 group-focus-within:text-accents-8 transition-colors" />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="bg-black border border-accents-2 rounded-md pl-8 pr-3 py-1.5 text-xs text-accents-8 placeholder:text-accents-4 focus:outline-none focus:ring-2 focus:ring-accents-5 focus:border-transparent w-32 focus:w-48 lg:focus:w-64 transition-all"
+              />
+            </div>
         </div>
 
         <div className="flex items-center gap-1 pl-1">

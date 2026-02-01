@@ -124,12 +124,15 @@ const App: React.FC = () => {
   // This prevents the app from freezing on every keystroke with large files
   const [debouncedInput, setDebouncedInput] = useState<string>(jsonInput);
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [viewMode, setViewMode] = useState<'code' | 'graph'>('code');
   const [isEditorReady, setIsEditorReady] = useState(false);
 
-  // Debounce effect
+  // Debounce input effect
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedInput(jsonInput);
@@ -139,6 +142,17 @@ const App: React.FC = () => {
       clearTimeout(handler);
     };
   }, [jsonInput]);
+
+  // Debounce search effect (shorter delay)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
 
   // Calculate stats based on the debounced input to save performance
   const stats = getStats(debouncedInput);
@@ -379,6 +393,8 @@ const App: React.FC = () => {
             hasContent={jsonInput.length > 0}
             indentation={indentation}
             onIndentChange={handleIndentChange}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
           />
           
           <div className="flex-1 relative min-h-0">
@@ -390,10 +406,14 @@ const App: React.FC = () => {
                    error={error} 
                    indentation={indentation}
                    onReady={handleEditorReady}
+                   searchTerm={debouncedSearchTerm}
                  />
                ) : (
                  // Graph View uses debounced input to prevent lag
-                 <JsonGraphView value={debouncedInput} />
+                 <JsonGraphView 
+                   value={debouncedInput} 
+                   searchTerm={debouncedSearchTerm}
+                 />
                )}
              </div>
           </div>

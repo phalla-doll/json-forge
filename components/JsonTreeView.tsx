@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, createContext, useContext, useMemo, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, createContext, useContext, useMemo, useLayoutEffect, useCallback } from 'react';
 import { 
   ChevronRight, 
   Box, 
@@ -19,6 +19,7 @@ import { trackEvent } from '../lib/utils';
 
 interface JsonGraphViewProps {
   value: string;
+  searchTerm?: string;
 }
 
 type DataType = 'string' | 'number' | 'boolean' | 'object' | 'array' | 'null';
@@ -46,12 +47,16 @@ interface GraphContextType {
   hideTooltip: () => void;
   // State to broadcast expand/collapse to all nodes
   globalAction: { type: GlobalActionType; id: number };
+  searchTerm: string;
+  focusNode: (rect: DOMRect) => void;
 }
 
 const GraphContext = createContext<GraphContextType>({ 
   showTooltip: () => {}, 
   hideTooltip: () => {},
-  globalAction: { type: 'idle', id: 0 }
+  globalAction: { type: 'idle', id: 0 },
+  searchTerm: '',
+  focusNode: () => {}
 });
 
 // Helper to generate safe property paths
@@ -83,7 +88,23 @@ const GraphNode: React.FC<{
   const type = getDataType(value);
   const isExpandable = type === 'object' || type === 'array';
   
-  const { showTooltip, hideTooltip, globalAction } = useContext(GraphContext);
+  const { showTooltip, hideTooltip, globalAction, searchTerm, focusNode } = useContext(GraphContext);
+
+  // Search Logic
+  const isMatch = useMemo(() => {
+    if (!searchTerm) return false;
+    const term = searchTerm.toLowerCase();
+    
+    // Check key/name
+    if (name && name.toLowerCase().includes(term)) return true;
+    
+    // Check primitive value
+    if (!isExpandable && value !== null) {
+      if (String(value).toLowerCase().includes(term)) return true;
+    }
+    
+    return false;
+  }, [searchTerm, name, value, isExpandable]);
 
   const [isExpanded, setIsExpanded] = useState<boolean>(() => {
     // Always expand root
@@ -129,6 +150,13 @@ const GraphNode: React.FC<{
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsExpanded(!isExpanded);
+  };
+  
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (nodeRef.current) {
+      focusNode(nodeRef.current.getBoundingClientRect());
+    }
   };
   
   const handleLoadMore = (e: React.MouseEvent) => {
@@ -181,9 +209,10 @@ const GraphNode: React.FC<{
           className={`
             flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm transition-all duration-200
             ${isExpandable ? 'cursor-pointer hover:border-accents-4' : ''}
-            bg-accents-1 border-accents-2 hover:bg-accents-2
+            ${isMatch ? 'bg-yellow-900/30 border-yellow-500/50' : 'bg-accents-1 border-accents-2 hover:bg-accents-2'}
           `}
           onClick={isExpandable ? handleToggle : undefined}
+          onDoubleClick={handleDoubleClick}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
@@ -337,12 +366,20 @@ const Tooltip: React.FC<TooltipProps> = ({ data, onMouseEnter, onMouseLeave }) =
   );
 };
 
-export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
+export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm = '' }) => {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 40, y: 40 });
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const [globalAction, setGlobalAction] = useState<{ type: GlobalActionType; id: number }>({ type: 'idle', id: 0 });
   
+  // Refs for tracking state without re-triggering memoized callbacks
+  const scaleRef = useRef(1);
+  const positionRef = useRef({ x: 40, y: 40 });
+  
+  // Sync refs
+  useEffect(() => { scaleRef.current = scale; }, [scale]);
+  useEffect(() => { positionRef.current = position; }, [position]);
+
   const isPanningRef = useRef(false);
   const isWheelingRef = useRef(false);
   const wheelTimeoutRef = useRef<any>(null);
@@ -384,6 +421,40 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
   // Created fresh whenever graphKey changes.
   const expansionConfig = useMemo(() => ({ budget: 50 }), [graphKey]);
 
+  const focusNode = useCallback((nodeRect: DOMRect) => {
+    if (!containerRef.current) return;
+    
+    const currentScale = scaleRef.current;
+    const currentPos = positionRef.current;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    
+    // Determine content offset relative to viewport
+    const contentScreenLeft = containerRect.left + currentPos.x;
+    const contentScreenTop = containerRect.top + currentPos.y;
+
+    // Node center in Viewport
+    const nodeCenterX = nodeRect.left + nodeRect.width / 2;
+    const nodeCenterY = nodeRect.top + nodeRect.height / 2;
+
+    // Node center relative to Content Origin (Unscaled)
+    const nodeUnscaledX = (nodeCenterX - contentScreenLeft) / currentScale;
+    const nodeUnscaledY = (nodeCenterY - contentScreenTop) / currentScale;
+
+    // Calculate Target Scale (Zoom in if far out, otherwise minor zoom or maintain)
+    let targetScale = currentScale < 1 ? 1 : Math.min(currentScale + 0.5, 3);
+    
+    // Calculate new Position to center the node
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
+    
+    const newX = (containerWidth / 2) - (nodeUnscaledX * targetScale);
+    const newY = (containerHeight / 2) - (nodeUnscaledY * targetScale);
+    
+    trackEvent('graph_node_double_click_zoom');
+    setScale(targetScale);
+    setPosition({ x: newX, y: newY });
+  }, []);
+
   // Context value should be stable
   const contextValue = useMemo(() => ({
     showTooltip: (d: TooltipData) => {
@@ -397,8 +468,10 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value }) => {
         setTooltipData(null);
       }, 300);
     },
-    globalAction
-  }), [globalAction]);
+    globalAction,
+    searchTerm,
+    focusNode
+  }), [globalAction, searchTerm, focusNode]);
 
   const handleTooltipMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
