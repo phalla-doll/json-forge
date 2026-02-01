@@ -670,7 +670,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
     <GraphContext.Provider value={contextValue}>
       <div className="relative w-full h-full overflow-hidden bg-background select-none transition-colors duration-300">
         {/* Controls */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 bg-accents-1 border border-accents-2 p-1 rounded-lg shadow-xl">
+        <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 bg-accents-1/95 border border-accents-2 p-1 rounded-lg shadow-2xl backdrop-blur-md">
           <button onClick={handleZoomIn} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Zoom In">
             <ZoomIn size={16} />
           </button>
