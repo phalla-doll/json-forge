@@ -97,11 +97,6 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
   // Watch for theme changes
   useEffect(() => {
     if (editorRef.current && isEditorReady) {
-      // We don't have direct access to monaco instance here easily without window or context,
-      // but editor.updateOptions isn't for themes. 
-      // We can use the global monaco object if available, or just rely on the editor instance method if valid.
-      // However, safest way in @monaco-editor/react is usually re-calling setTheme via the monaco instance passed in onMount.
-      // Since we don't store monaco instance, let's use the window.monaco global which exists when loader is used.
       if (window.monaco) {
         window.monaco.editor.setTheme(theme === 'dark' ? 'vercel-dark' : 'vercel-light');
       }
@@ -125,7 +120,6 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
     }
 
     // Find matches
-    // findMatches(searchString, searchOnlyEditableRange, isRegex, matchCase, wordSeparators, captureMatches)
     const matches = model.findMatches(searchTerm, false, false, false, null, true);
     
     if (onMatchCountChange) {
@@ -148,7 +142,7 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
     // Apply decorations
     decorationsRef.current = editor.deltaDecorations(decorationsRef.current, newDecorations);
 
-  }, [searchTerm, value, isEditorReady, onMatchCountChange]); // Re-run when searchTerm, value, or ready state changes
+  }, [searchTerm, value, isEditorReady, onMatchCountChange]);
 
   return (
     <div className="relative flex-1 w-full h-full group overflow-hidden">
@@ -158,8 +152,6 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
         value={value}
         onChange={handleEditorChange}
         onMount={handleEditorDidMount}
-        // Use an empty div for loading to prevent the default "Loading..." text
-        // The Loader component in App.tsx handles the visual loading state
         loading={<div className="w-full h-full bg-background" />}
         options={{
           minimap: { enabled: false },
@@ -193,6 +185,16 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
         theme="vs-dark" // Initial fallback
       />
       
+      {/* Empty State */}
+      {!value && (
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div className="text-accents-3 text-sm font-mono flex flex-col items-center gap-2 opacity-60">
+                <span className="text-4xl opacity-20">{'{ }'}</span>
+                <span>Paste JSON here, load a file, or drag & drop</span>
+            </div>
+        </div>
+      )}
+
       {/* Visual Error Indicator Overlay */}
       {error && (
         <div className="absolute bottom-6 left-0 right-0 px-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:max-w-lg w-full animate-in slide-in-from-bottom-2 fade-in duration-200 z-10 flex justify-center pointer-events-none">

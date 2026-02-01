@@ -558,6 +558,39 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
     isPanningRef.current = false;
   };
 
+  // Keyboard Handlers
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const panStep = 40;
+    
+    switch (e.key) {
+      case 'ArrowUp':
+        setPosition(prev => ({ ...prev, y: prev.y + panStep }));
+        break;
+      case 'ArrowDown':
+        setPosition(prev => ({ ...prev, y: prev.y - panStep }));
+        break;
+      case 'ArrowLeft':
+        setPosition(prev => ({ ...prev, x: prev.x + panStep }));
+        break;
+      case 'ArrowRight':
+        setPosition(prev => ({ ...prev, x: prev.x - panStep }));
+        break;
+      case '+':
+      case '=':
+        handleZoomIn();
+        break;
+      case '-':
+        handleZoomOut();
+        break;
+      case '0':
+        handleReset();
+        break;
+      default:
+        return; // Let other keys propagate
+    }
+    e.preventDefault(); // Prevent scroll if we handled it
+  };
+
   // Touch Handlers for Mobile Panning
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
@@ -668,16 +701,16 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
 
   return (
     <GraphContext.Provider value={contextValue}>
-      <div className="relative w-full h-full overflow-hidden bg-background select-none transition-colors duration-300">
+      <div className="relative w-full h-full overflow-hidden bg-background select-none transition-colors duration-300 focus:outline-none" tabIndex={0} onKeyDown={handleKeyDown}>
         {/* Controls */}
         <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 bg-accents-1/95 border border-accents-2 p-1 rounded-lg shadow-2xl backdrop-blur-md">
-          <button onClick={handleZoomIn} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Zoom In">
+          <button onClick={handleZoomIn} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Zoom In (+)">
             <ZoomIn size={16} />
           </button>
-          <button onClick={handleZoomOut} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Zoom Out">
+          <button onClick={handleZoomOut} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Zoom Out (-)">
             <ZoomOut size={16} />
           </button>
-          <button onClick={handleReset} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Reset Scale (100%)">
+          <button onClick={handleReset} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Reset Scale (0)">
             <RotateCcw size={16} />
           </button>
           <button onClick={handleFitScreen} className="p-2 hover:bg-accents-3 rounded text-accents-5 hover:text-accents-8" title="Fit to Screen">

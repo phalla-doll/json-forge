@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Braces, Github, Code, GitGraph, Table, Sun, Moon } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { Braces, Github, Code, GitGraph, Table, Sun, Moon, UploadCloud } from 'lucide-react';
 import { Toolbar } from './components/Toolbar';
 import { JsonEditor } from './components/Editor';
 import { JsonGraphView } from './components/JsonTreeView';
@@ -137,6 +137,8 @@ const App: React.FC = () => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [viewMode, setViewMode] = useState<'code' | 'graph' | 'table'>('code');
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounter = useRef(0);
 
   // Initialize Theme
   useEffect(() => {
@@ -326,7 +328,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleUpload = (file: File) => {
+  const handleUpload = useCallback((file: File) => {
     trackEvent('click_import', { file_type: file.type, size: file.size });
     
     if (!file.name.toLowerCase().endsWith('.json') && file.type !== 'application/json') {
@@ -352,13 +354,54 @@ const App: React.FC = () => {
       addToast('error', 'Failed to read file');
     };
     reader.readAsText(file);
+  }, [addToast]);
+
+  // Drag and Drop Handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current += 1;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounter.current = 0;
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleUpload(e.dataTransfer.files[0]);
+    }
   };
 
   return (
     <>
       {!isEditorReady && <Loader />}
       
-      <div className={`flex flex-col h-[100dvh] bg-background text-accents-8 font-sans selection:bg-accents-2 transition-opacity duration-700 ${isEditorReady ? 'opacity-100' : 'opacity-0'}`}>
+      <div 
+        className={`flex flex-col h-[100dvh] bg-background text-accents-8 font-sans selection:bg-accents-2 transition-opacity duration-700 ${isEditorReady ? 'opacity-100' : 'opacity-0'}`}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
         <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-accents-2 bg-background/50 backdrop-blur-md z-20 shrink-0 transition-colors duration-300">
           <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
             <div className="bg-green-600 text-white p-1.5 rounded-md shadow-sm shrink-0">
@@ -452,39 +495,52 @@ const App: React.FC = () => {
             hasMatches={searchMatchCount === null ? null : searchMatchCount > 0}
           />
           
+          {/* View Container: Using display styling for persistence instead of conditional rendering */}
           <div className="flex-1 relative min-h-0">
-             <div className="absolute inset-0">
-               {viewMode === 'code' ? (
-                 <JsonEditor 
-                   value={jsonInput} 
-                   onChange={handleInputChange} 
-                   error={error} 
-                   indentation={indentation}
-                   onReady={handleEditorReady}
-                   searchTerm={debouncedSearchTerm}
-                   theme={theme}
-                   onMatchCountChange={setSearchMatchCount}
-                 />
-               ) : viewMode === 'graph' ? (
-                 <JsonGraphView 
-                   value={debouncedInput} 
-                   searchTerm={debouncedSearchTerm}
-                   searchTrigger={searchTrigger}
-                   onMatchCountChange={setSearchMatchCount}
-                 />
-               ) : (
-                 <JsonTableView 
-                   value={debouncedInput} 
-                   searchTerm={debouncedSearchTerm}
-                 />
-               )}
-             </div>
+            {/* Drag Overlay */}
+            {isDragging && (
+              <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center border-2 border-dashed border-accents-5 m-4 rounded-xl animate-in fade-in duration-200 pointer-events-none">
+                <div className="bg-accents-1 p-6 rounded-full mb-4">
+                  <UploadCloud className="w-12 h-12 text-accents-8" />
+                </div>
+                <h3 className="text-xl font-bold text-accents-8 mb-2">Drop JSON file here</h3>
+                <p className="text-accents-5">Release to load content</p>
+              </div>
+            )}
+
+            <div className={`absolute inset-0 ${viewMode === 'code' ? 'block' : 'hidden'}`}>
+              <JsonEditor 
+                value={jsonInput} 
+                onChange={handleInputChange} 
+                error={error} 
+                indentation={indentation}
+                onReady={handleEditorReady}
+                searchTerm={debouncedSearchTerm}
+                theme={theme}
+                onMatchCountChange={setSearchMatchCount}
+              />
+            </div>
+            <div className={`absolute inset-0 ${viewMode === 'graph' ? 'block' : 'hidden'}`}>
+              <JsonGraphView 
+                value={debouncedInput} 
+                searchTerm={debouncedSearchTerm}
+                searchTrigger={searchTrigger}
+                onMatchCountChange={setSearchMatchCount}
+              />
+            </div>
+            <div className={`absolute inset-0 ${viewMode === 'table' ? 'block' : 'hidden'}`}>
+              <JsonTableView 
+                value={debouncedInput} 
+                searchTerm={debouncedSearchTerm}
+              />
+            </div>
           </div>
         </main>
         
         <StatusBar stats={stats} error={error} />
 
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 flex flex-col gap-2 z-50 pointer-events-none items-center md:items-end">
+        {/* Toasts - Positioned higher to avoid blocking horizontal scrollbars */}
+        <div className="fixed bottom-12 left-4 right-4 md:left-auto md:right-6 md:bottom-14 flex flex-col gap-2 z-50 pointer-events-none items-center md:items-end">
           <div className="pointer-events-auto flex flex-col gap-3 w-full max-w-sm">
             {toasts.map(toast => (
               <Toast key={toast.id} toast={toast} onClose={removeToast} />
