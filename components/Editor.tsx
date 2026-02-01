@@ -15,9 +15,10 @@ interface EditorProps {
   onReady?: () => void;
   searchTerm?: string;
   theme?: 'light' | 'dark';
+  onMatchCountChange?: (count: number | null) => void;
 }
 
-export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, indentation, onReady, searchTerm, theme = 'dark' }) => {
+export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, indentation, onReady, searchTerm, theme = 'dark', onMatchCountChange }) => {
   const editorRef = useRef<any>(null);
   const decorationsRef = useRef<string[]>([]);
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -119,6 +120,7 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
     // Clear previous decorations
     if (!searchTerm) {
       decorationsRef.current = editor.deltaDecorations(decorationsRef.current, []);
+      onMatchCountChange?.(null);
       return;
     }
 
@@ -126,6 +128,10 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
     // findMatches(searchString, searchOnlyEditableRange, isRegex, matchCase, wordSeparators, captureMatches)
     const matches = model.findMatches(searchTerm, false, false, false, null, true);
     
+    if (onMatchCountChange) {
+      onMatchCountChange(matches.length);
+    }
+
     // Create new decorations
     const newDecorations = matches.map((match: any) => ({
       range: match.range,
@@ -142,7 +148,7 @@ export const JsonEditor: React.FC<EditorProps> = ({ value, onChange, error, inde
     // Apply decorations
     decorationsRef.current = editor.deltaDecorations(decorationsRef.current, newDecorations);
 
-  }, [searchTerm, value, isEditorReady]); // Re-run when searchTerm, value, or ready state changes
+  }, [searchTerm, value, isEditorReady, onMatchCountChange]); // Re-run when searchTerm, value, or ready state changes
 
   return (
     <div className="relative flex-1 w-full h-full group overflow-hidden">

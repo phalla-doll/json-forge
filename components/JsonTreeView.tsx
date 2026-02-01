@@ -20,6 +20,8 @@ import { trackEvent } from '../lib/utils';
 interface JsonGraphViewProps {
   value: string;
   searchTerm?: string;
+  searchTrigger?: number;
+  onMatchCountChange?: (count: number | null) => void;
 }
 
 type DataType = 'string' | 'number' | 'boolean' | 'object' | 'array' | 'null';
@@ -210,7 +212,7 @@ const GraphNode: React.FC<{
           className={`
             flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm transition-all duration-200
             ${isExpandable ? 'cursor-pointer hover:border-accents-4' : ''}
-            ${isMatch ? 'bg-yellow-900/30 border-yellow-500/50' : 'bg-accents-1 border-accents-2 hover:bg-accents-2'}
+            ${isMatch ? 'bg-yellow-900/30 border-yellow-500/50 graph-search-match' : 'bg-accents-1 border-accents-2 hover:bg-accents-2'}
           `}
           onClick={isExpandable ? handleToggle : undefined}
           onDoubleClick={handleDoubleClick}
@@ -367,7 +369,7 @@ const Tooltip: React.FC<TooltipProps> = ({ data, onMouseEnter, onMouseLeave }) =
   );
 };
 
-export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm = '' }) => {
+export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm = '', searchTrigger = 0, onMatchCountChange }) => {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 40, y: 40 });
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
@@ -377,6 +379,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
   const scaleRef = useRef(1);
   const positionRef = useRef({ x: 40, y: 40 });
   const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
+  const matchIndexRef = useRef(0);
   
   // Sync refs
   useEffect(() => { scaleRef.current = scale; }, [scale]);
@@ -452,10 +455,45 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
     const newX = (containerWidth / 2) - (nodeUnscaledX * targetScale);
     const newY = (containerHeight / 2) - (nodeUnscaledY * targetScale);
     
-    trackEvent('graph_node_double_click_zoom');
+    // Don't track event here if it's programmatic, but we use same function
     setScale(targetScale);
     setPosition({ x: newX, y: newY });
   }, []);
+
+  const findAndFocusMatch = useCallback((index: number) => {
+     if (!containerRef.current) return;
+     const matches = containerRef.current.querySelectorAll('.graph-search-match');
+     
+     onMatchCountChange?.(matches.length);
+
+     if (matches.length === 0) return;
+     
+     const safeIndex = index % matches.length;
+     matchIndexRef.current = safeIndex;
+     
+     const target = matches[safeIndex];
+     // Use focusNode
+     focusNode(target.getBoundingClientRect());
+  }, [focusNode, onMatchCountChange]);
+
+  // Search Logic: Reset when term changes
+  useEffect(() => {
+    if (searchTerm) {
+      matchIndexRef.current = 0;
+      // Allow render to settle
+      setTimeout(() => findAndFocusMatch(0), 100); 
+    } else {
+        onMatchCountChange?.(null);
+    }
+  }, [searchTerm, findAndFocusMatch, onMatchCountChange]);
+
+  // Search Logic: Next on trigger
+  useEffect(() => {
+    if (searchTerm && searchTrigger > 0) {
+      const next = matchIndexRef.current + 1;
+      findAndFocusMatch(next);
+    }
+  }, [searchTrigger, searchTerm, findAndFocusMatch]);
 
   // Context value should be stable
   const contextValue = useMemo(() => ({

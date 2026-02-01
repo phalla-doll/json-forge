@@ -129,6 +129,8 @@ const App: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [searchTrigger, setSearchTrigger] = useState(0);
+  const [searchMatchCount, setSearchMatchCount] = useState<number | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -171,6 +173,16 @@ const App: React.FC = () => {
       clearTimeout(handler);
     };
   }, [searchTerm]);
+
+  // Reset match count when search term changes immediately to avoid flash of error state
+  useEffect(() => {
+    setSearchMatchCount(null);
+  }, [searchTerm]);
+
+  // Reset match count when view changes
+  useEffect(() => {
+    setSearchMatchCount(null);
+  }, [viewMode]);
 
   // Calculate stats based on the debounced input to save performance
   const stats = getStats(debouncedInput);
@@ -421,6 +433,8 @@ const App: React.FC = () => {
             onIndentChange={handleIndentChange}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
+            onSearchEnter={() => setSearchTrigger(prev => prev + 1)}
+            hasMatches={searchMatchCount === null ? null : searchMatchCount > 0}
           />
           
           <div className="flex-1 relative min-h-0">
@@ -434,12 +448,15 @@ const App: React.FC = () => {
                    onReady={handleEditorReady}
                    searchTerm={debouncedSearchTerm}
                    theme={theme}
+                   onMatchCountChange={setSearchMatchCount}
                  />
                ) : (
                  // Graph View uses debounced input to prevent lag
                  <JsonGraphView 
                    value={debouncedInput} 
                    searchTerm={debouncedSearchTerm}
+                   searchTrigger={searchTrigger}
+                   onMatchCountChange={setSearchMatchCount}
                  />
                )}
              </div>
