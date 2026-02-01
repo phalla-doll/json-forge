@@ -352,14 +352,14 @@ const Tooltip: React.FC<TooltipProps> = ({ data, onMouseEnter, onMouseLeave }) =
       
       <div className="flex flex-col gap-1">
         <span className="text-accents-4 text-[10px] uppercase tracking-wider">Path</span>
-        <div className="text-success break-all bg-accents-2 p-1.5 rounded border border-accents-2/50 select-text cursor-text">
+        <div className="text-success break-all bg-background p-1.5 rounded border border-accents-2 select-text cursor-text">
             {data.path}
         </div>
       </div>
 
       <div className="flex flex-col gap-1">
         <span className="text-accents-4 text-[10px] uppercase tracking-wider">Value</span>
-        <div className="text-accents-7 max-h-48 overflow-y-auto break-words bg-accents-2 p-1.5 rounded border border-accents-2/50 whitespace-pre-wrap scrollbar-thin select-text cursor-text">
+        <div className="text-accents-7 max-h-48 overflow-y-auto break-words bg-background p-1.5 rounded border border-accents-2 whitespace-pre-wrap scrollbar-thin select-text cursor-text">
           {renderTooltipValue()}
         </div>
       </div>
