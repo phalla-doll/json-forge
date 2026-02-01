@@ -652,7 +652,7 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
 
   const handleExpandAll = () => {
     trackEvent('graph_expand_all');
-    if (expandableNodeCount > 5000) {
+    if (expandableNodeCount > 1000) {
       const confirmed = window.confirm(
         `This JSON contains ${expandableNodeCount} expandable nodes. Expanding all may significantly slow down or freeze your browser. Are you sure you want to continue?`
       );
@@ -745,4 +745,4 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
       </div>
     </GraphContext.Provider>
   );
-};
+}
