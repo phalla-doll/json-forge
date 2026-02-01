@@ -83,7 +83,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         <div className="flex items-center gap-2 pl-1 pr-3 border-r border-accents-2">
             {/* Search Bar */}
             <div className="relative group">
-              <Search className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 transition-colors ${hasMatches === false ? 'text-error' : 'text-accents-5 group-focus-within:text-accents-8'}`} />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-accents-5 transition-colors" />
               <input 
                 type="text" 
                 placeholder="Search..." 
