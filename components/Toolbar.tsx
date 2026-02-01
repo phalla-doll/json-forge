@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { 
-  Braces, 
+  Sparkles, 
   Minimize2, 
   Copy, 
   Download, 
@@ -72,7 +72,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <ChevronDown className="w-3.5 h-3.5 absolute right-1.5 md:right-2.5 top-1/2 -translate-y-1/2 text-accents-5 pointer-events-none group-hover:text-accents-8 transition-colors" />
           </div>
 
-          <Button size="sm" onClick={onFormat} disabled={!hasContent} icon={<Braces className="w-3.5 h-3.5"/>}>
+          <Button size="sm" onClick={onFormat} disabled={!hasContent} icon={<Sparkles className="w-3.5 h-3.5"/>}>
             <span className="hidden sm:inline">Prettify</span>
           </Button>
           <Button size="sm" onClick={onMinify} disabled={!hasContent} icon={<Minimize2 className="w-3.5 h-3.5"/>}>
