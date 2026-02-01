@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Braces, Github, Code, GitGraph, Sun, Moon } from 'lucide-react';
+import { Braces, Github, Code, GitGraph, Table, Sun, Moon } from 'lucide-react';
 import { Toolbar } from './components/Toolbar';
 import { JsonEditor } from './components/Editor';
 import { JsonGraphView } from './components/JsonTreeView';
+import { JsonTableView } from './components/JsonTableView';
 import { Toast } from './components/Toast';
 import { Loader } from './components/Loader';
 import { StatusBar } from './components/StatusBar';
@@ -123,7 +124,7 @@ const App: React.FC = () => {
   // jsonInput is the immediate value (for the Editor)
   const [jsonInput, setJsonInput] = useState<string>(JSON.stringify(INITIAL_DATA, null, 4));
   
-  // debouncedInput is the delayed value (for Graph, Stats, Validation)
+  // debouncedInput is the delayed value (for Graph, Stats, Validation, Table)
   // This prevents the app from freezing on every keystroke with large files
   const [debouncedInput, setDebouncedInput] = useState<string>(jsonInput);
 
@@ -134,7 +135,7 @@ const App: React.FC = () => {
 
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [viewMode, setViewMode] = useState<'code' | 'graph'>('code');
+  const [viewMode, setViewMode] = useState<'code' | 'graph' | 'table'>('code');
   const [isEditorReady, setIsEditorReady] = useState(false);
 
   // Initialize Theme
@@ -398,6 +399,20 @@ const App: React.FC = () => {
                 <GitGraph size={14} />
                 <span className="hidden sm:inline">Graph</span>
               </button>
+              <button
+                onClick={() => {
+                  setViewMode('table');
+                  trackEvent('switch_view', { mode: 'table' });
+                }}
+                className={`flex items-center gap-2 px-2 md:px-3 py-1 rounded text-xs font-medium transition-all ${
+                  viewMode === 'table' 
+                    ? 'bg-accents-8 text-background shadow-sm' 
+                    : 'text-accents-5 hover:text-accents-8'
+                }`}
+              >
+                <Table size={14} />
+                <span className="hidden sm:inline">Table</span>
+              </button>
             </div>
           </div>
           
@@ -450,13 +465,17 @@ const App: React.FC = () => {
                    theme={theme}
                    onMatchCountChange={setSearchMatchCount}
                  />
-               ) : (
-                 // Graph View uses debounced input to prevent lag
+               ) : viewMode === 'graph' ? (
                  <JsonGraphView 
                    value={debouncedInput} 
                    searchTerm={debouncedSearchTerm}
                    searchTrigger={searchTrigger}
                    onMatchCountChange={setSearchMatchCount}
+                 />
+               ) : (
+                 <JsonTableView 
+                   value={debouncedInput} 
+                   searchTerm={debouncedSearchTerm}
                  />
                )}
              </div>
