@@ -445,8 +445,8 @@ export const JsonGraphView: React.FC<JsonGraphViewProps> = ({ value, searchTerm 
     const nodeUnscaledX = (nodeCenterX - contentScreenLeft) / currentScale;
     const nodeUnscaledY = (nodeCenterY - contentScreenTop) / currentScale;
 
-    // Calculate Target Scale (Zoom in if far out, otherwise minor zoom or maintain)
-    let targetScale = currentScale < 1 ? 1 : Math.min(currentScale + 0.5, 3);
+    // Maintain current scale instead of zooming in
+    const targetScale = currentScale;
     
     // Calculate new Position to center the node
     const containerWidth = containerRect.width;
