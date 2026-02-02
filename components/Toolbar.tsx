@@ -100,7 +100,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           </Button>
         </div>
 
-        {/* GROUP 2: Search */}
+        {/* GROUP 3: Search */}
         <div className="flex items-center gap-2 pr-4 border-r border-accents-2">
             <div className="relative group">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-accents-5 transition-colors" />
@@ -116,7 +116,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                   }
                 }}
                 className={`
-                  bg-background border rounded-md pl-8 pr-3 py-1.5 text-xs text-accents-8 placeholder:text-accents-4 focus:outline-none w-32 focus:w-48 lg:focus:w-64 transition-all
+                  bg-background border rounded-md pl-8 pr-3 py-1.5 text-xs text-accents-8 placeholder:text-accents-4 focus:outline-none w-24 focus:w-48 lg:focus:w-64 transition-all
                   ${hasMatches === false 
                     ? 'border-error focus:border-error' 
                     : 'border-accents-2 focus:border-accents-5'}
@@ -125,7 +125,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             </div>
         </div>
 
-        {/* GROUP 3: File Ops */}
+        {/* GROUP 4: File Ops */}
         <div className="flex items-center gap-2">
           <input 
             type="file" 
@@ -143,7 +143,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </div>
       </div>
 
-      {/* GROUP 4: Actions */}
+      {/* GROUP 5: Actions */}
       <div className="flex items-center gap-2 ml-4 min-w-max">
         <Button size="sm" onClick={onClear} disabled={!hasContent} variant="ghost" className="text-accents-4 hover:text-error" icon={<Trash2 className="w-3.5 h-3.5"/>} title="Clear All">
           <span className="hidden sm:inline">Clear</span>

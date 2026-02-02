@@ -539,7 +539,7 @@ const App: React.FC = () => {
         
         <StatusBar stats={stats} error={error} />
 
-        {/* Toasts - Positioned higher to avoid blocking horizontal scrollbars */}
+        {/* Toasts */}
         <div className="fixed bottom-12 left-4 right-4 md:left-auto md:right-6 md:bottom-14 flex flex-col gap-2 z-50 pointer-events-none items-center md:items-end">
           <div className="pointer-events-auto flex flex-col gap-3 w-full max-w-sm">
             {toasts.map(toast => (
