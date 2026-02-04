@@ -413,7 +413,7 @@ const App: React.FC = () => {
             </div>
             <div className="h-6 w-px bg-accents-2 mx-1 md:mx-2 hidden md:block"></div>
 
-            <div className="flex items-center bg-accents-1 p-0.5 rounded-md border border-accents-2 ml-2 md:ml-0 shrink-0">
+            <div className="flex items-center bg-accents-1 p-0.5 rounded-md border border-accents-2 ml-2 md:ml-0 shrink-0 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => {
                   setViewMode('code');
