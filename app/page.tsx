@@ -63,7 +63,15 @@ const INITIAL_DATA = {
 type ViewMode = "code" | "graph" | "table";
 
 export default function Page() {
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const activeTheme = mounted ? resolvedTheme ?? theme : undefined;
+  const isDarkTheme = activeTheme === "dark";
 
   const [indentation, setIndentation] = useState<number | string>(4);
   const [jsonInput, setJsonInput] = useState<string>(
@@ -434,17 +442,28 @@ export default function Page() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            onClick={() => setTheme(isDarkTheme ? "light" : "dark")}
             aria-label={
-              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+              mounted
+                ? isDarkTheme
+                  ? "Switch to light mode"
+                  : "Switch to dark mode"
+                : "Toggle theme"
             }
             className="text-muted-foreground hover:text-foreground"
+            suppressHydrationWarning
           >
-            {theme === "dark" ? (
-              <HugeiconsIcon icon={Sun} className="size-4" />
-            ) : (
-              <HugeiconsIcon icon={Moon} className="size-4" />
-            )}
+            <span suppressHydrationWarning>
+              {mounted ? (
+                isDarkTheme ? (
+                  <HugeiconsIcon icon={Sun} className="size-4" />
+                ) : (
+                  <HugeiconsIcon icon={Moon} className="size-4" />
+                )
+              ) : (
+                <span className="block size-4" aria-hidden="true" />
+              )}
+            </span>
           </Button>
           <Button
             asChild
@@ -502,7 +521,7 @@ export default function Page() {
             error={error}
             indentation={indentation}
             searchTerm={debouncedSearchTerm}
-            theme={theme === "dark" ? "dark" : "light"}
+            theme={isDarkTheme ? "dark" : "light"}
             onMatchCountChange={setSearchMatchCount}
           />
         </div>
