@@ -1,4 +1,4 @@
-import { Inter, JetBrains_Mono } from "next/font/google"
+import { Inter, JetBrains_Mono, Geist } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+const geist = Geist({subsets:['latin'],variable:'--font-sans'})
 
 const jetbrainsMono = JetBrains_Mono({
     subsets: ["latin"],
@@ -29,10 +29,9 @@ export default function RootLayout({
             lang="en"
             suppressHydrationWarning
             className={cn(
-                "antialiased",
-                inter.variable,
-                jetbrainsMono.variable
-            )}
+                        "antialiased",
+                        jetbrainsMono.variable
+                    , "font-sans", geist.variable)}
         >
             <body className="h-dvh overflow-hidden">
                 <ThemeProvider
