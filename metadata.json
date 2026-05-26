@@ -1,5 +1,4 @@
 {
   "name": "JSON Forge",
-  "description": "A professional-grade JSON formatter, validator, and minifier with file handling and clipboard integration.",
-  "requestFramePermissions": []
+  "description": "A professional-grade JSON formatter, validator, and minifier with file handling and clipboard integration."
 }

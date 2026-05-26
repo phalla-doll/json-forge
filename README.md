@@ -39,10 +39,11 @@ JSON Forge is engineered to handle large datasets that crash typical web-based f
 
 ## 🛠 Tech Stack
 
-*   **Core**: React 18, TypeScript, Vite
-*   **Styling**: Tailwind CSS
+*   **Core**: React 19, TypeScript, Next.js (App Router)
+*   **UI**: shadcn/ui (Radix primitives), Tailwind CSS v4
 *   **Editor**: `@monaco-editor/react`
-*   **Icons**: `lucide-react`
+*   **Icons**: `@hugeicons/react`
+*   **AI**: `@google/genai` (Gemini)
 *   **State**: React Hooks (Context, Memo, UseState)
 
 ## 📦 Installation
@@ -57,34 +58,40 @@ To run JSON Forge locally:
 
 2.  **Install dependencies**
     ```bash
-    npm install
+    pnpm install
     ```
 
 3.  **Start the development server**
     ```bash
-    npm run dev
+    pnpm dev
     ```
 
 4.  **Build for production**
     ```bash
-    npm run build
+    pnpm build
     ```
 
 ## 📂 Project Structure
 
 ```
-src/
-├── components/         # UI Components
-│   ├── Editor.tsx      # Monaco Editor wrapper
-│   ├── JsonTreeView.tsx # The complex graph visualization logic
-│   ├── StatusBar.tsx   # Footer stats and validation
-│   ├── Toolbar.tsx     # Actions (Format, Minify, etc.)
-│   └── ...
-├── lib/
-│   └── utils.ts        # Helper functions (Stats, File I/O)
-├── types.ts            # TypeScript definitions
-├── App.tsx             # Main application layout and state
-└── index.tsx           # Entry point
+app/
+├── layout.tsx           # Root layout (ThemeProvider, Toaster, fonts)
+├── page.tsx             # Main application (client component)
+├── loading.tsx          # ASCII pre-React loader
+├── globals.css          # Tailwind + theme tokens
+└── api/ai/              # Server-side Gemini route handlers
+components/
+├── ui/                  # shadcn/ui primitives (Button, Dialog, etc.)
+├── json-editor.tsx      # Monaco Editor wrapper (dynamic import)
+├── json-tree-view.tsx   # Tree visualization
+├── json-table-view.tsx  # Table visualization
+├── toolbar.tsx          # Actions (Format, Minify, etc.)
+├── status-bar.tsx       # Footer stats and validation
+└── ...
+lib/
+├── ai.ts                # Gemini AI helpers
+└── utils.ts             # Helpers (cn, stats, file I/O)
+types.ts                 # TypeScript definitions
 ```
 
 ## 📄 License
