@@ -12,9 +12,9 @@
 | 5 — AI modal | ✅ Complete | shadcn `Dialog` + `Textarea`, generate + fix flows, `sonner` error surfacing, purple AI button |
 | 6 — Alternate views | ✅ Complete | `JsonTreeView` (780 LOC), `JsonTableView`, `JsonMermaidView` ported with shadcn tokens |
 | 7 — Polish + accessibility | ✅ Complete | All Blockers + Should-fixes from code review addressed; `pnpm build`, `pnpm typecheck`, `pnpm lint` all clean (0 errors, 0 warnings). Lighthouse + browser a11y audit still owed via manual QA. |
-| 8 — Promotion to root | ⬜ Pending | Side-by-side QA, `git mv` swap, Vercel config update — awaiting user go-ahead |
+| 8 — Promotion to root | ✅ Complete | Vite app archived to `.archive/`, v2 promoted to root via `git mv` (history preserved), `pnpm build/typecheck/lint` clean, dev port → 3000. Vercel framework preset update + `.archive/` deletion are follow-up tasks. |
 
-**Last updated:** Phase 7 complete. Pre-promotion review punch list resolved:
+**Last updated:** Phase 8 complete. Rebuild finished.
 - B1: Gemini moved behind `app/api/ai/{generate,fix}/route.ts`; client no longer holds the API key (renamed `NEXT_PUBLIC_GEMINI_API_KEY` → `GEMINI_API_KEY`).
 - B2/B3: tree-view render-phase mutation replaced with parent-precomputed `initiallyExpandedPaths` set; random `graphKey` replaced with `key={value}`.
 - B4: error state collapsed to derived `useMemo`; redundant `setError` calls removed.
