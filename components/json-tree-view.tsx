@@ -221,6 +221,9 @@ const GraphNode: React.FC<GraphNodeProps> = React.memo(function GraphNode({
   const [userExpanded, setUserExpanded] = useState<boolean>(initialExpanded);
   const [appliedActionId, setAppliedActionId] = useState(globalAction.id);
 
+  // Sync to a new global expand/collapse action by adjusting state during
+  // render — React's "store info from previous render" pattern. The
+  // conditional below converges in one re-render, so it cannot loop.
   let isExpanded = userExpanded;
   if (globalAction.id !== appliedActionId) {
     if (globalAction.type === "expand" && isExpandable) {
@@ -228,7 +231,7 @@ const GraphNode: React.FC<GraphNodeProps> = React.memo(function GraphNode({
     } else if (globalAction.type === "collapse" && depth !== 0) {
       isExpanded = false;
     }
-    setUserExpanded(isExpanded);
+    if (isExpanded !== userExpanded) setUserExpanded(isExpanded);
     setAppliedActionId(globalAction.id);
   }
 

@@ -208,6 +208,11 @@ export default function Page() {
       toast.error("Invalid file type. Only .json files are allowed.");
       return;
     }
+    const MAX_FILE_BYTES = 25 * 1024 * 1024;
+    if (file.size > MAX_FILE_BYTES) {
+      toast.error("File too large. Maximum size is 25 MB.");
+      return;
+    }
     if (file.size > 5 * 1024 * 1024) {
       toast.info("Large file detected. Graph view may be slow.");
     }
@@ -262,10 +267,20 @@ export default function Page() {
       const { result, remaining } = await generateJson(prompt);
       setAiRemaining(remaining);
       if (result) {
-        const formatted = JSON.stringify(JSON.parse(result), null, indentation);
-        setJsonInput(formatted);
-        setDebouncedInput(formatted);
-        toast.success("JSON generated successfully");
+        try {
+          const formatted = JSON.stringify(
+            JSON.parse(result),
+            null,
+            indentation,
+          );
+          setJsonInput(formatted);
+          setDebouncedInput(formatted);
+          toast.success("JSON generated successfully");
+        } catch {
+          setJsonInput(result);
+          setDebouncedInput(result);
+          toast.warning("Generated output wasn't valid JSON — loaded as-is.");
+        }
       }
     } catch (err) {
       toast.error(
@@ -285,10 +300,18 @@ export default function Page() {
       const { result, remaining } = await fixJson(jsonInput, error);
       setAiRemaining(remaining);
       if (result) {
-        const formatted = JSON.stringify(JSON.parse(result), null, indentation);
-        setJsonInput(formatted);
-        setDebouncedInput(formatted);
-        toast.success("JSON fixed successfully");
+        try {
+          const formatted = JSON.stringify(
+            JSON.parse(result),
+            null,
+            indentation,
+          );
+          setJsonInput(formatted);
+          setDebouncedInput(formatted);
+          toast.success("JSON fixed successfully");
+        } catch {
+          toast.warning("AI returned non-JSON output — original kept.");
+        }
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to fix JSON");

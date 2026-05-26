@@ -121,17 +121,28 @@ function renderCell(
       </span>
     );
   }
-  if (str.startsWith("http")) {
-    return (
-      <a
-        href={str}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-500 hover:underline"
-      >
-        {str}
-      </a>
-    );
+  if (str.length < 2048 && /^https?:\/\//i.test(str)) {
+    let safeHref: string | null = null;
+    try {
+      const parsed = new URL(str);
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+        safeHref = parsed.toString();
+      }
+    } catch {
+      safeHref = null;
+    }
+    if (safeHref) {
+      return (
+        <a
+          href={safeHref}
+          target="_blank"
+          rel="noopener noreferrer ugc"
+          className="text-blue-500 hover:underline"
+        >
+          {str}
+        </a>
+      );
+    }
   }
   return <span className="text-foreground">{str}</span>;
 }
