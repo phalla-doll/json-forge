@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useEffect, useState } from "react"
+import { useRef, useEffect, useMemo } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
     PaintBrush04Icon,
@@ -59,13 +59,10 @@ export function Toolbar({
 }: ToolbarProps) {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const searchInputRef = useRef<HTMLInputElement>(null)
-    const [shortcutLabel, setShortcutLabel] = useState("Ctrl+K")
-
-    useEffect(() => {
-        if (/Mac|iPod|iPhone|iPad/.test(navigator.userAgent)) {
-            setShortcutLabel("⌘K")
-        }
-    }, [])
+    const shortcutLabel = useMemo(
+        () => /Mac|iPod|iPhone|iPad/.test(navigator.userAgent) ? "⌘K" : "Ctrl+K",
+        []
+    )
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
