@@ -4,13 +4,7 @@ import { useRef, useEffect, useState } from "react"
 import MonacoEditor, { type OnMount } from "@monaco-editor/react"
 import type { EditorProps } from "./json-editor"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare global {
-    interface Window {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        monaco?: any
-    }
-}
+type MonacoNS = Parameters<OnMount>[1]
 
 export function JsonEditorInner({
     value,
@@ -23,6 +17,7 @@ export function JsonEditorInner({
     onMatchCountChange,
 }: EditorProps) {
     const editorRef = useRef<Parameters<OnMount>[0] | null>(null)
+    const monacoRef = useRef<MonacoNS | null>(null)
     const decorationsRef = useRef<string[]>([])
     const [isEditorReady, setIsEditorReady] = useState(false)
 
@@ -78,6 +73,7 @@ export function JsonEditorInner({
 
     const handleEditorDidMount: OnMount = (editor, monaco) => {
         editorRef.current = editor
+        monacoRef.current = monaco
         defineThemes(monaco)
         monaco.editor.setTheme(
             theme === "dark" ? "vercel-dark" : "vercel-light"
@@ -87,8 +83,8 @@ export function JsonEditorInner({
     }
 
     useEffect(() => {
-        if (editorRef.current && isEditorReady && window.monaco) {
-            window.monaco.editor.setTheme(
+        if (isEditorReady && monacoRef.current) {
+            monacoRef.current.editor.setTheme(
                 theme === "dark" ? "vercel-dark" : "vercel-light"
             )
         }
@@ -121,20 +117,17 @@ export function JsonEditorInner({
 
         onMatchCountChange?.(matches.length)
 
-        const newDecorations = matches.map(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (match: any) => ({
-                range: match.range,
-                options: {
-                    isWholeLine: false,
-                    className: "editor-match-highlight",
-                    overviewRuler: {
-                        color: "rgba(234, 179, 8, 0.8)",
-                        position: 4,
-                    },
+        const newDecorations = matches.map((match) => ({
+            range: match.range,
+            options: {
+                isWholeLine: false,
+                className: "editor-match-highlight",
+                overviewRuler: {
+                    color: "rgba(234, 179, 8, 0.8)",
+                    position: 4,
                 },
-            })
-        )
+            },
+        }))
 
         decorationsRef.current = editor.deltaDecorations(
             decorationsRef.current,
@@ -181,7 +174,7 @@ export function JsonEditorInner({
                     insertSpaces: typeof indentation === "number",
                     detectIndentation: false,
                 }}
-                theme="vs-dark"
+                theme={theme === "dark" ? "vercel-dark" : "vercel-light"}
             />
 
             {!value && (

@@ -23,7 +23,6 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 
 interface ToolbarProps {
@@ -59,16 +58,14 @@ export function Toolbar({
 }: ToolbarProps) {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const searchInputRef = useRef<HTMLInputElement>(null)
-    const [shortcutLabel, setShortcutLabel] = useState("Ctrl+K")
+    const [shortcutLabel] = useState(() => {
+        if (typeof navigator === "undefined") return "Ctrl+K"
+        const ua = navigator.userAgent
+        const isApple = /Mac|iPod|iPhone|iPad/.test(ua)
+        return isApple ? "⌘K" : "Ctrl+K"
+    })
 
     useEffect(() => {
-        if (
-            typeof navigator !== "undefined" &&
-            /Mac|iPod|iPhone|iPad/.test(navigator.platform)
-        ) {
-            setShortcutLabel("⌘K")
-        }
-
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
                 e.preventDefault()
@@ -88,7 +85,7 @@ export function Toolbar({
     }
 
     return (
-        <div className="flex h-14 shrink-0 items-center justify-between overflow-x-auto border-b border-border bg-background px-4">
+        <div className="flex h-12 shrink-0 items-center justify-between overflow-x-auto border-b border-border bg-background px-4">
             <div className="flex items-center gap-4 min-w-max">
                 <div className="flex items-center gap-2 pr-4 border-r border-border">
                     <Select

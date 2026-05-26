@@ -55,7 +55,6 @@ export function AiModal({
                             onChange={(e) => setPrompt(e.target.value)}
                             placeholder="e.g. Create a list of 5 users with names, emails, and realistic addresses..."
                             className="h-32 resize-none"
-                            autoFocus
                             disabled={isLoading}
                         />
                     </div>

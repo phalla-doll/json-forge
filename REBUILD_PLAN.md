@@ -11,10 +11,25 @@
 | 4 — Editor + Code view | ✅ Complete | Monaco via `next/dynamic` SSR-safe, Vercel dark/light themes, search highlighting, all toolbar actions functional |
 | 5 — AI modal | ✅ Complete | shadcn `Dialog` + `Textarea`, generate + fix flows, `sonner` error surfacing, purple AI button |
 | 6 — Alternate views | ✅ Complete | `JsonTreeView` (780 LOC), `JsonTableView`, `JsonMermaidView` ported with shadcn tokens |
-| 7 — Polish + accessibility | ⬜ Pending | Focus ring audit, keyboard shortcuts, Lighthouse pass |
-| 8 — Promotion to root | ⬜ Pending | Side-by-side QA, `git mv` swap, Vercel config update |
+| 7 — Polish + accessibility | ✅ Complete | All Blockers + Should-fixes from code review addressed; `pnpm build`, `pnpm typecheck`, `pnpm lint` all clean (0 errors, 0 warnings). Lighthouse + browser a11y audit still owed via manual QA. |
+| 8 — Promotion to root | ⬜ Pending | Side-by-side QA, `git mv` swap, Vercel config update — awaiting user go-ahead |
 
-**Last updated:** Phase 6 complete — all feature work done. Phases 7–8 remain for polish and promotion.
+**Last updated:** Phase 7 complete. Pre-promotion review punch list resolved:
+- B1: Gemini moved behind `app/api/ai/{generate,fix}/route.ts`; client no longer holds the API key (renamed `NEXT_PUBLIC_GEMINI_API_KEY` → `GEMINI_API_KEY`).
+- B2/B3: tree-view render-phase mutation replaced with parent-precomputed `initiallyExpandedPaths` set; random `graphKey` replaced with `key={value}`.
+- B4: error state collapsed to derived `useMemo`; redundant `setError` calls removed.
+- S1: dormant `json-mermaid-view.tsx` deleted; `mermaid` dep removed.
+- S2: hard-coded `dark` class on `<html>` removed; `ThemeProvider` owns the class.
+- S3: ~15 raw `<button>`s in tree/table views converted to shadcn `Button + Tooltip`.
+- S4/S5: aria-labels added to ToggleGroup items, theme toggle, GitHub link; `rel="noopener noreferrer"` added.
+- S6: tree-view `setTimeout(..., 100)` replaced with double-`requestAnimationFrame`.
+- S7: `navigator.platform` → `navigator.userAgent` UA sniff.
+- S8: local `Tooltip` renamed to `NodeTooltip` to free the name for shadcn.
+- S9: Monaco `theme` prop now reflects the active theme.
+- S10: `<Textarea autoFocus>` in AI modal removed (Radix owns focus).
+- Nits: `dragCounter`/`isEditorReady` write-only state moved to `useRef` or removed; `getStats` wrapped in `useMemo`; setTimeout refs typed; table-view filter carries original index; `optimizePackageImports: ["lucide-react"]` added.
+
+Phase 8 promotion is a destructive root swap and should run only on user go-ahead.
 
 ---
 

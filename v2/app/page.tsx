@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useMemo, useRef } from "react"
 import {
     Braces,
     Code,
@@ -82,11 +82,9 @@ export default function Page() {
     const [searchMatchCount, setSearchMatchCount] = useState<number | null>(
         null
     )
-    const [error, setError] = useState<string | null>(null)
     const [viewMode, setViewMode] = useState<ViewMode>("code")
     const [isDragging, setIsDragging] = useState(false)
-    const [dragCounter, setDragCounter] = useState(0)
-    const [isEditorReady, setIsEditorReady] = useState(false)
+    const dragCounterRef = useRef(0)
     const [isAiModalOpen, setIsAiModalOpen] = useState(false)
     const [isAiLoading, setIsAiLoading] = useState(false)
 
@@ -103,30 +101,23 @@ export default function Page() {
         return () => clearTimeout(handler)
     }, [searchTerm])
 
-    useEffect(() => setSearchMatchCount(null), [searchTerm])
-    useEffect(() => setSearchMatchCount(null), [viewMode])
+    const stats: EditorStats = useMemo(
+        () => getStats(debouncedInput),
+        [debouncedInput]
+    )
 
-    const stats: EditorStats = getStats(debouncedInput)
-
-    useEffect(() => {
-        if (!debouncedInput.trim()) {
-            setError(null)
-            return
-        }
-        if (isValidJson(debouncedInput)) {
-            setError(null)
-        } else {
-            try {
-                JSON.parse(debouncedInput)
-            } catch (e) {
-                setError((e as Error).message)
-            }
+    const error = useMemo<string | null>(() => {
+        if (!debouncedInput.trim()) return null
+        try {
+            JSON.parse(debouncedInput)
+            return null
+        } catch (e) {
+            return (e as Error).message
         }
     }, [debouncedInput])
 
     const handleInputChange = (value: string) => {
         setJsonInput(value)
-        if (!value) setError(null)
     }
 
     const handleIndentChange = (newIndent: number | string) => {
@@ -154,10 +145,8 @@ export default function Page() {
             const formatted = JSON.stringify(parsed, null, indentation)
             setJsonInput(formatted)
             setDebouncedInput(formatted)
-            setError(null)
             toast.success("Formatted successfully")
-        } catch (err) {
-            setError((err as Error).message)
+        } catch {
             toast.error("Invalid JSON format")
         }
     }
@@ -170,10 +159,8 @@ export default function Page() {
             const minified = JSON.stringify(parsed)
             setJsonInput(minified)
             setDebouncedInput(minified)
-            setError(null)
             toast.success("Minified successfully")
-        } catch (err) {
-            setError((err as Error).message)
+        } catch {
             toast.error("Invalid JSON format")
         }
     }
@@ -201,7 +188,6 @@ export default function Page() {
         trackEvent("click_clear_confirm")
         setJsonInput("")
         setDebouncedInput("")
-        setError(null)
         toast.info("Editor cleared")
     }
 
@@ -244,7 +230,6 @@ export default function Page() {
                     const result = event.target.result as string
                     setJsonInput(result)
                     setDebouncedInput(result)
-                    setError(null)
                     toast.success(`Loaded ${file.name}`)
                 }
             }
@@ -257,7 +242,7 @@ export default function Page() {
     const handleDragEnter = (e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        setDragCounter((c) => c + 1)
+        dragCounterRef.current += 1
         if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
             setIsDragging(true)
         }
@@ -266,11 +251,8 @@ export default function Page() {
     const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        setDragCounter((c) => {
-            const next = c - 1
-            if (next === 0) setIsDragging(false)
-            return next
-        })
+        dragCounterRef.current = Math.max(0, dragCounterRef.current - 1)
+        if (dragCounterRef.current === 0) setIsDragging(false)
     }
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -282,7 +264,7 @@ export default function Page() {
         e.preventDefault()
         e.stopPropagation()
         setIsDragging(false)
-        setDragCounter(0)
+        dragCounterRef.current = 0
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             handleUpload(e.dataTransfer.files[0])
         }
@@ -301,7 +283,6 @@ export default function Page() {
                 )
                 setJsonInput(formatted)
                 setDebouncedInput(formatted)
-                setError(null)
                 toast.success("JSON generated successfully")
             }
         } catch (err) {
@@ -328,7 +309,6 @@ export default function Page() {
                 )
                 setJsonInput(formatted)
                 setDebouncedInput(formatted)
-                setError(null)
                 toast.success("JSON fixed successfully")
             }
         } catch (err) {
@@ -348,7 +328,7 @@ export default function Page() {
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
-            <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/50 px-4 backdrop-blur-md md:px-6">
+            <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/50 px-4 backdrop-blur-md md:px-6">
                 <div className="flex items-center gap-3 overflow-hidden md:gap-4">
                     <div className="shrink-0 rounded-md bg-green-600 p-1.5 text-white shadow-sm">
                         <Braces className="size-4" />
@@ -365,6 +345,7 @@ export default function Page() {
 
                     <ToggleGroup
                         type="single"
+                        size="sm"
                         value={viewMode}
                         onValueChange={(val) => {
                             if (val) {
@@ -376,6 +357,7 @@ export default function Page() {
                     >
                         <ToggleGroupItem
                             value="code"
+                            aria-label="Code view"
                             className="gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
                         >
                             <Code className="size-3.5" />
@@ -383,6 +365,7 @@ export default function Page() {
                         </ToggleGroupItem>
                         <ToggleGroupItem
                             value="graph"
+                            aria-label="Graph view"
                             className="gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
                         >
                             <GitGraph className="size-3.5" />
@@ -390,6 +373,7 @@ export default function Page() {
                         </ToggleGroupItem>
                         <ToggleGroupItem
                             value="table"
+                            aria-label="Table view"
                             className="gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
                         >
                             <Table className="size-3.5" />
@@ -424,25 +408,40 @@ export default function Page() {
                         </TooltipContent>
                     </Tooltip>
 
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() =>
                             setTheme(theme === "dark" ? "light" : "dark")
                         }
-                        className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        aria-label={
+                            theme === "dark"
+                                ? "Switch to light mode"
+                                : "Switch to dark mode"
+                        }
+                        className="text-muted-foreground hover:text-foreground"
                     >
                         {theme === "dark" ? (
-                            <Sun className="size-5" />
+                            <Sun className="size-4" />
                         ) : (
-                            <Moon className="size-5" />
+                            <Moon className="size-4" />
                         )}
-                    </button>
-                    <a
-                        href="https://github.com/phalla-doll/json-forge"
-                        target="_blank"
-                        className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    </Button>
+                    <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-foreground"
                     >
-                        <ExternalLink className="size-5" />
-                    </a>
+                        <a
+                            href="https://github.com/phalla-doll/json-forge"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="View source on GitHub"
+                        >
+                            <ExternalLink className="size-4" />
+                        </a>
+                    </Button>
                 </div>
             </header>
 
@@ -489,9 +488,6 @@ export default function Page() {
                         onChange={handleInputChange}
                         error={error}
                         indentation={indentation}
-                        onReady={() =>
-                            setTimeout(() => setIsEditorReady(true), 400)
-                        }
                         searchTerm={debouncedSearchTerm}
                         theme={theme === "dark" ? "dark" : "light"}
                         onMatchCountChange={setSearchMatchCount}
