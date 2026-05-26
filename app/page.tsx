@@ -357,12 +357,12 @@ export default function Page() {
                 trackEvent("switch_view", { mode: val });
               }
             }}
-            className="ml-2 shrink-0 rounded-md border border-border bg-muted md:ml-0"
+            className="ml-2 shrink-0 rounded-md border border-border bg-muted p-0.5 md:ml-0"
           >
             <ToggleGroupItem
               value="code"
               aria-label="Code view"
-              className="gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
+              className="h-6 gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
             >
               <HugeiconsIcon icon={Code} className="size-3.5" />
               <span className="hidden sm:inline">Code</span>
@@ -370,7 +370,7 @@ export default function Page() {
             <ToggleGroupItem
               value="graph"
               aria-label="Graph view"
-              className="gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
+              className="h-6 gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
             >
               <HugeiconsIcon icon={GitGraph} className="size-3.5" />
               <span className="hidden sm:inline">Graph</span>
@@ -378,7 +378,7 @@ export default function Page() {
             <ToggleGroupItem
               value="table"
               aria-label="Table view"
-              className="gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
+              className="h-6 gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
             >
               <HugeiconsIcon icon={Table} className="size-3.5" />
               <span className="hidden sm:inline">Table</span>
