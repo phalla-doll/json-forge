@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Sparkles, LoaderCircle } from "@hugeicons/core-free-icons"
+import { AiContentGenerator02Icon, LoaderCircle, Sparkles } from "@hugeicons/core-free-icons"
 import {
     Dialog,
     DialogContent,
@@ -40,7 +40,7 @@ export function AiModal({
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <HugeiconsIcon icon={Sparkles} className="size-5 text-purple-500" />
+                        <HugeiconsIcon icon={AiContentGenerator02Icon} className="size-5 text-purple-500" />
                         Generate JSON with AI
                     </DialogTitle>
                 </DialogHeader>

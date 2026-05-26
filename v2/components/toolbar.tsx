@@ -1,9 +1,9 @@
 "use client"
 
-import { useRef, useEffect, useState } from "react"
+import { useRef, useEffect, useMemo } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-    Sparkles,
+    PaintBrush04Icon,
     Minimize2,
     Copy,
     Download,
@@ -59,12 +59,9 @@ export function Toolbar({
 }: ToolbarProps) {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const searchInputRef = useRef<HTMLInputElement>(null)
-    const [shortcutLabel, setShortcutLabel] = useState("Ctrl+K")
-
-    useEffect(() => {
-        const ua = navigator.userAgent
-        const isApple = /Mac|iPod|iPhone|iPad/.test(ua)
-        setShortcutLabel(isApple ? "⌘K" : "Ctrl+K")
+    const shortcutLabel = useMemo(() => {
+        if (typeof navigator === "undefined") return "Ctrl+K"
+        return /Mac|iPod|iPhone|iPad/.test(navigator.userAgent) ? "⌘K" : "Ctrl+K"
     }, [])
 
     useEffect(() => {
@@ -114,7 +111,7 @@ export function Toolbar({
                                 onClick={onFormat}
                                 disabled={!hasContent}
                             >
-                                <HugeiconsIcon icon={Sparkles} className="size-3.5" />
+                                <HugeiconsIcon icon={PaintBrush04Icon} className="size-3.5" />
                                 <span className="hidden lg:inline">Prettify</span>
                             </Button>
                         </TooltipTrigger>

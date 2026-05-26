@@ -11,7 +11,7 @@ import {
     Moon,
     ExternalLink,
     CloudUpload,
-    Sparkles,
+    AiContentGenerator02Icon,
 } from "@hugeicons/core-free-icons"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
@@ -398,7 +398,7 @@ export default function Page() {
                                 }}
                                 className="border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
                             >
-                                <HugeiconsIcon icon={Sparkles} className="size-3.5" />
+                                <HugeiconsIcon icon={AiContentGenerator02Icon} className="size-3.5" />
                                 <span className="hidden sm:inline">
                                     {error ? "AI Fix" : "AI Generate"}
                                 </span>
