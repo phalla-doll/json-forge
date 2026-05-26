@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-    Braces,
     Code,
     GitGraph,
     Table,
@@ -331,8 +330,33 @@ export default function Page() {
         >
             <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/50 px-4 backdrop-blur-md md:px-6">
                 <div className="flex items-center gap-3 overflow-hidden md:gap-4">
-                    <div className="shrink-0 rounded-md bg-green-600 p-1.5 text-white shadow-sm">
-                        <HugeiconsIcon icon={Braces} className="size-4" />
+                    <div className="shrink-0 rounded-md bg-foreground p-1.5 shadow-sm">
+                        <svg
+                            viewBox="0 0 32 32"
+                            className="size-4 text-background"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M12 7 C9 7 9 11 9 13 C9 15 7 16 7 16 C7 16 9 17 9 19 C9 21 9 25 12 25"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                            <path
+                                d="M20 7 C23 7 23 11 23 13 C23 15 25 16 25 16 C25 16 23 17 23 19 C23 21 23 25 20 25"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                            <path
+                                d="M16 11.5 L17 15 L20.5 16 L17 17 L16 20.5 L15 17 L11.5 16 L15 15 Z"
+                                fill="#f59e0b"
+                            />
+                        </svg>
                     </div>
                     <div className="flex min-w-0 flex-col">
                         <h1 className="truncate text-sm font-semibold tracking-wide">
