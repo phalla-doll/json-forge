@@ -19,11 +19,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { Input } from "@/components/ui/input"
 
 interface ToolbarProps {
@@ -103,35 +98,25 @@ export function Toolbar({
                         </SelectContent>
                     </Select>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={onFormat}
-                                disabled={!hasContent}
-                            >
-                                <HugeiconsIcon icon={PaintBrush04Icon} className="size-3.5" />
-                                <span className="hidden lg:inline">Prettify</span>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Format JSON</TooltipContent>
-                    </Tooltip>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onFormat}
+                        disabled={!hasContent}
+                    >
+                        <HugeiconsIcon icon={PaintBrush04Icon} className="size-3.5" />
+                        <span className="hidden lg:inline">Prettify</span>
+                    </Button>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={onMinify}
-                                disabled={!hasContent}
-                            >
-                                <HugeiconsIcon icon={Minimize2} className="size-3.5" />
-                                <span className="hidden lg:inline">Minify</span>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Minify JSON</TooltipContent>
-                    </Tooltip>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onMinify}
+                        disabled={!hasContent}
+                    >
+                        <HugeiconsIcon icon={Minimize2} className="size-3.5" />
+                        <span className="hidden lg:inline">Minify</span>
+                    </Button>
                 </div>
 
                 <div className="flex items-center gap-2 pr-4 border-r border-border">
@@ -165,63 +150,43 @@ export function Toolbar({
                         className="hidden"
                         accept=".json,application/json"
                     />
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                <HugeiconsIcon icon={Upload} className="size-3.5" />
-                                <span className="hidden sm:inline">Import</span>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Import File</TooltipContent>
-                    </Tooltip>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <HugeiconsIcon icon={Upload} className="size-3.5" />
+                        <span className="hidden sm:inline">Import</span>
+                    </Button>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={onDownload}
-                                disabled={!hasContent}
-                            >
-                                <HugeiconsIcon icon={Download} className="size-3.5" />
-                                <span className="hidden sm:inline">Export</span>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Download File</TooltipContent>
-                    </Tooltip>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onDownload}
+                        disabled={!hasContent}
+                    >
+                        <HugeiconsIcon icon={Download} className="size-3.5" />
+                        <span className="hidden sm:inline">Export</span>
+                    </Button>
                 </div>
             </div>
 
             <div className="ml-4 flex items-center gap-2 min-w-max">
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={onClear}
-                            disabled={!hasContent}
-                            className="text-muted-foreground hover:text-destructive"
-                        >
-                            <HugeiconsIcon icon={Trash2} className="size-3.5" />
-                            <span className="hidden sm:inline">Clear</span>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Clear All</TooltipContent>
-                </Tooltip>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onClear}
+                    disabled={!hasContent}
+                    className="text-muted-foreground hover:text-destructive"
+                >
+                    <HugeiconsIcon icon={Trash2} className="size-3.5" />
+                    <span className="hidden sm:inline">Clear</span>
+                </Button>
 
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button size="sm" onClick={onCopy} disabled={!hasContent}>
-                            <HugeiconsIcon icon={Copy} className="size-3.5" />
-                            <span className="hidden sm:inline">Copy</span>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Copy to Clipboard</TooltipContent>
-                </Tooltip>
+                <Button size="sm" onClick={onCopy} disabled={!hasContent}>
+                    <HugeiconsIcon icon={Copy} className="size-3.5" />
+                    <span className="hidden sm:inline">Copy</span>
+                </Button>
             </div>
         </div>
     )
