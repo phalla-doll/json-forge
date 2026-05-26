@@ -1,5 +1,23 @@
 # JSON Forge — shadcn/ui Rebuild Plan
 
+## Progress
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| 0 — Scaffold `v2/` | ✅ Complete | Next.js 16 + shadcn (preset `b6rtDj74a`) on `:3001`, all runtime deps installed, clean build |
+| 1 — Theme parity | ✅ Complete | Vercel accents aliased to shadcn tokens, Inter + JetBrains Mono via `next/font/google`, ASCII loader, dark default |
+| 2 — Shared infrastructure | ✅ Complete | `types.ts`, `lib/ai.ts`, `lib/utils.ts` (merged with `cn`), `next-themes`, `sonner` toast, layout shell |
+| 3 — Toolbar + StatusBar | ✅ Complete | shadcn `Select`, `Tooltip`, `Input`, `ToggleGroup`, `Separator`; all toolbar actions + view switcher wired |
+| 4 — Editor + Code view | ✅ Complete | Monaco via `next/dynamic` SSR-safe, Vercel dark/light themes, search highlighting, all toolbar actions functional |
+| 5 — AI modal | ✅ Complete | shadcn `Dialog` + `Textarea`, generate + fix flows, `sonner` error surfacing, purple AI button |
+| 6 — Alternate views | ✅ Complete | `JsonTreeView` (780 LOC), `JsonTableView`, `JsonMermaidView` ported with shadcn tokens |
+| 7 — Polish + accessibility | ⬜ Pending | Focus ring audit, keyboard shortcuts, Lighthouse pass |
+| 8 — Promotion to root | ⬜ Pending | Side-by-side QA, `git mv` swap, Vercel config update |
+
+**Last updated:** Phase 6 complete — all feature work done. Phases 7–8 remain for polish and promotion.
+
+---
+
 ## Strategy
 
 Build a parallel project at `./v2/` with a real Vite + Tailwind + shadcn toolchain. Port features phase-by-phase from the root app, keeping the current app fully functional throughout. When `v2/` reaches parity and is verified, promote it to the root in a single swap commit.

@@ -1,0 +1,40 @@
+.loader-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: #000000;
+    color: #eaeaea;
+    font-family: var(--font-mono, "JetBrains Mono", monospace);
+    font-size: 13px;
+    letter-spacing: -0.5px;
+}
+.loader-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: max-content;
+    max-width: 100%;
+    padding: 0 16px;
+}
+.loader-blink {
+    animation: loader-blink 1s step-end infinite;
+}
+@keyframes loader-blink {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+.loader-text-dim {
+    color: #444;
+}
+.loader-text-blue {
+    color: #0070f3;
+}
+.loader-text-green {
+    color: #22c55e;
+}

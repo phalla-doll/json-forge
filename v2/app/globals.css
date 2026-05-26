@@ -1,0 +1,188 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: var(--font-sans);
+    --font-mono: var(--font-mono);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --color-success: var(--color-success);
+    --color-error: var(--color-error);
+    --color-warning: var(--color-warning);
+    --color-accents-1: var(--accents-1);
+    --color-accents-2: var(--accents-2);
+    --color-accents-3: var(--accents-3);
+    --color-accents-4: var(--accents-4);
+    --color-accents-5: var(--accents-5);
+    --color-accents-6: var(--accents-6);
+    --color-accents-7: var(--accents-7);
+    --color-accents-8: var(--accents-8);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    --bg-background: #ffffff;
+    --accents-1: #fafafa;
+    --accents-2: #eaeaea;
+    --accents-3: #999999;
+    --accents-4: #888888;
+    --accents-5: #666666;
+    --accents-6: #444444;
+    --accents-7: #333333;
+    --accents-8: #000000;
+    --color-success: #0070f3;
+    --color-error: #ee0000;
+    --color-warning: #f5a623;
+
+    --background: var(--bg-background);
+    --foreground: var(--accents-8);
+    --card: var(--bg-background);
+    --card-foreground: var(--accents-8);
+    --popover: var(--bg-background);
+    --popover-foreground: var(--accents-8);
+    --primary: var(--accents-8);
+    --primary-foreground: var(--bg-background);
+    --secondary: var(--accents-1);
+    --secondary-foreground: var(--accents-8);
+    --muted: var(--accents-1);
+    --muted-foreground: var(--accents-5);
+    --accent: var(--accents-1);
+    --accent-foreground: var(--accents-8);
+    --destructive: var(--color-error);
+    --border: var(--accents-2);
+    --input: var(--accents-2);
+    --ring: var(--accents-5);
+    --radius: 0.375rem;
+    --chart-1: var(--accents-2);
+    --chart-2: var(--accents-3);
+    --chart-3: var(--accents-4);
+    --chart-4: var(--accents-5);
+    --chart-5: var(--accents-6);
+    --sidebar: var(--accents-1);
+    --sidebar-foreground: var(--accents-8);
+    --sidebar-primary: var(--accents-8);
+    --sidebar-primary-foreground: var(--bg-background);
+    --sidebar-accent: var(--accents-1);
+    --sidebar-accent-foreground: var(--accents-8);
+    --sidebar-border: var(--accents-2);
+    --sidebar-ring: var(--accents-5);
+}
+
+.dark {
+    --bg-background: #000000;
+    --accents-1: #111111;
+    --accents-2: #333333;
+    --accents-3: #444444;
+    --accents-4: #666666;
+    --accents-5: #888888;
+    --accents-6: #999999;
+    --accents-7: #eaeaea;
+    --accents-8: #fafafa;
+
+    --background: var(--bg-background);
+    --foreground: var(--accents-8);
+    --card: var(--bg-background);
+    --card-foreground: var(--accents-8);
+    --popover: var(--bg-background);
+    --popover-foreground: var(--accents-8);
+    --primary: var(--accents-8);
+    --primary-foreground: var(--bg-background);
+    --secondary: var(--accents-1);
+    --secondary-foreground: var(--accents-8);
+    --muted: var(--accents-1);
+    --muted-foreground: var(--accents-5);
+    --accent: var(--accents-1);
+    --accent-foreground: var(--accents-8);
+    --destructive: var(--color-error);
+    --border: var(--accents-2);
+    --input: var(--accents-2);
+    --ring: var(--accents-5);
+    --chart-1: var(--accents-2);
+    --chart-2: var(--accents-3);
+    --chart-3: var(--accents-4);
+    --chart-4: var(--accents-5);
+    --chart-5: var(--accents-6);
+    --sidebar: var(--accents-1);
+    --sidebar-foreground: var(--accents-8);
+    --sidebar-primary: var(--accents-8);
+    --sidebar-primary-foreground: var(--bg-background);
+    --sidebar-accent: var(--accents-1);
+    --sidebar-accent-foreground: var(--accents-8);
+    --sidebar-border: var(--accents-2);
+    --sidebar-ring: var(--accents-5);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+    html {
+        @apply font-sans;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-background);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--accents-2);
+    border-radius: 5px;
+    border: 2px solid var(--bg-background);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accents-3);
+}
+
+.editor-match-highlight {
+    background-color: rgba(234, 179, 8, 0.2) !important;
+    border-bottom: 2px solid rgba(234, 179, 8, 0.5);
+}
+.editor-match-highlight-overview {
+    background-color: rgba(234, 179, 8, 0.8) !important;
+}
