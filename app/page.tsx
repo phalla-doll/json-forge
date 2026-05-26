@@ -357,7 +357,7 @@ export default function Page() {
                 trackEvent("switch_view", { mode: val });
               }
             }}
-            className="ml-2 shrink-0 rounded-md border border-border bg-muted p-0.5 md:ml-0"
+            className="ml-2 shrink-0 rounded-md border border-border bg-muted md:ml-0"
           >
             <ToggleGroupItem
               value="code"
