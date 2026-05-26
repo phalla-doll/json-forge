@@ -88,7 +88,7 @@ export function Toolbar({
               onIndentChange(val === "tab" ? "\t" : Number(val));
             }}
           >
-            <SelectTrigger className="h-8 w-20 text-xs">
+            <SelectTrigger size="sm" className="h-7 w-20 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -136,7 +136,7 @@ export function Toolbar({
                   onSearchEnter();
                 }
               }}
-              className={`h-8 w-36 pl-8 text-xs transition-all focus:w-48 lg:focus:w-64 ${
+              className={`h-7 w-36 pl-8 text-xs transition-all focus:w-48 lg:focus:w-64 ${
                 hasMatches === false
                   ? "border-destructive focus-visible:border-destructive"
                   : ""
