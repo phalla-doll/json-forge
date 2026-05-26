@@ -1,27 +1,27 @@
-import { EditorStats } from '../types';
+import { EditorStats } from "../types";
 
 declare global {
   interface Window {
     gtag: (
-      command: 'event',
+      command: "event",
       action: string,
-      params?: { [key: string]: any }
+      params?: { [key: string]: any },
     ) => void;
   }
 }
 
 export const trackEvent = (action: string, params?: { [key: string]: any }) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', action, params);
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", action, params);
   }
 };
 
 export const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
 export const getStats = (text: string): EditorStats => {
@@ -43,9 +43,9 @@ export const isValidJson = (text: string): boolean => {
 };
 
 export const downloadFile = (content: string, filename: string) => {
-  const blob = new Blob([content], { type: 'application/json' });
+  const blob = new Blob([content], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);

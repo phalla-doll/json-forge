@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Sparkles, X, Loader2 } from 'lucide-react';
-import { Button } from './Button';
+import React, { useState } from "react";
+import { Sparkles, X, Loader2 } from "lucide-react";
+import { Button } from "./Button";
 
 interface AiModalProps {
   isOpen: boolean;
@@ -9,8 +9,13 @@ interface AiModalProps {
   isLoading: boolean;
 }
 
-export const AiModal: React.FC<AiModalProps> = ({ isOpen, onClose, onGenerate, isLoading }) => {
-  const [prompt, setPrompt] = useState('');
+export const AiModal: React.FC<AiModalProps> = ({
+  isOpen,
+  onClose,
+  onGenerate,
+  isLoading,
+}) => {
+  const [prompt, setPrompt] = useState("");
 
   if (!isOpen) return null;
 
@@ -23,7 +28,7 @@ export const AiModal: React.FC<AiModalProps> = ({ isOpen, onClose, onGenerate, i
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div 
+      <div
         className="w-full max-w-lg bg-background border border-accents-2 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
@@ -32,7 +37,7 @@ export const AiModal: React.FC<AiModalProps> = ({ isOpen, onClose, onGenerate, i
             <Sparkles className="w-5 h-5 text-purple-500" />
             <h3>Generate JSON with AI</h3>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="text-accents-4 hover:text-accents-8 transition-colors"
             disabled={isLoading}
@@ -43,7 +48,10 @@ export const AiModal: React.FC<AiModalProps> = ({ isOpen, onClose, onGenerate, i
 
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
           <div>
-            <label htmlFor="prompt" className="block text-sm font-medium text-accents-5 mb-2">
+            <label
+              htmlFor="prompt"
+              className="block text-sm font-medium text-accents-5 mb-2"
+            >
               Describe the data you need
             </label>
             <textarea
@@ -58,12 +66,17 @@ export const AiModal: React.FC<AiModalProps> = ({ isOpen, onClose, onGenerate, i
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              variant="primary" 
+            <Button
+              type="submit"
+              variant="primary"
               disabled={!prompt.trim() || isLoading}
               className="bg-purple-600 hover:bg-purple-700 text-white border-transparent"
             >
