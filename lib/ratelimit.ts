@@ -3,8 +3,10 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 
-const url = process.env.UPSTASH_REDIS_REST_URL;
-const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+const url =
+  process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const token =
+  process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 
 let warned = false;
 
@@ -19,7 +21,7 @@ function getLimiters(): Limiters | null {
   if (!url || !token) {
     if (!warned) {
       console.warn(
-        "[ratelimit] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN missing — AI rate limiting disabled.",
+        "[ratelimit] Upstash creds missing (UPSTASH_REDIS_REST_URL/TOKEN or KV_REST_API_URL/TOKEN) — AI rate limiting disabled.",
       );
       warned = true;
     }
