@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   try {
     const result = await fixJsonOnServer(json, error);
-    return NextResponse.json({ result });
+    return NextResponse.json({ result, remaining: rl.remaining });
   } catch (err) {
     console.error("AI fix error:", err);
     return NextResponse.json(

@@ -22,6 +22,7 @@ interface AiModalProps {
   onClose: () => void;
   onGenerate: (prompt: string) => void;
   isLoading: boolean;
+  remaining: number | null;
 }
 
 export function AiModal({
@@ -29,6 +30,7 @@ export function AiModal({
   onClose,
   onGenerate,
   isLoading,
+  remaining,
 }: AiModalProps) {
   const [prompt, setPrompt] = useState("");
 
@@ -90,7 +92,7 @@ export function AiModal({
               ) : (
                 <>
                   <HugeiconsIcon icon={Sparkles} className="size-4" />
-                  Generate
+                  Generate{remaining !== null ? ` (${remaining}/5)` : ""}
                 </>
               )}
             </Button>

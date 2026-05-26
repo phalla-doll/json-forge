@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
   try {
     const result = await generateJsonOnServer(prompt);
-    return NextResponse.json({ result });
+    return NextResponse.json({ result, remaining: rl.remaining });
   } catch (error) {
     console.error("AI generate error:", error);
     return NextResponse.json(

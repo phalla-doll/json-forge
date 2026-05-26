@@ -15,11 +15,6 @@ import {
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Toolbar } from "@/components/toolbar";
 import { StatusBar } from "@/components/status-bar";
@@ -84,6 +79,7 @@ export default function Page() {
   const dragCounterRef = useRef(0);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiRemaining, setAiRemaining] = useState<number | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedInput(jsonInput), 800);
@@ -263,7 +259,8 @@ export default function Page() {
     trackEvent("ai_generate");
     setIsAiLoading(true);
     try {
-      const result = await generateJson(prompt);
+      const { result, remaining } = await generateJson(prompt);
+      setAiRemaining(remaining);
       if (result) {
         const formatted = JSON.stringify(JSON.parse(result), null, indentation);
         setJsonInput(formatted);
@@ -285,7 +282,8 @@ export default function Page() {
     trackEvent("ai_fix");
     setIsAiLoading(true);
     try {
-      const result = await fixJson(jsonInput, error);
+      const { result, remaining } = await fixJson(jsonInput, error);
+      setAiRemaining(remaining);
       if (result) {
         const formatted = JSON.stringify(JSON.parse(result), null, indentation);
         setJsonInput(formatted);
@@ -387,33 +385,28 @@ export default function Page() {
         </div>
 
         <div className="flex shrink-0 items-center gap-3 pl-2 md:gap-4">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (error) {
-                    handleAiFix();
-                  } else {
-                    setIsAiModalOpen(true);
-                  }
-                }}
-                className="border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
-              >
-                <HugeiconsIcon
-                  icon={AiContentGenerator02Icon}
-                  className="size-3.5"
-                />
-                <span className="hidden sm:inline">
-                  {error ? "AI Fix" : "AI Generate"}
-                </span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {error ? "Fix JSON with AI" : "Generate JSON with AI"}
-            </TooltipContent>
-          </Tooltip>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (error) {
+                handleAiFix();
+              } else {
+                setIsAiModalOpen(true);
+              }
+            }}
+            className="border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
+          >
+            <HugeiconsIcon
+              icon={AiContentGenerator02Icon}
+              className="size-3.5"
+            />
+            <span className="hidden sm:inline">
+              {error
+                ? `AI Fix${aiRemaining !== null ? ` (${aiRemaining}/5)` : ""}`
+                : `Generate JSON${aiRemaining !== null ? ` (${aiRemaining}/5)` : ""}`}
+            </span>
+          </Button>
 
           <Button
             variant="ghost"
@@ -517,6 +510,7 @@ export default function Page() {
         onClose={() => setIsAiModalOpen(false)}
         onGenerate={handleAiGenerate}
         isLoading={isAiLoading}
+        remaining={aiRemaining}
       />
     </div>
   );

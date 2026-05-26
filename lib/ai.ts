@@ -1,3 +1,8 @@
+export type AiResponse = {
+  result: string;
+  remaining: number;
+};
+
 async function postJson<T>(url: string, payload: unknown): Promise<T> {
   const res = await fetch(url, {
     method: "POST",
@@ -7,6 +12,7 @@ async function postJson<T>(url: string, payload: unknown): Promise<T> {
   const data = (await res.json().catch(() => ({}))) as {
     result?: string;
     error?: string;
+    remaining?: number;
   };
   if (!res.ok) {
     throw new Error(data.error || `Request failed (${res.status})`);
@@ -14,20 +20,20 @@ async function postJson<T>(url: string, payload: unknown): Promise<T> {
   return data as T;
 }
 
-export const generateJson = async (prompt: string): Promise<string> => {
-  const data = await postJson<{ result: string }>("/api/ai/generate", {
+export const generateJson = async (prompt: string): Promise<AiResponse> => {
+  const data = await postJson<AiResponse>("/api/ai/generate", {
     prompt,
   });
-  return data.result || "";
+  return { result: data.result || "", remaining: data.remaining ?? 0 };
 };
 
 export const fixJson = async (
   malformedJson: string,
   errorMessage: string,
-): Promise<string> => {
-  const data = await postJson<{ result: string }>("/api/ai/fix", {
+): Promise<AiResponse> => {
+  const data = await postJson<AiResponse>("/api/ai/fix", {
     json: malformedJson,
     error: errorMessage,
   });
-  return data.result || "";
+  return { result: data.result || "", remaining: data.remaining ?? 0 };
 };

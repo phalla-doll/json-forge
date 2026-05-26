@@ -3,16 +3,14 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 
-const url =
-  process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const token =
   process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 
 let warned = false;
 
 type Limiters = {
-  perMinute: Ratelimit;
-  perDay: Ratelimit;
+  perHour: Ratelimit;
 };
 
 let cached: Limiters | null = null;
@@ -30,16 +28,10 @@ function getLimiters(): Limiters | null {
   if (!cached) {
     const redis = new Redis({ url, token });
     cached = {
-      perMinute: new Ratelimit({
+      perHour: new Ratelimit({
         redis,
-        limiter: Ratelimit.slidingWindow(10, "1 m"),
-        prefix: "json-forge:ai:min",
-        analytics: false,
-      }),
-      perDay: new Ratelimit({
-        redis,
-        limiter: Ratelimit.fixedWindow(50, "1 d"),
-        prefix: "json-forge:ai:day",
+        limiter: Ratelimit.fixedWindow(5, "1 h"),
+        prefix: "json-forge:ai:hour",
         analytics: false,
       }),
     };
@@ -59,44 +51,38 @@ function getClientIp(request: Request): string {
 }
 
 export type RateLimitResult =
-  | { ok: true }
+  | { ok: true; remaining: number }
   | { ok: false; response: NextResponse };
 
 export async function enforceAiRateLimit(
   request: Request,
 ): Promise<RateLimitResult> {
   const limiters = getLimiters();
-  if (!limiters) return { ok: true };
+  if (!limiters) return { ok: true, remaining: 5 };
 
   const ip = getClientIp(request);
-  const [minute, day] = await Promise.all([
-    limiters.perMinute.limit(ip),
-    limiters.perDay.limit(ip),
-  ]);
+  const hour = await limiters.perHour.limit(ip);
 
-  if (minute.success && day.success) return { ok: true };
+  if (hour.success) return { ok: true, remaining: hour.remaining };
 
-  const blocker = !day.success ? day : minute;
   const retryAfterSec = Math.max(
     1,
-    Math.ceil((blocker.reset - Date.now()) / 1000),
+    Math.ceil((hour.reset - Date.now()) / 1000),
   );
-  const message = !day.success
-    ? "Daily AI limit reached. Try again tomorrow."
-    : "Too many requests. Slow down for a moment.";
 
   return {
     ok: false,
     response: NextResponse.json(
-      { error: message },
+      {
+        error:
+          "Hourly limit reached. You have 5 AI generations per hour. Try again later.",
+      },
       {
         status: 429,
         headers: {
           "Retry-After": String(retryAfterSec),
-          "X-RateLimit-Limit-Minute": String(minute.limit),
-          "X-RateLimit-Remaining-Minute": String(Math.max(0, minute.remaining)),
-          "X-RateLimit-Limit-Day": String(day.limit),
-          "X-RateLimit-Remaining-Day": String(Math.max(0, day.remaining)),
+          "X-RateLimit-Limit-Hour": String(hour.limit),
+          "X-RateLimit-Remaining-Hour": String(Math.max(0, hour.remaining)),
         },
       },
     ),
