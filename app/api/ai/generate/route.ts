@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { generateJsonOnServer } from "@/lib/gemini"
+import { generateJsonOnServer } from "@/lib/nvidia"
 
 export const runtime = "nodejs"
 
