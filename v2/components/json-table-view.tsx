@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useMemo, useState } from "react"
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
     AlertTriangle,
     Filter,
@@ -8,7 +9,7 @@ import {
     Home,
     FolderOpen,
     ArrowLeft,
-} from "lucide-react"
+} from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import {
     Tooltip,
@@ -82,7 +83,8 @@ function renderCell(
                 onClick={() => targetPath && onNavigate(targetPath)}
                 className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-border hover:bg-muted-foreground text-foreground text-[11px] font-medium transition-colors group border border-transparent hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-                <FolderOpen
+                <HugeiconsIcon
+                    icon={FolderOpen}
                     size={10}
                     className="text-muted-foreground group-hover:text-foreground"
                 />
@@ -158,14 +160,14 @@ function Breadcrumbs({ path, onReset, onClick }: BreadcrumbsProps) {
                                 : "text-muted-foreground"
                         }`}
                     >
-                        <Home size={14} />
+                        <HugeiconsIcon icon={Home} size={14} />
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent>Root</TooltipContent>
             </Tooltip>
             {path.map((segment, idx) => (
                 <React.Fragment key={idx}>
-                    <ChevronRight size={12} className="text-muted-foreground shrink-0" />
+                    <HugeiconsIcon icon={ChevronRight} size={12} className="text-muted-foreground shrink-0" />
                     <Button
                         variant="ghost"
                         size="sm"
@@ -253,7 +255,7 @@ export const JsonTableView: React.FC<JsonTableViewProps> = ({
         return (
             <div className="h-full flex flex-col items-center justify-center text-destructive gap-4 p-8 text-center bg-background">
                 <div className="bg-destructive/10 p-4 rounded-full">
-                    <AlertTriangle size={32} />
+                    <HugeiconsIcon icon={AlertTriangle} size={32} />
                 </div>
                 <div>
                     <h3 className="text-lg font-medium mb-2">Invalid JSON</h3>
@@ -297,7 +299,7 @@ export const JsonTableView: React.FC<JsonTableViewProps> = ({
                         if (filtered.length === 0) {
                             return (
                                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-2">
-                                    <Filter size={24} />
+                                    <HugeiconsIcon icon={Filter} size={24} />
                                     <span>No matches</span>
                                 </div>
                             )
@@ -386,7 +388,7 @@ export const JsonTableView: React.FC<JsonTableViewProps> = ({
                         if (filteredKeys.length === 0) {
                             return (
                                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-2">
-                                    <Filter size={24} />
+                                    <HugeiconsIcon icon={Filter} size={24} />
                                     <span>No matches</span>
                                 </div>
                             )
@@ -441,7 +443,7 @@ export const JsonTableView: React.FC<JsonTableViewProps> = ({
                                         aria-label="Go back"
                                         className="absolute top-4 left-4 size-7 text-muted-foreground"
                                     >
-                                        <ArrowLeft size={16} />
+                                        <HugeiconsIcon icon={ArrowLeft} size={16} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>Back</TooltipContent>

@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Sparkles, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Sparkles, LoaderCircle } from "@hugeicons/core-free-icons"
 import {
     Dialog,
     DialogContent,
@@ -39,7 +40,7 @@ export function AiModal({
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Sparkles className="size-5 text-purple-500" />
+                        <HugeiconsIcon icon={Sparkles} className="size-5 text-purple-500" />
                         Generate JSON with AI
                     </DialogTitle>
                 </DialogHeader>
@@ -75,12 +76,12 @@ export function AiModal({
                         >
                             {isLoading ? (
                                 <>
-                                    <Loader2 className="size-4 animate-spin" />
+                                    <HugeiconsIcon icon={LoaderCircle} className="size-4 animate-spin" />
                                     Generating...
                                 </>
                             ) : (
                                 <>
-                                    <Sparkles className="size-4" />
+                                    <HugeiconsIcon icon={Sparkles} className="size-4" />
                                     Generate
                                 </>
                             )}

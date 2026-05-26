@@ -1,6 +1,7 @@
 "use client"
 
-import { CheckCircle2, XCircle } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckCircle, XCircle } from "@hugeicons/core-free-icons"
 import type { EditorStats } from "@/types"
 
 interface StatusBarProps {
@@ -19,9 +20,9 @@ export function StatusBar({ stats, error }: StatusBarProps) {
                     title={error || "JSON syntax is valid"}
                 >
                     {error ? (
-                        <XCircle className="size-3" />
+                        <HugeiconsIcon icon={XCircle} className="size-3" />
                     ) : (
-                        <CheckCircle2 className="size-3" />
+                        <HugeiconsIcon icon={CheckCircle} className="size-3" />
                     )}
                     <span className="font-medium">
                         {error ? "Invalid JSON" : "Valid JSON"}

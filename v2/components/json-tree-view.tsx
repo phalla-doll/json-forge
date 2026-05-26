@@ -9,6 +9,7 @@ import React, {
     useMemo,
     useCallback,
 } from "react"
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
     ChevronRight,
     Box,
@@ -24,7 +25,7 @@ import {
     MoreHorizontal,
     ChevronsDown,
     ChevronsUp,
-} from "lucide-react"
+} from "@hugeicons/core-free-icons"
 import { trackEvent } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -142,16 +143,16 @@ interface GraphNodeProps {
 function TypeIcon({ type }: { type: DataType }) {
     switch (type) {
         case "object":
-            return <Box size={14} className="text-blue-600 dark:text-blue-400" />
+            return <HugeiconsIcon icon={Box} size={14} className="text-blue-600 dark:text-blue-400" />
         case "array":
-            return <List size={14} className="text-yellow-600 dark:text-yellow-400" />
+            return <HugeiconsIcon icon={List} size={14} className="text-yellow-600 dark:text-yellow-400" />
         case "string":
-            return <Type size={14} className="text-green-600 dark:text-green-400" />
+            return <HugeiconsIcon icon={Type} size={14} className="text-green-600 dark:text-green-400" />
         case "number":
-            return <Hash size={14} className="text-orange-600 dark:text-orange-400" />
+            return <HugeiconsIcon icon={Hash} size={14} className="text-orange-600 dark:text-orange-400" />
         case "boolean":
             return (
-                <ToggleLeft size={14} className="text-purple-600 dark:text-purple-400" />
+                <HugeiconsIcon icon={ToggleLeft} size={14} className="text-purple-600 dark:text-purple-400" />
             )
         default:
             return <div className="w-3.5 h-3.5 rounded-full bg-muted-foreground" />
@@ -298,7 +299,7 @@ const GraphNode: React.FC<GraphNodeProps> = React.memo(function GraphNode({
                                 isExpanded ? "rotate-90" : ""
                             }`}
                         >
-                            <ChevronRight size={14} className="text-muted-foreground" />
+                            <HugeiconsIcon icon={ChevronRight} size={14} className="text-muted-foreground" />
                         </div>
                     )}
 
@@ -358,7 +359,7 @@ const GraphNode: React.FC<GraphNodeProps> = React.memo(function GraphNode({
                                     onClick={handleLoadMore}
                                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-muted-foreground bg-transparent hover:bg-border hover:border-muted-foreground text-xs text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 >
-                                    <MoreHorizontal size={14} />
+                                    <HugeiconsIcon icon={MoreHorizontal} size={14} />
                                     <span>
                                         Show next 50 items ({keys.length - visibleItems}{" "}
                                         remaining)
@@ -625,7 +626,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
         return (
             <div className="h-full flex flex-col items-center justify-center text-destructive gap-4 p-8 text-center">
                 <div className="bg-destructive/10 p-4 rounded-full">
-                    <AlertTriangle size={32} />
+                    <HugeiconsIcon icon={AlertTriangle} size={32} />
                 </div>
                 <div>
                     <h3 className="text-lg font-medium mb-2">Invalid JSON</h3>
@@ -821,7 +822,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                                 className={iconButtonClasses}
                                 aria-label="Zoom in"
                             >
-                                <ZoomIn size={16} />
+                                <HugeiconsIcon icon={ZoomIn} size={16} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="left">Zoom in (+)</TooltipContent>
@@ -835,7 +836,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                                 className={iconButtonClasses}
                                 aria-label="Zoom out"
                             >
-                                <ZoomOut size={16} />
+                                <HugeiconsIcon icon={ZoomOut} size={16} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="left">Zoom out (-)</TooltipContent>
@@ -849,7 +850,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                                 className={iconButtonClasses}
                                 aria-label="Reset zoom"
                             >
-                                <RotateCcw size={16} />
+                                <HugeiconsIcon icon={RotateCcw} size={16} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="left">Reset scale (0)</TooltipContent>
@@ -863,7 +864,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                                 className={iconButtonClasses}
                                 aria-label="Fit to screen"
                             >
-                                <Shrink size={16} />
+                                <HugeiconsIcon icon={Shrink} size={16} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="left">Fit to screen</TooltipContent>
@@ -880,7 +881,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                                 className={iconButtonClasses}
                                 aria-label="Expand all nodes"
                             >
-                                <ChevronsDown size={16} />
+                                <HugeiconsIcon icon={ChevronsDown} size={16} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="left">Expand all</TooltipContent>
@@ -894,7 +895,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                                 className={iconButtonClasses}
                                 aria-label="Collapse all nodes"
                             >
-                                <ChevronsUp size={16} />
+                                <HugeiconsIcon icon={ChevronsUp} size={16} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="left">Collapse all</TooltipContent>
@@ -931,19 +932,19 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
 
                 <div className="absolute bottom-4 left-4 right-4 md:right-auto bg-muted/80 backdrop-blur border border-border px-3 py-2 rounded-md flex flex-wrap gap-x-4 gap-y-2 text-[10px] text-muted-foreground pointer-events-none justify-center md:justify-start">
                     <div className="flex items-center gap-1">
-                        <Box size={10} className="text-blue-600 dark:text-blue-400" /> Object
+                        <HugeiconsIcon icon={Box} size={10} className="text-blue-600 dark:text-blue-400" /> Object
                     </div>
                     <div className="flex items-center gap-1">
-                        <List size={10} className="text-yellow-600 dark:text-yellow-400" /> Array
+                        <HugeiconsIcon icon={List} size={10} className="text-yellow-600 dark:text-yellow-400" /> Array
                     </div>
                     <div className="flex items-center gap-1">
-                        <Type size={10} className="text-green-600 dark:text-green-400" /> String
+                        <HugeiconsIcon icon={Type} size={10} className="text-green-600 dark:text-green-400" /> String
                     </div>
                     <div className="flex items-center gap-1">
-                        <Hash size={10} className="text-orange-600 dark:text-orange-400" /> Number
+                        <HugeiconsIcon icon={Hash} size={10} className="text-orange-600 dark:text-orange-400" /> Number
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <ToggleLeft size={12} className="text-purple-600 dark:text-purple-400" /> Boolean
+                        <HugeiconsIcon icon={ToggleLeft} size={12} className="text-purple-600 dark:text-purple-400" /> Boolean
                     </div>
                 </div>
 

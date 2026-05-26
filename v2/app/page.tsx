@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react"
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
     Braces,
     Code,
@@ -9,9 +10,9 @@ import {
     Sun,
     Moon,
     ExternalLink,
-    UploadCloud,
+    CloudUpload,
     Sparkles,
-} from "lucide-react"
+} from "@hugeicons/core-free-icons"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
@@ -331,7 +332,7 @@ export default function Page() {
             <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/50 px-4 backdrop-blur-md md:px-6">
                 <div className="flex items-center gap-3 overflow-hidden md:gap-4">
                     <div className="shrink-0 rounded-md bg-green-600 p-1.5 text-white shadow-sm">
-                        <Braces className="size-4" />
+                        <HugeiconsIcon icon={Braces} className="size-4" />
                     </div>
                     <div className="flex min-w-0 flex-col">
                         <h1 className="truncate text-sm font-semibold tracking-wide">
@@ -360,7 +361,7 @@ export default function Page() {
                             aria-label="Code view"
                             className="gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
                         >
-                            <Code className="size-3.5" />
+                            <HugeiconsIcon icon={Code} className="size-3.5" />
                             <span className="hidden sm:inline">Code</span>
                         </ToggleGroupItem>
                         <ToggleGroupItem
@@ -368,7 +369,7 @@ export default function Page() {
                             aria-label="Graph view"
                             className="gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
                         >
-                            <GitGraph className="size-3.5" />
+                            <HugeiconsIcon icon={GitGraph} className="size-3.5" />
                             <span className="hidden sm:inline">Graph</span>
                         </ToggleGroupItem>
                         <ToggleGroupItem
@@ -376,7 +377,7 @@ export default function Page() {
                             aria-label="Table view"
                             className="gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
                         >
-                            <Table className="size-3.5" />
+                            <HugeiconsIcon icon={Table} className="size-3.5" />
                             <span className="hidden sm:inline">Table</span>
                         </ToggleGroupItem>
                     </ToggleGroup>
@@ -397,7 +398,7 @@ export default function Page() {
                                 }}
                                 className="border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
                             >
-                                <Sparkles className="size-3.5" />
+                                <HugeiconsIcon icon={Sparkles} className="size-3.5" />
                                 <span className="hidden sm:inline">
                                     {error ? "AI Fix" : "AI Generate"}
                                 </span>
@@ -422,9 +423,9 @@ export default function Page() {
                         className="text-muted-foreground hover:text-foreground"
                     >
                         {theme === "dark" ? (
-                            <Sun className="size-4" />
+                            <HugeiconsIcon icon={Sun} className="size-4" />
                         ) : (
-                            <Moon className="size-4" />
+                            <HugeiconsIcon icon={Moon} className="size-4" />
                         )}
                     </Button>
                     <Button
@@ -439,7 +440,7 @@ export default function Page() {
                             rel="noopener noreferrer"
                             aria-label="View source on GitHub"
                         >
-                            <ExternalLink className="size-4" />
+                            <HugeiconsIcon icon={ExternalLink} className="size-4" />
                         </a>
                     </Button>
                 </div>
@@ -467,7 +468,7 @@ export default function Page() {
                 {isDragging && (
                     <div className="pointer-events-none absolute inset-0 z-50 m-4 flex animate-in fade-in flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground bg-background/80 backdrop-blur-sm duration-200">
                         <div className="mb-4 rounded-full bg-muted p-6">
-                            <UploadCloud className="size-12" />
+                            <HugeiconsIcon icon={CloudUpload} className="size-12" />
                         </div>
                         <h3 className="mb-2 text-xl font-bold">
                             Drop JSON file here

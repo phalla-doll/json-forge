@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useEffect, useState } from "react"
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
     Sparkles,
     Minimize2,
@@ -9,7 +10,7 @@ import {
     Upload,
     Trash2,
     Search,
-} from "lucide-react"
+} from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import {
     Select,
@@ -58,12 +59,13 @@ export function Toolbar({
 }: ToolbarProps) {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const searchInputRef = useRef<HTMLInputElement>(null)
-    const [shortcutLabel] = useState(() => {
-        if (typeof navigator === "undefined") return "Ctrl+K"
+    const [shortcutLabel, setShortcutLabel] = useState("Ctrl+K")
+
+    useEffect(() => {
         const ua = navigator.userAgent
         const isApple = /Mac|iPod|iPhone|iPad/.test(ua)
-        return isApple ? "⌘K" : "Ctrl+K"
-    })
+        setShortcutLabel(isApple ? "⌘K" : "Ctrl+K")
+    }, [])
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -112,7 +114,7 @@ export function Toolbar({
                                 onClick={onFormat}
                                 disabled={!hasContent}
                             >
-                                <Sparkles className="size-3.5" />
+                                <HugeiconsIcon icon={Sparkles} className="size-3.5" />
                                 <span className="hidden lg:inline">Prettify</span>
                             </Button>
                         </TooltipTrigger>
@@ -127,7 +129,7 @@ export function Toolbar({
                                 onClick={onMinify}
                                 disabled={!hasContent}
                             >
-                                <Minimize2 className="size-3.5" />
+                                <HugeiconsIcon icon={Minimize2} className="size-3.5" />
                                 <span className="hidden lg:inline">Minify</span>
                             </Button>
                         </TooltipTrigger>
@@ -137,7 +139,7 @@ export function Toolbar({
 
                 <div className="flex items-center gap-2 pr-4 border-r border-border">
                     <div className="relative">
-                        <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <HugeiconsIcon icon={Search} className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                         <Input
                             ref={searchInputRef}
                             type="text"
@@ -173,7 +175,7 @@ export function Toolbar({
                                 size="sm"
                                 onClick={() => fileInputRef.current?.click()}
                             >
-                                <Upload className="size-3.5" />
+                                <HugeiconsIcon icon={Upload} className="size-3.5" />
                                 <span className="hidden sm:inline">Import</span>
                             </Button>
                         </TooltipTrigger>
@@ -188,7 +190,7 @@ export function Toolbar({
                                 onClick={onDownload}
                                 disabled={!hasContent}
                             >
-                                <Download className="size-3.5" />
+                                <HugeiconsIcon icon={Download} className="size-3.5" />
                                 <span className="hidden sm:inline">Export</span>
                             </Button>
                         </TooltipTrigger>
@@ -207,7 +209,7 @@ export function Toolbar({
                             disabled={!hasContent}
                             className="text-muted-foreground hover:text-destructive"
                         >
-                            <Trash2 className="size-3.5" />
+                            <HugeiconsIcon icon={Trash2} className="size-3.5" />
                             <span className="hidden sm:inline">Clear</span>
                         </Button>
                     </TooltipTrigger>
@@ -217,7 +219,7 @@ export function Toolbar({
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button size="sm" onClick={onCopy} disabled={!hasContent}>
-                            <Copy className="size-3.5" />
+                            <HugeiconsIcon icon={Copy} className="size-3.5" />
                             <span className="hidden sm:inline">Copy</span>
                         </Button>
                     </TooltipTrigger>

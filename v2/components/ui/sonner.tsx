@@ -2,7 +2,8 @@
 
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CircleCheck, Info, AlertTriangle, OctagonXIcon, LoaderCircle } from "@hugeicons/core-free-icons"
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
@@ -13,19 +14,19 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       icons={{
         success: (
-          <CircleCheckIcon className="size-4" />
+          <HugeiconsIcon icon={CircleCheck} className="size-4" />
         ),
         info: (
-          <InfoIcon className="size-4" />
+          <HugeiconsIcon icon={Info} className="size-4" />
         ),
         warning: (
-          <TriangleAlertIcon className="size-4" />
+          <HugeiconsIcon icon={AlertTriangle} className="size-4" />
         ),
         error: (
-          <OctagonXIcon className="size-4" />
+          <HugeiconsIcon icon={OctagonXIcon} className="size-4" />
         ),
         loading: (
-          <Loader2Icon className="size-4 animate-spin" />
+          <HugeiconsIcon icon={LoaderCircle} className="size-4 animate-spin" />
         ),
       }}
       style={
