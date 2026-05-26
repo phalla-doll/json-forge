@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { fixJsonOnServer } from "@/lib/nvidia";
+import { enforceAiRateLimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 
 const MAX_JSON_BYTES = 1_000_000;
 
 export async function POST(request: Request) {
+  const rl = await enforceAiRateLimit(request);
+  if (!rl.ok) return rl.response;
+
   let body: { json?: unknown; error?: unknown };
   try {
     body = await request.json();

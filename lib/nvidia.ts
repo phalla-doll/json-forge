@@ -34,7 +34,7 @@ export async function generateJsonOnServer(prompt: string): Promise<string> {
     response_format: { type: "json_object" },
     temperature: 1,
     top_p: 1,
-    max_tokens: 4096,
+    max_tokens: 2048,
   });
   return response.choices[0]?.message?.content || "";
 }

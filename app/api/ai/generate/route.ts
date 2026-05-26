@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { generateJsonOnServer } from "@/lib/nvidia";
+import { enforceAiRateLimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const rl = await enforceAiRateLimit(request);
+  if (!rl.ok) return rl.response;
+
   let body: { prompt?: unknown };
   try {
     body = await request.json();
