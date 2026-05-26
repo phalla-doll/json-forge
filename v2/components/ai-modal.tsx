@@ -72,7 +72,7 @@ export function AiModal({
                         <Button
                             type="submit"
                             disabled={!prompt.trim() || isLoading}
-                            className="border-transparent bg-purple-600 text-white hover:bg-purple-700"
+                            variant="default"
                         >
                             {isLoading ? (
                                 <>
