@@ -151,7 +151,7 @@ export function JsonEditorInner({
                     lineDecorationsWidth: 10,
                     lineNumbersMinChars: 3,
                     fontSize: 13,
-                    fontFamily: "'JetBrains Mono', monospace",
+                    fontFamily: "'Google Sans Code', monospace",
                     lineHeight: 24,
                     padding: { top: 16, bottom: 16 },
                     scrollBeyondLastLine: false,

@@ -1,4 +1,4 @@
-import { JetBrains_Mono, Geist } from "next/font/google"
+import { Google_Sans_Code, Geist } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'})
 
-const jetbrainsMono = JetBrains_Mono({
+const googleSansCode = Google_Sans_Code({
     subsets: ["latin"],
     variable: "--font-mono",
 })
@@ -30,7 +30,7 @@ export default function RootLayout({
             suppressHydrationWarning
             className={cn(
                         "antialiased",
-                        jetbrainsMono.variable
+                        googleSansCode.variable
                     , "font-sans", geist.variable)}
         >
             <body className="h-dvh overflow-hidden">

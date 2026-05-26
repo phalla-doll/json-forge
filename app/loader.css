@@ -5,7 +5,7 @@
     height: 100vh;
     background: #000000;
     color: #eaeaea;
-    font-family: var(--font-mono, "JetBrains Mono", monospace);
+    font-family: var(--font-mono, "Google Sans Code", monospace);
     font-size: 13px;
     letter-spacing: -0.5px;
 }
