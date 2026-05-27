@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Code,
@@ -13,6 +20,9 @@ import {
   AiContentGenerator02Icon,
   Share05Icon,
   X,
+  HelpCircleIcon,
+  GitCompareIcon,
+  DocumentCodeIcon,
 } from "@hugeicons/core-free-icons";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -25,16 +35,38 @@ import { AiModal } from "@/components/ai-modal";
 import { ShareModal } from "@/components/share-modal";
 import { JsonTreeView } from "@/components/json-tree-view";
 import { JsonTableView } from "@/components/json-table-view";
-import { getStats, downloadFile, isValidJson, trackEvent } from "@/lib/utils";
+import { JsonDiffView } from "@/components/json-diff-view";
+import { KeyboardCheatsheetModal } from "@/components/keyboard-cheatsheet-modal";
+import { SchemaModal } from "@/components/schema-modal";
+import {
+  getStats,
+  downloadFile,
+  isValidJson,
+  trackEvent,
+  sortKeysDeep,
+} from "@/lib/utils";
+import {
+  parseJsonl,
+  parseYaml,
+  detectFormat,
+  ConversionError,
+} from "@/lib/converters";
 import { generateJson, fixJson } from "@/lib/ai";
-import { createShare, type ShareResult } from "@/lib/share";
+import {
+  createShare,
+  type ShareResult,
+  type ShareOptions,
+} from "@/lib/share";
+import { saveCurrent, loadCurrent, pushRecent } from "@/lib/storage";
+import { RecentDocsModal } from "@/components/recent-docs-modal";
 import type { EditorStats } from "@/types";
 
-type ViewMode = "code" | "graph" | "table";
+type ViewMode = "code" | "graph" | "table" | "diff";
 
 export type SharedSnapshotInfo = {
   createdAt: number;
   expiresAt: number;
+  readOnly?: boolean;
 };
 
 type JsonForgeAppProps = {
@@ -47,11 +79,11 @@ export function JsonForgeApp({
   sharedSnapshot,
 }: JsonForgeAppProps) {
   const { theme, resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const activeTheme = mounted ? (resolvedTheme ?? theme) : undefined;
   const isDarkTheme = activeTheme === "dark";
@@ -64,6 +96,12 @@ export function JsonForgeApp({
   const [searchTrigger, setSearchTrigger] = useState(0);
   const [searchMatchCount, setSearchMatchCount] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("code");
+  const [wordWrap, setWordWrap] = useState(false);
+  const [diffRight, setDiffRight] = useState<string>("");
+  const currentInputRef = useRef<string>(initialJson);
+  useEffect(() => {
+    currentInputRef.current = jsonInput;
+  }, [jsonInput]);
   const [isDragging, setIsDragging] = useState(false);
   const dragCounterRef = useRef(0);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -73,14 +111,26 @@ export function JsonForgeApp({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isShareLoading, setIsShareLoading] = useState(false);
   const [shareResult, setShareResult] = useState<ShareResult | null>(null);
+  const [isCheatsheetOpen, setIsCheatsheetOpen] = useState(false);
+  const [isRecentsOpen, setIsRecentsOpen] = useState(false);
+  const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedInput(jsonInput), 800);
     return () => clearTimeout(handler);
   }, [jsonInput]);
 
+  const lastTrackedSearchRef = useRef<string>("");
+
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      const trimmed = searchTerm.trim();
+      if (trimmed && trimmed !== lastTrackedSearchRef.current) {
+        lastTrackedSearchRef.current = trimmed;
+        trackEvent("search_used", { length: trimmed.length });
+      }
+    }, 300);
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
@@ -98,6 +148,95 @@ export function JsonForgeApp({
       return (e as Error).message;
     }
   }, [debouncedInput]);
+
+  const previousErrorRef = useRef<string | null>(null);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (error && error !== previousErrorRef.current) {
+        trackEvent("invalid_json_observed");
+      }
+      previousErrorRef.current = error;
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [error]);
+
+  // Restore last-saved document on mount (skip when viewing a shared snapshot
+  // so that opening /s/<slug> doesn't overwrite the shared payload with the
+  // local browser's previous work).
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    if (sharedSnapshot) return;
+    loadCurrent().then((saved) => {
+      if (saved && saved !== initialJson) {
+        setJsonInput(saved);
+        setDebouncedInput(saved);
+        trackEvent("autosave_restored", { size: saved.length });
+      }
+    });
+  }, [sharedSnapshot, initialJson]);
+
+  // Persist the current document on debounced changes. Skip for shared
+  // snapshots so a viewer's local edits don't replace their saved doc.
+  useEffect(() => {
+    if (sharedSnapshot) return;
+    saveCurrent(debouncedInput);
+  }, [debouncedInput, sharedSnapshot]);
+
+  useEffect(() => {
+    const VIEW_KEYS: Record<string, ViewMode> = {
+      "1": "code",
+      "2": "graph",
+      "3": "table",
+      "4": "diff",
+    };
+
+    const isTypingTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      if (target.isContentEditable) return true;
+      const tag = target.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+        return true;
+      }
+      // Monaco renders into a contentEditable textarea inside .monaco-editor
+      return !!target.closest(".monaco-editor");
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.repeat) return;
+
+      // Cmd/Ctrl + 1..4 — switch view (works even when editor has focus).
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        !event.altKey &&
+        !event.shiftKey &&
+        VIEW_KEYS[event.key]
+      ) {
+        event.preventDefault();
+        const mode = VIEW_KEYS[event.key];
+        setViewMode(mode);
+        trackEvent("view_switch_hotkey", { mode });
+        return;
+      }
+
+      // ? — open cheatsheet. Skip when typing.
+      if (
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        event.key === "?" &&
+        !isTypingTarget(event.target)
+      ) {
+        event.preventDefault();
+        trackEvent("open_cheatsheet", { source: "hotkey" });
+        setIsCheatsheetOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const handleInputChange = (value: string) => {
     setJsonInput(value);
@@ -148,6 +287,25 @@ export function JsonForgeApp({
     }
   };
 
+  const handleSortKeys = () => {
+    trackEvent("click_sort_keys");
+    try {
+      if (!jsonInput.trim()) return;
+      const parsed = JSON.parse(jsonInput);
+      const sorted = JSON.stringify(sortKeysDeep(parsed), null, indentation);
+      setJsonInput(sorted);
+      setDebouncedInput(sorted);
+      toast.success("Keys sorted alphabetically");
+    } catch {
+      toast.error("Invalid JSON format");
+    }
+  };
+
+  const handleWordWrapChange = (next: boolean) => {
+    trackEvent("toggle_word_wrap", { enabled: next });
+    setWordWrap(next);
+  };
+
   const handleCopy = async () => {
     trackEvent("click_copy");
     if (!jsonInput) return;
@@ -169,6 +327,9 @@ export function JsonForgeApp({
       }
     }
     trackEvent("click_clear_confirm");
+    if (jsonInput.trim()) {
+      void pushRecent(jsonInput);
+    }
     setJsonInput("");
     setDebouncedInput("");
     toast.info("Editor cleared");
@@ -189,38 +350,64 @@ export function JsonForgeApp({
     }
   };
 
-  const handleUpload = useCallback((file: File) => {
-    trackEvent("click_import", {
-      file_type: file.type,
-      size: file.size,
-    });
-    if (
-      !file.name.toLowerCase().endsWith(".json") &&
-      file.type !== "application/json"
-    ) {
-      toast.error("Invalid file type. Only .json files are allowed.");
-      return;
-    }
-    const MAX_FILE_BYTES = 25 * 1024 * 1024;
-    if (file.size > MAX_FILE_BYTES) {
-      toast.error("File too large. Maximum size is 25 MB.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.info("Large file detected. Graph view may be slow.");
-    }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        const result = event.target.result as string;
-        setJsonInput(result);
-        setDebouncedInput(result);
-        toast.success(`Loaded ${file.name}`);
+  const handleUpload = useCallback(
+    (file: File) => {
+      const format = detectFormat(file.name);
+      trackEvent("click_import", {
+        file_type: file.type,
+        size: file.size,
+        format: format ?? "unknown",
+      });
+      if (!format) {
+        toast.error(
+          "Unsupported file type. Use .json, .jsonl, .ndjson, .yaml, or .yml.",
+        );
+        return;
       }
-    };
-    reader.onerror = () => toast.error("Failed to read file");
-    reader.readAsText(file);
-  }, []);
+      const MAX_FILE_BYTES = 25 * 1024 * 1024;
+      if (file.size > MAX_FILE_BYTES) {
+        toast.error("File too large. Maximum size is 25 MB.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.info("Large file detected. Graph view may be slow.");
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (!event.target?.result) return;
+        const rawText = event.target.result as string;
+        try {
+          let parsed: string;
+          if (format === "json") {
+            parsed = rawText;
+          } else if (format === "jsonl") {
+            parsed = parseJsonl(rawText, indentation);
+          } else {
+            parsed = parseYaml(rawText, indentation);
+          }
+          // Archive the previous doc into recents before replacing it so the
+          // user can flip back to it.
+          if (currentInputRef.current.trim()) {
+            void pushRecent(currentInputRef.current);
+          }
+          setJsonInput(parsed);
+          setDebouncedInput(parsed);
+          toast.success(`Loaded ${file.name}`);
+        } catch (err) {
+          const message =
+            err instanceof ConversionError
+              ? err.message
+              : err instanceof Error
+                ? err.message
+                : "Failed to parse file";
+          toast.error(`Failed to parse ${format.toUpperCase()}: ${message}`);
+        }
+      };
+      reader.onerror = () => toast.error("Failed to read file");
+      reader.readAsText(file);
+    },
+    [indentation],
+  );
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
@@ -249,7 +436,12 @@ export function JsonForgeApp({
     setIsDragging(false);
     dragCounterRef.current = 0;
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleUpload(e.dataTransfer.files[0]);
+      const file = e.dataTransfer.files[0];
+      trackEvent("drag_drop_import", {
+        file_type: file.type,
+        size: file.size,
+      });
+      handleUpload(file);
     }
   };
 
@@ -259,6 +451,9 @@ export function JsonForgeApp({
     try {
       const { result, remaining } = await generateJson(prompt);
       setAiRemaining(remaining);
+      if (remaining === 0) {
+        trackEvent("ai_quota_exhausted", { endpoint: "generate" });
+      }
       if (result) {
         try {
           const formatted = JSON.stringify(
@@ -285,16 +480,26 @@ export function JsonForgeApp({
     }
   };
 
-  const handleShare = async () => {
+  const handleOpenShareModal = () => {
     if (!jsonInput.trim() || error || isShareLoading) return;
-    trackEvent("share_create_attempt");
     setShareResult(null);
     setIsShareModalOpen(true);
+  };
+
+  const handleCreateShare = async (options: ShareOptions) => {
+    if (!jsonInput.trim() || error || isShareLoading) return;
+    trackEvent("share_create_attempt", {
+      expires_in: options.expiresIn ?? "30d",
+      read_only: options.readOnly === true,
+    });
     setIsShareLoading(true);
     try {
-      const result = await createShare(jsonInput);
+      const result = await createShare(jsonInput, options);
       setShareResult(result);
-      trackEvent("share_create_success");
+      trackEvent("share_create_success", {
+        expires_in: result.expiresIn,
+        read_only: result.readOnly,
+      });
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to create share link";
@@ -313,6 +518,9 @@ export function JsonForgeApp({
     try {
       const { result, remaining } = await fixJson(jsonInput, error);
       setAiRemaining(remaining);
+      if (remaining === 0) {
+        trackEvent("ai_quota_exhausted", { endpoint: "fix" });
+      }
       if (result) {
         try {
           const formatted = JSON.stringify(
@@ -392,7 +600,7 @@ export function JsonForgeApp({
                 trackEvent("switch_view", { mode: val });
               }
             }}
-            className="ml-2 shrink-0 rounded-md border border-border bg-muted p-0.5 md:ml-0"
+            className="ml-2 shrink-0 rounded-md border border-border bg-muted p-px md:ml-0"
           >
             <ToggleGroupItem
               value="code"
@@ -418,6 +626,14 @@ export function JsonForgeApp({
               <HugeiconsIcon icon={Table} className="size-3.5" />
               <span className="hidden sm:inline">Table</span>
             </ToggleGroupItem>
+            <ToggleGroupItem
+              value="diff"
+              aria-label="Diff view"
+              className="h-6 gap-2 rounded px-2 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm md:px-3"
+            >
+              <HugeiconsIcon icon={GitCompareIcon} className="size-3.5" />
+              <span className="hidden sm:inline">Diff</span>
+            </ToggleGroupItem>
           </ToggleGroup>
         </div>
 
@@ -432,6 +648,7 @@ export function JsonForgeApp({
                 setIsAiModalOpen(true);
               }
             }}
+            disabled={sharedSnapshot?.readOnly === true}
             className="border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
           >
             <HugeiconsIcon
@@ -446,9 +663,28 @@ export function JsonForgeApp({
           </Button>
 
           <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsSchemaModalOpen(true)}
+            disabled={!jsonInput.trim() || !!error}
+            title={
+              error
+                ? "Fix JSON first to generate a schema"
+                : "Generate a TypeScript / Zod / JSON Schema from current JSON"
+            }
+          >
+            <HugeiconsIcon icon={DocumentCodeIcon} className="size-3.5" />
+            <span className="hidden md:inline">Schema</span>
+          </Button>
+
+          <Button
             variant="ghost"
             size="sm"
-            onClick={() => setTheme(isDarkTheme ? "light" : "dark")}
+            onClick={() => {
+              const next = isDarkTheme ? "light" : "dark";
+              trackEvent("theme_toggle", { source: "button", next });
+              setTheme(next);
+            }}
             aria-label={
               mounted
                 ? isDarkTheme
@@ -470,6 +706,19 @@ export function JsonForgeApp({
                 <span className="block size-4" aria-hidden="true" />
               )}
             </span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              trackEvent("open_cheatsheet", { source: "button" });
+              setIsCheatsheetOpen(true);
+            }}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Keyboard shortcuts"
+            title="Keyboard shortcuts (?)"
+          >
+            <HugeiconsIcon icon={HelpCircleIcon} className="size-4" />
           </Button>
           <Button
             asChild
@@ -499,11 +748,12 @@ export function JsonForgeApp({
       <Toolbar
         onFormat={handleFormat}
         onMinify={handleMinify}
+        onSortKeys={handleSortKeys}
         onCopy={handleCopy}
         onClear={handleClear}
         onDownload={handleDownload}
         onUpload={handleUpload}
-        onShare={handleShare}
+        onShare={handleOpenShareModal}
         canShare={jsonInput.trim().length > 0 && !error}
         isSharing={isShareLoading}
         hasContent={jsonInput.length > 0}
@@ -513,6 +763,10 @@ export function JsonForgeApp({
         onSearchChange={setSearchTerm}
         onSearchEnter={() => setSearchTrigger((p) => p + 1)}
         hasMatches={searchMatchCount === null ? null : searchMatchCount > 0}
+        wordWrap={wordWrap}
+        onWordWrapChange={handleWordWrapChange}
+        readOnly={sharedSnapshot?.readOnly === true}
+        onOpenRecents={() => setIsRecentsOpen(true)}
       />
 
       <main className="relative flex-1 min-h-0 bg-background">
@@ -539,22 +793,33 @@ export function JsonForgeApp({
             searchTerm={debouncedSearchTerm}
             theme={isDarkTheme ? "dark" : "light"}
             onMatchCountChange={setSearchMatchCount}
+            wordWrap={wordWrap}
+            readOnly={sharedSnapshot?.readOnly === true}
           />
         </div>
 
         {viewMode !== "code" && (
           <div className="absolute inset-0">
-            {viewMode === "graph" ? (
+            {viewMode === "graph" && (
               <JsonTreeView
                 value={debouncedInput}
                 searchTerm={debouncedSearchTerm}
                 searchTrigger={searchTrigger}
                 onMatchCountChange={setSearchMatchCount}
               />
-            ) : (
+            )}
+            {viewMode === "table" && (
               <JsonTableView
                 value={debouncedInput}
                 searchTerm={debouncedSearchTerm}
+              />
+            )}
+            {viewMode === "diff" && (
+              <JsonDiffView
+                original={debouncedInput}
+                modified={diffRight}
+                onModifiedChange={setDiffRight}
+                theme={isDarkTheme ? "dark" : "light"}
               />
             )}
           </div>
@@ -577,6 +842,33 @@ export function JsonForgeApp({
         onClose={() => setIsShareModalOpen(false)}
         isLoading={isShareLoading}
         result={shareResult}
+        onCreate={handleCreateShare}
+      />
+
+      <KeyboardCheatsheetModal
+        isOpen={isCheatsheetOpen}
+        onClose={() => setIsCheatsheetOpen(false)}
+      />
+
+      <RecentDocsModal
+        isOpen={isRecentsOpen}
+        onClose={() => setIsRecentsOpen(false)}
+        onOpen={(text) => {
+          if (currentInputRef.current.trim()) {
+            void pushRecent(currentInputRef.current);
+          }
+          setJsonInput(text);
+          setDebouncedInput(text);
+          toast.success("Recent document loaded");
+        }}
+      />
+
+      <SchemaModal
+        isOpen={isSchemaModalOpen}
+        onClose={() => setIsSchemaModalOpen(false)}
+        json={jsonInput}
+        remaining={aiRemaining}
+        onRemainingChange={setAiRemaining}
       />
     </div>
   );
@@ -609,9 +901,19 @@ function SharedSnapshotBanner({
       <div className="flex items-center gap-2">
         <HugeiconsIcon icon={Share05Icon} className="size-3.5 shrink-0" />
         <span suppressHydrationWarning>
-          Viewing a shared snapshot from <strong>{createdText}</strong>. Expires{" "}
-          {expiresText}. Edits stay local — they won&apos;t update the shared
-          link.
+          {info.readOnly ? (
+            <>
+              <strong>View-only</strong> snapshot from{" "}
+              <strong>{createdText}</strong>. Expires {expiresText}. The creator
+              disabled editing.
+            </>
+          ) : (
+            <>
+              Viewing a shared snapshot from <strong>{createdText}</strong>.
+              Expires {expiresText}. Edits stay local — they won&apos;t update
+              the shared link.
+            </>
+          )}
         </span>
       </div>
       <button

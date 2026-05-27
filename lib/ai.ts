@@ -37,3 +37,16 @@ export const fixJson = async (
   });
   return { result: data.result || "", remaining: data.remaining ?? 0 };
 };
+
+export type SchemaTarget = "typescript" | "zod" | "json-schema";
+
+export const generateTypes = async (
+  json: string,
+  target: SchemaTarget,
+): Promise<AiResponse> => {
+  const data = await postJson<AiResponse>("/api/ai/types", {
+    json,
+    target,
+  });
+  return { result: data.result || "", remaining: data.remaining ?? 0 };
+};

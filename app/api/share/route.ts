@@ -8,7 +8,16 @@ export const runtime = "nodejs";
 
 const MAX_PAYLOAD_BYTES = 512 * 1024; // 512 KiB — safely under D1's 1 MiB row cap.
 const MAX_BODY_BYTES = MAX_PAYLOAD_BYTES + 4 * 1024; // JSON envelope overhead.
-const TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days.
+
+const TTL_OPTIONS_MS = {
+  "1h": 60 * 60 * 1000,
+  "1d": 24 * 60 * 60 * 1000,
+  "7d": 7 * 24 * 60 * 60 * 1000,
+  "30d": 30 * 24 * 60 * 60 * 1000,
+} as const;
+
+type ExpiryOption = keyof typeof TTL_OPTIONS_MS;
+const VALID_EXPIRIES = new Set(Object.keys(TTL_OPTIONS_MS) as ExpiryOption[]);
 
 // Stream-read with a hard byte cap so a missing or spoofed Content-Length
 // can't trick us into buffering the platform's max body (~4.5 MB on Vercel)
@@ -56,9 +65,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Payload too large" }, { status: 413 });
   }
 
-  let body: { json?: unknown };
+  let body: { json?: unknown; expiresIn?: unknown; readOnly?: unknown };
   try {
-    body = raw ? (JSON.parse(raw) as { json?: unknown }) : {};
+    body = raw
+      ? (JSON.parse(raw) as {
+          json?: unknown;
+          expiresIn?: unknown;
+          readOnly?: unknown;
+        })
+      : {};
   } catch {
     return NextResponse.json(
       { error: "Invalid request body" },
@@ -66,13 +81,19 @@ export async function POST(request: Request) {
     );
   }
 
-  const { json } = body;
+  const { json, expiresIn, readOnly } = body;
   if (typeof json !== "string" || !json.trim()) {
     return NextResponse.json(
       { error: "JSON payload is required" },
       { status: 400 },
     );
   }
+
+  const expiry: ExpiryOption =
+    typeof expiresIn === "string" && VALID_EXPIRIES.has(expiresIn as ExpiryOption)
+      ? (expiresIn as ExpiryOption)
+      : "30d";
+  const readOnlyFlag = readOnly === true;
 
   const byteSize = Buffer.byteLength(json, "utf8");
   if (byteSize > MAX_PAYLOAD_BYTES) {
@@ -93,13 +114,13 @@ export async function POST(request: Request) {
 
   const slug = generateSlug();
   const now = Date.now();
-  const expiresAt = now + TTL_MS;
+  const expiresAt = now + TTL_OPTIONS_MS[expiry];
   const ipHash = hashIp(getClientIp(request));
 
   try {
     await execute(
-      "INSERT INTO shares (slug, payload, byte_size, created_at, expires_at, ip_hash) VALUES (?, ?, ?, ?, ?, ?)",
-      [slug, json, byteSize, now, expiresAt, ipHash],
+      "INSERT INTO shares (slug, payload, byte_size, created_at, expires_at, ip_hash, read_only) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [slug, json, byteSize, now, expiresAt, ipHash, readOnlyFlag ? 1 : 0],
     );
   } catch (err) {
     if (err instanceof D1Error) {
@@ -117,6 +138,8 @@ export async function POST(request: Request) {
     slug,
     url: `/s/${slug}`,
     expiresAt,
+    readOnly: readOnlyFlag,
+    expiresIn: expiry,
     remaining: rl.remaining,
   });
 }

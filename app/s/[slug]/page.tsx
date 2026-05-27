@@ -4,6 +4,7 @@ import { D1Error, query } from "@/lib/d1";
 import { SLUG_PATTERN } from "@/lib/slug";
 import { JsonForgeApp } from "@/components/json-forge-app";
 import { ExpiredShareView } from "./expired-view";
+import { ShareViewBeacon } from "./share-view-beacon";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ type ShareRow = {
   payload: string;
   created_at: number;
   expires_at: number;
+  read_only: number | null;
 };
 
 export const metadata: Metadata = {
@@ -27,7 +29,7 @@ async function loadShare(slug: string): Promise<LoadResult> {
   if (!SLUG_PATTERN.test(slug)) return { kind: "not-found" };
   try {
     const rows = await query<ShareRow>(
-      "SELECT payload, created_at, expires_at FROM shares WHERE slug = ? LIMIT 1",
+      "SELECT payload, created_at, expires_at, read_only FROM shares WHERE slug = ? LIMIT 1",
       [slug],
     );
     const row = rows[0];
@@ -58,13 +60,18 @@ export default async function SharePage({
   if (result.kind === "not-found") notFound();
   if (result.kind === "expired") return <ExpiredShareView />;
 
+  const readOnly = result.row.read_only === 1;
   return (
-    <JsonForgeApp
-      initialJson={result.row.payload}
-      sharedSnapshot={{
-        createdAt: result.row.created_at,
-        expiresAt: result.row.expires_at,
-      }}
-    />
+    <>
+      <ShareViewBeacon slug={slug} readOnly={readOnly} />
+      <JsonForgeApp
+        initialJson={result.row.payload}
+        sharedSnapshot={{
+          createdAt: result.row.created_at,
+          expiresAt: result.row.expires_at,
+          readOnly,
+        }}
+      />
+    </>
   );
 }

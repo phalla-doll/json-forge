@@ -7,6 +7,7 @@ import {
   LoaderCircle,
   Share05Icon,
   CheckCircle,
+  EyeIcon,
 } from "@hugeicons/core-free-icons";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -20,14 +21,22 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/utils";
-import type { ShareResult } from "@/lib/share";
+import type { ShareResult, ShareExpiry, ShareOptions } from "@/lib/share";
 
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
   isLoading: boolean;
   result: ShareResult | null;
+  onCreate: (options: ShareOptions) => void;
 }
+
+const EXPIRY_OPTIONS: { value: ShareExpiry; label: string }[] = [
+  { value: "1h", label: "1 hour" },
+  { value: "1d", label: "1 day" },
+  { value: "7d", label: "7 days" },
+  { value: "30d", label: "30 days" },
+];
 
 // Parent should pass `key={result?.slug ?? "pending"}` so a new share remounts
 // this component, naturally resetting copy state without a reset effect.
@@ -36,8 +45,11 @@ export function ShareModal({
   onClose,
   isLoading,
   result,
+  onCreate,
 }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
+  const [expiresIn, setExpiresIn] = useState<ShareExpiry>("30d");
+  const [readOnly, setReadOnly] = useState(false);
 
   useEffect(() => {
     if (!copied) return;
@@ -69,6 +81,10 @@ export function ShareModal({
     }
   };
 
+  const handleConfirm = () => {
+    onCreate({ expiresIn, readOnly });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
@@ -81,18 +97,72 @@ export function ShareModal({
             Share this JSON
           </DialogTitle>
           <DialogDescription>
-            Anyone with this link can view a snapshot of the current editor. The
-            link expires after 30 days.
+            {result
+              ? "Send this link to anyone — they'll see a snapshot of your JSON."
+              : "Pick how long the link should live, then create it."}
           </DialogDescription>
         </DialogHeader>
 
-        {isLoading || !result ? (
+        {isLoading ? (
           <div className="flex h-24 items-center justify-center text-sm text-muted-foreground">
             <HugeiconsIcon
               icon={LoaderCircle}
               className="size-4 animate-spin"
             />
             <span className="ml-2">Creating share link…</span>
+          </div>
+        ) : !result ? (
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-medium text-foreground">
+                Expires after
+              </span>
+              <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-0.5">
+                {EXPIRY_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setExpiresIn(opt.value)}
+                    className={`flex-1 rounded px-2 py-1.5 text-xs font-medium transition-colors ${
+                      expiresIn === opt.value
+                        ? "bg-foreground text-background shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <label className="flex cursor-pointer items-start gap-2 rounded-md border border-border bg-muted/40 p-3">
+              <input
+                type="checkbox"
+                checked={readOnly}
+                onChange={(e) => setReadOnly(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span className="flex flex-col text-xs">
+                <span className="flex items-center gap-1.5 font-medium text-foreground">
+                  <HugeiconsIcon icon={EyeIcon} className="size-3.5" />
+                  View-only mode
+                </span>
+                <span className="text-muted-foreground">
+                  Recipients cannot edit, prettify, or import. They can still
+                  view, copy, and download.
+                </span>
+              </span>
+            </label>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button onClick={handleConfirm}>
+                <HugeiconsIcon icon={Share05Icon} className="size-3.5" />
+                Create link
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -136,10 +206,15 @@ export function ShareModal({
                 </span>
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Expires {expiryText}. Recipients can edit locally, but their
-              changes won&apos;t update this link.
-            </p>
+            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span>Expires {expiryText}.</span>
+              {result.readOnly && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-amber-600 dark:text-amber-300">
+                  <HugeiconsIcon icon={EyeIcon} className="size-3" />
+                  View-only
+                </span>
+              )}
+            </div>
           </div>
         )}
       </DialogContent>

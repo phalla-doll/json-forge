@@ -9,6 +9,7 @@ type ShareRow = {
   payload: string;
   created_at: number;
   expires_at: number;
+  read_only: number | null;
 };
 
 export async function GET(
@@ -23,7 +24,7 @@ export async function GET(
   let rows: ShareRow[];
   try {
     rows = await query<ShareRow>(
-      "SELECT payload, created_at, expires_at FROM shares WHERE slug = ? LIMIT 1",
+      "SELECT payload, created_at, expires_at, read_only FROM shares WHERE slug = ? LIMIT 1",
       [slug],
     );
   } catch (err) {
@@ -52,6 +53,7 @@ export async function GET(
       json: row.payload,
       createdAt: row.created_at,
       expiresAt: row.expires_at,
+      readOnly: row.read_only === 1,
     },
     {
       // Don't cache: shares can be deleted by cron at any time and the CDN
