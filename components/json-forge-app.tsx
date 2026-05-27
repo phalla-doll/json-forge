@@ -351,23 +351,23 @@ export function JsonForgeApp({
               aria-hidden="true"
             >
               <path
-                d="M12 7 C9 7 9 11 9 13 C9 15 7 16 7 16 C7 16 9 17 9 19 C9 21 9 25 12 25"
+                d="M13 6 C9 6 9 11 9 13 C9 15 6 16 6 16 C6 16 9 17 9 19 C9 21 9 26 13 26"
                 stroke="currentColor"
-                strokeWidth="2.5"
+                strokeWidth="2.75"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
-                d="M20 7 C23 7 23 11 23 13 C23 15 25 16 25 16 C25 16 23 17 23 19 C23 21 23 25 20 25"
+                d="M19 6 C23 6 23 11 23 13 C23 15 26 16 26 16 C26 16 23 17 23 19 C23 21 23 26 19 26"
                 stroke="currentColor"
-                strokeWidth="2.5"
+                strokeWidth="2.75"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
-                d="M16 11.5 L17 15 L20.5 16 L17 17 L16 20.5 L15 17 L11.5 16 L15 15 Z"
+                d="M16 11 L17.2 14.8 L21 16 L17.2 17.2 L16 21 L14.8 17.2 L11 16 L14.8 14.8 Z"
                 fill="#f59e0b"
               />
             </svg>
