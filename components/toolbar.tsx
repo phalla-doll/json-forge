@@ -98,12 +98,18 @@ export function Toolbar({
               onIndentChange(val === "tab" ? "\t" : Number(val));
             }}
           >
-            <SelectTrigger size="sm" className="h-7 w-20 text-xs">
+            <SelectTrigger size="sm" className="h-7 w-20 text-xs lg:w-24">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="2">2 Sp</SelectItem>
-              <SelectItem value="4">4 Sp</SelectItem>
+              <SelectItem value="2">
+                2 <span className="lg:hidden">Sp</span>
+                <span className="hidden lg:inline">Spaces</span>
+              </SelectItem>
+              <SelectItem value="4">
+                4 <span className="lg:hidden">Sp</span>
+                <span className="hidden lg:inline">Spaces</span>
+              </SelectItem>
               <SelectItem value="tab">Tabs</SelectItem>
             </SelectContent>
           </Select>
