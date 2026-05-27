@@ -444,7 +444,7 @@ export function Toolbar({
                                         onSearchEnter();
                                     }
                                 }}
-                                className={`h-7 w-34 pl-8 text-xs transition-all focus:w-48 lg:focus:w-64 ${
+                                className={`h-7 w-33 pl-8 text-xs transition-all focus:w-48 lg:focus:w-64 ${
                                     hasMatches === false
                                         ? "border-destructive focus-visible:border-destructive"
                                         : ""
