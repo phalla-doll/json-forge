@@ -33,9 +33,10 @@ When changing editor behavior, edit `JsonForgeApp` once — both routes pick it 
 
 All editor state lives in this one component with React hooks:
 
-- `jsonInput` (immediate) drives the editor; `debouncedInput` (800ms) drives the expensive consumers: `stats`, `error` (validity), Graph view, Table view.
+- `jsonInput` (immediate) drives the editor; `debouncedInput` (800ms) drives the expensive consumers: `stats`, `error` (validity), Graph view, Table view, Diff view.
 - `searchTerm` (immediate) drives the input; `debouncedSearchTerm` (300ms) drives match highlighting and the Tree/Table search.
-- `viewMode` is `"code" | "graph" | "table"`. The Code view is kept mounted but hidden when inactive so Monaco's state survives view switches.
+- `viewMode` is `"code" | "graph" | "table" | "diff"`. The Code view is kept mounted but hidden when inactive so Monaco's state survives view switches.
+- A `sharedSnapshot.readOnly` prop propagates from `/s/[slug]` and disables all mutating toolbar actions (Prettify, Minify, Sort, Clear, Import, Share, AI). Editor renders with `readOnly: true`. Search, Copy, Export stay enabled.
 
 If you add a derived value, hang it off `debouncedInput`, not `jsonInput`, or you will re-trigger heavy work on every keystroke.
 
@@ -53,13 +54,14 @@ All server-only modules import `"server-only"` to crash the build if they leak i
 
 API routes:
 
-| Route                          | Notes                                                                                                        |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `POST /api/ai/generate`        | NVIDIA chat completion via `lib/nvidia.ts`. Rate-limited (5/hour/IP).                                        |
-| `POST /api/ai/fix`             | Same, with broken-JSON + error as input.                                                                     |
-| `POST /api/share`              | Streams body with a hard byte cap (don't trust Content-Length), validates JSON, inserts into D1. 10/hour/IP. |
-| `GET /api/share/[slug]`        | Returns `410` once `expires_at < now`.                                                                       |
-| `GET /api/cron/cleanup-shares` | Vercel Cron (daily 04:00 UTC, see `vercel.json`). Requires `Authorization: Bearer $CRON_SECRET`.             |
+| Route                          | Notes                                                                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /api/ai/generate`        | NVIDIA chat completion via `lib/nvidia.ts`. Rate-limited (5/hour/IP).                                                                                  |
+| `POST /api/ai/fix`             | Same, with broken-JSON + error as input.                                                                                                               |
+| `POST /api/ai/types`           | `generateTypesOnServer` returns a `{ "code": "..." }` envelope (keeps `response_format: json_object`). Targets: `typescript` \| `zod` \| `json-schema`. Shares the AI 5/hour/IP bucket. |
+| `POST /api/share`              | Streams body with a hard byte cap (don't trust Content-Length), validates JSON, inserts into D1. Accepts `{ expiresIn: "1h"\|"1d"\|"7d"\|"30d", readOnly: bool }` (defaults `30d`, editable). 10/hour/IP. |
+| `GET /api/share/[slug]`        | Returns `410` once `expires_at < now`. Forwards `read_only` (`NULL` from pre-v2 rows is treated as editable).                                          |
+| `GET /api/cron/cleanup-shares` | Vercel Cron (daily 04:00 UTC, see `vercel.json`). Requires `Authorization: Bearer $CRON_SECRET`.                                                       |
 
 Shared cross-cutting guards every POST route uses:
 
@@ -75,11 +77,28 @@ Always run new POST routes through the same three guards in the same order.
 - The model is forced to `response_format: { type: "json_object" }`, then `validateOutput` parses, checks size (256 KiB) and depth (64), and **re-serializes** to normalize. Any new AI endpoint should keep this validation pipeline — clients trust the output is JSON.
 - Default model is `openai/gpt-oss-120b`; override with `NVIDIA_MODEL`.
 
-### Cloudflare D1 (`lib/d1.ts`, `db/schema.sql`)
+### Cloudflare D1 (`lib/d1.ts`, `db/schema.sql`, `db/schema_v2.sql`)
 
 Vercel-hosted Next.js talks to D1 via REST (not the Workers binding). `lib/d1.ts` exposes `query` / `execute` with a 5s timeout and a typed `D1Error`. The schema is a single `shares` table keyed by a 10-char URL-safe slug from `lib/slug.ts` (64^10 space — no collision-retry loop). `ip_hash` is `sha256("ip:CRON_SECRET").slice(0,16)` for abuse triage; in production we refuse to fall back to a hardcoded salt (returns `null` instead).
 
-If you change the schema, ship a new SQL file _and_ run it with `wrangler d1 execute … --remote`. There is no migration framework.
+Schema migrations are bare numbered SQL files (no framework). Apply in order, both `--remote` and `--local`:
+
+1. `db/schema.sql` — base `shares` table.
+2. `db/schema_v2.sql` — `ALTER TABLE shares ADD COLUMN read_only INTEGER NOT NULL DEFAULT 0` for view-only share links. Must be applied before deploying code that reads/writes `read_only`.
+
+When you add a new migration, ship a new numbered SQL file and document the order here.
+
+### Client-side persistence (`lib/storage.ts`)
+
+`idb-keyval` (`json-forge` DB, `kv` store) holds autosave + recents. `saveCurrent` keeps the active editor body under `current-doc` so the editor restores on reload. `pushRecent` writes up to 10 entries to `recent-docs` plus a per-hash body under `recent:<hash>`; entries that fall out of the top-10 window have their bodies pruned in the same transaction. `shortHash` SHA-1s only the first 4 KiB so we don't hash 25 MB payloads. Everything degrades silently (private mode, no IndexedDB) — never throw out of these helpers.
+
+### Non-JSON imports (`lib/converters.ts`)
+
+`detectFormat(filename)` returns `"json" | "jsonl" | "yaml" | null`. `parseJsonl` and `parseYaml` both return canonical JSON strings (via `JSON.stringify(parsed, null, indent)`). YAML uses `JSON_SCHEMA` + `json: true` so YAML-isms that don't round-trip are rejected. Both throw `ConversionError` with a line-number-prefixed message; the toolbar surfaces it as a toast.
+
+### Site URL (`lib/site.ts`)
+
+`SITE_URL` (defaults to `https://json.manthaa.dev`, overridable via `NEXT_PUBLIC_SITE_URL`) and `SITE_NAME` are imported by `app/layout.tsx`, `app/sitemap.ts`, and `app/robots.ts`. Don't hardcode the URL elsewhere — those three files must agree for OpenGraph + SEO to behave.
 
 ### Path alias
 
@@ -91,12 +110,13 @@ If you change the schema, ship a new SQL file _and_ run it with `wrangler d1 exe
 
 ## Conventions worth knowing
 
-- **Telemetry:** `trackEvent(action, params?)` in `lib/utils.ts` calls `window.gtag` when present. Add a `trackEvent` call for any new user-visible action; keep names snake_case (`click_prettify`, `ai_fix`, `share_create_success`).
+- **Telemetry:** `trackEvent(action, params?)` in `lib/utils.ts` calls `window.gtag` when present. Add a `trackEvent` call for any new user-visible action; keep names snake_case (`click_prettify`, `ai_fix`, `share_create_success`, `table_navigate`, `theme_toggle`, `ai_quota_exhausted`, `share_view`).
 - **Toasts:** use `sonner`'s `toast.success/info/warning/error`. Don't introduce a second toast library.
 - **Icons:** `@hugeicons/react` with named icons from `@hugeicons/core-free-icons`. Pass `className="size-3.5"` etc. — don't import lucide or heroicons.
 - **shadcn/ui:** primitives live under `components/ui/`. The project uses the `radix-nova` style with `olive` base color (`components.json`). Run `pnpm dlx shadcn@latest add <component>` to add new ones rather than hand-writing them.
 - **Theme:** `next-themes` + a `D` hotkey toggle in `theme-provider.tsx`. Anything that renders differently per theme needs `mounted` gating or `suppressHydrationWarning` to avoid hydration mismatches (see `JsonForgeApp` header).
 - **Large-payload routes:** when accepting user JSON over HTTP, replicate the streaming `readBodyCapped` pattern from `app/api/share/route.ts` — do not call `request.text()` directly.
+- **Formatting:** Prettier (4-space indent) with `prettier-plugin-tailwindcss` enforces Tailwind class order. Run `pnpm format` before committing; `pnpm format:check` is the CI-style check.
 
 ## Environment variables
 
