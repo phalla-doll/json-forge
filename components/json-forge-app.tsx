@@ -611,12 +611,12 @@ export function JsonForgeApp({
                                 trackEvent("switch_view", { mode: val });
                             }
                         }}
-                        className="border-border bg-muted shrink-0 rounded-md border p-px sm:ml-2 md:ml-0"
+                        className="bg-muted shrink-0 rounded-md p-px sm:ml-2 md:ml-0"
                     >
                         <ToggleGroupItem
                             value="code"
                             aria-label="Code view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
+                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-7 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
                         >
                             <HugeiconsIcon icon={Code} className="size-3.5" />
                             <span className="hidden sm:inline">Code</span>
@@ -624,7 +624,7 @@ export function JsonForgeApp({
                         <ToggleGroupItem
                             value="graph"
                             aria-label="Graph view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
+                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-7 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
                         >
                             <HugeiconsIcon
                                 icon={GitGraph}
@@ -635,7 +635,7 @@ export function JsonForgeApp({
                         <ToggleGroupItem
                             value="table"
                             aria-label="Table view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
+                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-7 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
                         >
                             <HugeiconsIcon icon={Table} className="size-3.5" />
                             <span className="hidden sm:inline">Table</span>
@@ -643,7 +643,7 @@ export function JsonForgeApp({
                         <ToggleGroupItem
                             value="diff"
                             aria-label="Diff view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
+                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-7 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
                         >
                             <HugeiconsIcon
                                 icon={GitCompareIcon}
