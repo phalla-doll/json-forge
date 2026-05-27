@@ -4,7 +4,7 @@ import { useRef, useEffect, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   PaintBrush04Icon,
-  Minimize2,
+  ArrowShrinkIcon,
   Copy,
   Download,
   Upload,
@@ -124,7 +124,7 @@ export function Toolbar({
             onClick={onMinify}
             disabled={!hasContent}
           >
-            <HugeiconsIcon icon={Minimize2} className="size-3.5" />
+            <HugeiconsIcon icon={ArrowShrinkIcon} className="size-3.5" />
             <span className="hidden lg:inline">Minify</span>
           </Button>
         </div>
