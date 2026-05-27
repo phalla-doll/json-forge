@@ -1,0 +1,26 @@
+# Build output
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Deps & lockfiles
+node_modules/
+pnpm-lock.yaml
+
+# Generated
+next-env.d.ts
+public/
+
+# Vercel / wrangler
+.vercel/
+.wrangler/
+
+# Claude Code agents/skills (externally managed)
+.agents/
+.claude/
+
+# Misc
+*.log
+.DS_Store

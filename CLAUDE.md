@@ -25,7 +25,7 @@ JSON Forge is a Next.js 16 App Router app deployed on Vercel. It is mostly a sin
 Both routes render `components/json-forge-app.tsx`, passing different `initialJson`:
 
 - `app/page.tsx` — the home editor, seeded with sample data.
-- `app/s/[slug]/page.tsx` — server-rendered share viewer. Loads the snapshot from D1 in the server component, decides found/expired/not-found *outside* the React render path (no `Date.now()` during render), and either calls `notFound()`, renders `ExpiredShareView`, or hands the payload to `JsonForgeApp` with a `sharedSnapshot` prop. The banner inside `JsonForgeApp` uses `suppressHydrationWarning` because date formatting depends on the client locale.
+- `app/s/[slug]/page.tsx` — server-rendered share viewer. Loads the snapshot from D1 in the server component, decides found/expired/not-found _outside_ the React render path (no `Date.now()` during render), and either calls `notFound()`, renders `ExpiredShareView`, or hands the payload to `JsonForgeApp` with a `sharedSnapshot` prop. The banner inside `JsonForgeApp` uses `suppressHydrationWarning` because date formatting depends on the client locale.
 
 When changing editor behavior, edit `JsonForgeApp` once — both routes pick it up.
 
@@ -53,13 +53,13 @@ All server-only modules import `"server-only"` to crash the build if they leak i
 
 API routes:
 
-| Route | Notes |
-|---|---|
-| `POST /api/ai/generate` | NVIDIA chat completion via `lib/nvidia.ts`. Rate-limited (5/hour/IP). |
-| `POST /api/ai/fix` | Same, with broken-JSON + error as input. |
-| `POST /api/share` | Streams body with a hard byte cap (don't trust Content-Length), validates JSON, inserts into D1. 10/hour/IP. |
-| `GET /api/share/[slug]` | Returns `410` once `expires_at < now`. |
-| `GET /api/cron/cleanup-shares` | Vercel Cron (daily 04:00 UTC, see `vercel.json`). Requires `Authorization: Bearer $CRON_SECRET`. |
+| Route                          | Notes                                                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `POST /api/ai/generate`        | NVIDIA chat completion via `lib/nvidia.ts`. Rate-limited (5/hour/IP).                                        |
+| `POST /api/ai/fix`             | Same, with broken-JSON + error as input.                                                                     |
+| `POST /api/share`              | Streams body with a hard byte cap (don't trust Content-Length), validates JSON, inserts into D1. 10/hour/IP. |
+| `GET /api/share/[slug]`        | Returns `410` once `expires_at < now`.                                                                       |
+| `GET /api/cron/cleanup-shares` | Vercel Cron (daily 04:00 UTC, see `vercel.json`). Requires `Authorization: Bearer $CRON_SECRET`.             |
 
 Shared cross-cutting guards every POST route uses:
 
@@ -79,7 +79,7 @@ Always run new POST routes through the same three guards in the same order.
 
 Vercel-hosted Next.js talks to D1 via REST (not the Workers binding). `lib/d1.ts` exposes `query` / `execute` with a 5s timeout and a typed `D1Error`. The schema is a single `shares` table keyed by a 10-char URL-safe slug from `lib/slug.ts` (64^10 space — no collision-retry loop). `ip_hash` is `sha256("ip:CRON_SECRET").slice(0,16)` for abuse triage; in production we refuse to fall back to a hardcoded salt (returns `null` instead).
 
-If you change the schema, ship a new SQL file *and* run it with `wrangler d1 execute … --remote`. There is no migration framework.
+If you change the schema, ship a new SQL file _and_ run it with `wrangler d1 execute … --remote`. There is no migration framework.
 
 ### Path alias
 

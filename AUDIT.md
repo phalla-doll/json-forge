@@ -86,7 +86,7 @@ Today: `Cmd/Ctrl+K` (search focus, `toolbar.tsx:73`), `D` (theme toggle, `theme-
 
 ## I. Accessibility & mobile
 
-- **Mobile-first layout** — The toolbar is `overflow-x-auto` and ToggleGroup labels are hidden under `sm` (`json-forge-app.tsx:403,411,419`). The graph and table views are *unusable* on phones because of pan + tiny cells. Either offer a collapsed "compact mobile" mode or surface a banner: "Open on desktop for full features".
+- **Mobile-first layout** — The toolbar is `overflow-x-auto` and ToggleGroup labels are hidden under `sm` (`json-forge-app.tsx:403,411,419`). The graph and table views are _unusable_ on phones because of pan + tiny cells. Either offer a collapsed "compact mobile" mode or surface a banner: "Open on desktop for full features".
 - **`aria-live` for the validation error** — Today `StatusBar` shows it visually; assistive tech doesn't hear "Invalid JSON" without polite announcement.
 - **Tree view keyboard focus ring** — `handleKeyDown` exists at `json-tree-view.tsx:698` but verify focus visibility on Tab and that Space/Enter expand nodes.
 - **`prefers-reduced-motion`** — The drag overlay (`animate-in fade-in duration-200`) and graph transitions should respect it.

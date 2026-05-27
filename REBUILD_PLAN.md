@@ -2,19 +2,20 @@
 
 ## Progress
 
-| Phase | Status | Notes |
-|-------|--------|-------|
-| 0 — Scaffold `v2/` | ✅ Complete | Next.js 16 + shadcn (preset `b6rtDj74a`) on `:3001`, all runtime deps installed, clean build |
-| 1 — Theme parity | ✅ Complete | Vercel accents aliased to shadcn tokens, Inter + JetBrains Mono via `next/font/google`, ASCII loader, dark default |
-| 2 — Shared infrastructure | ✅ Complete | `types.ts`, `lib/ai.ts`, `lib/utils.ts` (merged with `cn`), `next-themes`, `sonner` toast, layout shell |
-| 3 — Toolbar + StatusBar | ✅ Complete | shadcn `Select`, `Tooltip`, `Input`, `ToggleGroup`, `Separator`; all toolbar actions + view switcher wired |
-| 4 — Editor + Code view | ✅ Complete | Monaco via `next/dynamic` SSR-safe, Vercel dark/light themes, search highlighting, all toolbar actions functional |
-| 5 — AI modal | ✅ Complete | shadcn `Dialog` + `Textarea`, generate + fix flows, `sonner` error surfacing, purple AI button |
-| 6 — Alternate views | ✅ Complete | `JsonTreeView` (780 LOC), `JsonTableView`, `JsonMermaidView` ported with shadcn tokens |
+| Phase                      | Status      | Notes                                                                                                                                                                                           |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 — Scaffold `v2/`         | ✅ Complete | Next.js 16 + shadcn (preset `b6rtDj74a`) on `:3001`, all runtime deps installed, clean build                                                                                                    |
+| 1 — Theme parity           | ✅ Complete | Vercel accents aliased to shadcn tokens, Inter + JetBrains Mono via `next/font/google`, ASCII loader, dark default                                                                              |
+| 2 — Shared infrastructure  | ✅ Complete | `types.ts`, `lib/ai.ts`, `lib/utils.ts` (merged with `cn`), `next-themes`, `sonner` toast, layout shell                                                                                         |
+| 3 — Toolbar + StatusBar    | ✅ Complete | shadcn `Select`, `Tooltip`, `Input`, `ToggleGroup`, `Separator`; all toolbar actions + view switcher wired                                                                                      |
+| 4 — Editor + Code view     | ✅ Complete | Monaco via `next/dynamic` SSR-safe, Vercel dark/light themes, search highlighting, all toolbar actions functional                                                                               |
+| 5 — AI modal               | ✅ Complete | shadcn `Dialog` + `Textarea`, generate + fix flows, `sonner` error surfacing, purple AI button                                                                                                  |
+| 6 — Alternate views        | ✅ Complete | `JsonTreeView` (780 LOC), `JsonTableView`, `JsonMermaidView` ported with shadcn tokens                                                                                                          |
 | 7 — Polish + accessibility | ✅ Complete | All Blockers + Should-fixes from code review addressed; `pnpm build`, `pnpm typecheck`, `pnpm lint` all clean (0 errors, 0 warnings). Lighthouse + browser a11y audit still owed via manual QA. |
-| 8 — Promotion to root | ✅ Complete | Vite app archived to `.archive/` (since deleted), v2 promoted to root via `git mv` (history preserved), `pnpm build/typecheck/lint` clean, dev port → 3000. |
+| 8 — Promotion to root      | ✅ Complete | Vite app archived to `.archive/` (since deleted), v2 promoted to root via `git mv` (history preserved), `pnpm build/typecheck/lint` clean, dev port → 3000.                                     |
 
 **Last updated:** Phase 8 complete. Rebuild finished.
+
 - B1: Gemini moved behind `app/api/ai/{generate,fix}/route.ts`; client no longer holds the API key (renamed `NEXT_PUBLIC_GEMINI_API_KEY` → `GEMINI_API_KEY`).
 - B2/B3: tree-view render-phase mutation replaced with parent-precomputed `initiallyExpandedPaths` set; random `graphKey` replaced with `key={value}`.
 - B4: error state collapsed to derived `useMemo`; redundant `setError` calls removed.
@@ -38,6 +39,7 @@ Phase 8 promotion is a destructive root swap and should run only on user go-ahea
 Build a parallel project at `./v2/` with a real Vite + Tailwind + shadcn toolchain. Port features phase-by-phase from the root app, keeping the current app fully functional throughout. When `v2/` reaches parity and is verified, promote it to the root in a single swap commit.
 
 Why a subfolder (not a branch):
+
 - Both apps runnable at once (`npm run dev` in root on `:3000`, in `v2/` on `:3001`) for visual diffing.
 - No risk to the deployed app during the rebuild.
 - The promotion step is one mechanical move + history-preserving rename, reviewable as a single PR.
@@ -63,7 +65,9 @@ Note: switching from Vite to Next.js means the app is now a Next project. The JS
 This rebuild **must** lean on the project's installed Claude Code skills rather than hand-rolling solutions. Three skills cover the entire surface area of this plan:
 
 ### `shadcn` (component discovery + installation)
+
 **Use first, before writing any UI code.** For every UI need (button, dialog, toast, select, tabs, tooltip, table, etc.), invoke this skill to:
+
 - search the shadcn registry for an existing component,
 - install it via the canonical CLI command,
 - look up composition examples and prop APIs.
@@ -71,14 +75,18 @@ This rebuild **must** lean on the project's installed Claude Code skills rather 
 **Rule:** if shadcn ships a component for the job, use it. Do **not** write a custom Radix wrapper, a custom modal, a custom toggle group, or a custom form input. The only acceptable customs are domain components that have no shadcn equivalent (Monaco editor wrapper, Mermaid renderer, the JSON tree/table views).
 
 ### `vercel:shadcn` (shadcn architecture, theming, registry expertise)
+
 Use alongside `shadcn` for the harder calls:
+
 - theming + CSS-variable aliasing (Phase 1),
 - composition patterns when stacking primitives (Toolbar dropdowns, AI modal),
 - troubleshooting installation, Tailwind, or `components.json` issues,
 - deciding when to extend a component via `cva` variants vs. wrapping it.
 
 ### `vercel:nextjs` (App Router patterns)
+
 Use for every Next-specific decision:
+
 - where `"use client"` belongs and where it doesn't,
 - `next/dynamic` with `ssr: false` for Monaco/Mermaid (Phase 4, 6),
 - `next/font/google` for Inter + JetBrains Mono (Phase 1),
@@ -87,6 +95,7 @@ Use for every Next-specific decision:
 - `app/layout.tsx` structure (theme provider, Toaster placement).
 
 ### `vercel:react-best-practices` (review pass)
+
 Triggered automatically by the harness after multiple TSX edits, and invoked explicitly in Phase 7. Run it across every ported file before promotion.
 
 ### Operating discipline
@@ -102,17 +111,17 @@ At the start of every phase below, the first action is to consult `shadcn` (and 
 **Skills:** `shadcn` (to confirm the init command and preset behavior), `vercel:nextjs` (for App Router scaffold conventions).
 
 1. From the repo root, scaffold into `v2/`:
-   ```
-   mkdir v2 && cd v2
-   pnpm dlx shadcn@latest init --preset b6rtDj74a --template next
-   ```
-   The preset configures Tailwind, the shadcn registry, `components.json`, `lib/utils.ts` (`cn`), and the New York / neutral / CSS-variables defaults. The `--template next` flag scaffolds a Next.js App Router project.
+    ```
+    mkdir v2 && cd v2
+    pnpm dlx shadcn@latest init --preset b6rtDj74a --template next
+    ```
+    The preset configures Tailwind, the shadcn registry, `components.json`, `lib/utils.ts` (`cn`), and the New York / neutral / CSS-variables defaults. The `--template next` flag scaffolds a Next.js App Router project.
 2. Install runtime deps that the current app uses:
-   ```
-   pnpm add lucide-react @monaco-editor/react @google/genai mermaid sonner
-   ```
+    ```
+    pnpm add lucide-react @monaco-editor/react @google/genai mermaid sonner
+    ```
 3. Configure `next.config.ts`:
-   - Mark `mermaid` and `@monaco-editor/react` as client-only (they touch `window`); no transpile config typically needed in recent Next versions, but verify.
+    - Mark `mermaid` and `@monaco-editor/react` as client-only (they touch `window`); no transpile config typically needed in recent Next versions, but verify.
 4. Configure dev port: add `"dev": "next dev -p 3001"` to `v2/package.json` so the root Vite app keeps `:3000`.
 5. Wire the Gemini key: add `GEMINI_API_KEY=…` to `v2/.env.local`. Since the current app calls Gemini from the browser, expose it as `NEXT_PUBLIC_GEMINI_API_KEY` for now — flag this for Phase 5 to optionally move behind a Next route handler so the key isn't shipped to the client.
 6. Verify: `pnpm dev` shows the shadcn starter on `:3001`.
@@ -129,21 +138,21 @@ At the start of every phase below, the first action is to consult `shadcn` (and 
 
 1. Copy the `--accents-1`..`--accents-8`, `--color-success`, `--color-error`, `--color-warning` CSS variables from root `index.html` into `v2/app/globals.css` under `:root` and `.dark`.
 2. In the same file, alias shadcn's semantic tokens (already defined by the preset) to the accents scale:
-   ```css
-   :root {
-     --background: var(--bg-background);
-     --foreground: var(--accents-8);
-     --muted: var(--accents-1);
-     --muted-foreground: var(--accents-5);
-     --border: var(--accents-2);
-     --input: var(--accents-2);
-     --ring: var(--accents-5);
-     --primary: var(--accents-8);
-     --primary-foreground: var(--bg-background);
-     --destructive: var(--color-error);
-     /* ... etc */
-   }
-   ```
+    ```css
+    :root {
+        --background: var(--bg-background);
+        --foreground: var(--accents-8);
+        --muted: var(--accents-1);
+        --muted-foreground: var(--accents-5);
+        --border: var(--accents-2);
+        --input: var(--accents-2);
+        --ring: var(--accents-5);
+        --primary: var(--accents-8);
+        --primary-foreground: var(--bg-background);
+        --destructive: var(--color-error);
+        /* ... etc */
+    }
+    ```
 3. Verify the preset's `tailwind.config.ts` has `darkMode: 'class'` (preset default). Extend `fontFamily` with Inter + JetBrains Mono.
 4. Load Inter + JetBrains Mono via `next/font/google` in `v2/app/layout.tsx` (preferred over `<link>` for Next).
 5. Port the custom scrollbar CSS and `editor-match-highlight` rules from root `index.html` into `v2/app/globals.css`.
@@ -180,10 +189,10 @@ Components to install via the `shadcn` skill: `button`, `input`, `select`, `tool
 
 1. **Button** — replace the four `Button.tsx` variants with shadcn `button` variants. Add a custom `ai` variant (purple) via `cva` for the AI generate button.
 2. **Toolbar** (`components/Toolbar.tsx` → `v2/components/toolbar.tsx`, marked `"use client"`):
-   - Indent dropdown → shadcn `Select`.
-   - Search input → shadcn `Input` with `lucide` Search icon prefix; keep the Cmd/Ctrl+K handler and the `hasMatches === false` red-border styling.
-   - Wrap every icon-only or label-hidden button in `Tooltip`.
-   - Group separators → shadcn `Separator`.
+    - Indent dropdown → shadcn `Select`.
+    - Search input → shadcn `Input` with `lucide` Search icon prefix; keep the Cmd/Ctrl+K handler and the `hasMatches === false` red-border styling.
+    - Wrap every icon-only or label-hidden button in `Tooltip`.
+    - Group separators → shadcn `Separator`.
 3. **View mode switcher** (currently in `App.tsx:416`) → `ToggleGroup` (single-select) for Code/Graph/Table.
 4. **StatusBar** — stays as a plain styled `<div>`, just swap class names to use `bg-muted`, `border-border`, `text-muted-foreground`.
 
@@ -262,10 +271,10 @@ Components to install via the `shadcn` skill: `button`, `input`, `select`, `tool
 
 1. Final side-by-side QA pass (both servers running). Document any intentional visual deltas.
 2. Move root files out of the way:
-   ```
-   git mv App.tsx components lib types.ts index.tsx index.html package.json tsconfig.json vite.config.ts .archive/
-   ```
-   (`.archive/` kept in-tree for one release cycle as a safety net; deleted in a follow-up PR.)
+    ```
+    git mv App.tsx components lib types.ts index.tsx index.html package.json tsconfig.json vite.config.ts .archive/
+    ```
+    (`.archive/` kept in-tree for one release cycle as a safety net; deleted in a follow-up PR.)
 3. Move `v2/` contents to root with `git mv` so blame history follows the files. This includes the Next.js project structure (`app/`, `components/`, `lib/`, `next.config.ts`, `package.json`, `pnpm-lock.yaml`, `.env.local.example`, etc.).
 4. Update root `README.md` with new dev instructions (`pnpm install && pnpm dev`).
 5. Update Vercel project settings: framework preset changes from **Vite** to **Next.js**. Verify the build command, output directory, and env var names (`GEMINI_API_KEY` or `NEXT_PUBLIC_GEMINI_API_KEY` depending on Phase 5 outcome).
@@ -289,14 +298,14 @@ Components to install via the `shadcn` skill: `button`, `input`, `select`, `tool
 
 ## Risk register
 
-| Risk | Mitigation |
-|---|---|
-| Monaco / Mermaid SSR errors (they touch `window`) | All view components marked `"use client"`; Monaco loaded via `next/dynamic` with `ssr: false` in Phase 4. |
-| Gemini API key wiring breaks | Phase 0 step 5 mirrors the existing env var; Phase 5 step 6 optionally moves it server-side. |
-| ASCII pre-React loader lost during root swap | Phase 1 step 6 ports it into `v2/app/loading.tsx` (or inlined in `layout.tsx`) early. |
-| `JsonTreeView.tsx` (780 LOC) hides subtle Tailwind class assumptions | Treat Phase 6 as the longest phase; budget extra time for tree view. |
-| Visual drift the user dislikes | Phase 1 aliases shadcn tokens to existing accents — drift is opt-in, not default. |
-| Vercel framework preset mismatch causes failed deploys | Phase 8 step 5 explicitly flips the preset to Next.js before merge. |
+| Risk                                                                 | Mitigation                                                                                                |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Monaco / Mermaid SSR errors (they touch `window`)                    | All view components marked `"use client"`; Monaco loaded via `next/dynamic` with `ssr: false` in Phase 4. |
+| Gemini API key wiring breaks                                         | Phase 0 step 5 mirrors the existing env var; Phase 5 step 6 optionally moves it server-side.              |
+| ASCII pre-React loader lost during root swap                         | Phase 1 step 6 ports it into `v2/app/loading.tsx` (or inlined in `layout.tsx`) early.                     |
+| `JsonTreeView.tsx` (780 LOC) hides subtle Tailwind class assumptions | Treat Phase 6 as the longest phase; budget extra time for tree view.                                      |
+| Visual drift the user dislikes                                       | Phase 1 aliases shadcn tokens to existing accents — drift is opt-in, not default.                         |
+| Vercel framework preset mismatch causes failed deploys               | Phase 8 step 5 explicitly flips the preset to Next.js before merge.                                       |
 
 ---
 

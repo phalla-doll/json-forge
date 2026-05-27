@@ -4,23 +4,23 @@ import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
 
 export interface EditorProps {
-  value: string;
-  onChange: (value: string) => void;
-  error: string | null;
-  indentation: number | string;
-  onReady?: () => void;
-  searchTerm?: string;
-  theme?: "light" | "dark";
-  onMatchCountChange?: (count: number | null) => void;
-  wordWrap?: boolean;
-  readOnly?: boolean;
+    value: string;
+    onChange: (value: string) => void;
+    error: string | null;
+    indentation: number | string;
+    onReady?: () => void;
+    searchTerm?: string;
+    theme?: "light" | "dark";
+    onMatchCountChange?: (count: number | null) => void;
+    wordWrap?: boolean;
+    readOnly?: boolean;
 }
 
 const JsonEditorInner = dynamic(
-  () => import("./json-editor-inner").then((mod) => mod.JsonEditorInner),
-  { ssr: false, loading: () => <div className="size-full bg-background" /> },
+    () => import("./json-editor-inner").then((mod) => mod.JsonEditorInner),
+    { ssr: false, loading: () => <div className="bg-background size-full" /> },
 ) as ComponentType<EditorProps>;
 
 export function JsonEditor(props: EditorProps) {
-  return <JsonEditorInner {...props} />;
+    return <JsonEditorInner {...props} />;
 }

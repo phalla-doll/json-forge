@@ -4,20 +4,20 @@ import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
 
 export interface DiffViewProps {
-  original: string;
-  modified: string;
-  onModifiedChange: (value: string) => void;
-  theme?: "light" | "dark";
+    original: string;
+    modified: string;
+    onModifiedChange: (value: string) => void;
+    theme?: "light" | "dark";
 }
 
 const JsonDiffViewInner = dynamic(
-  () => import("./json-diff-view-inner").then((mod) => mod.JsonDiffViewInner),
-  {
-    ssr: false,
-    loading: () => <div className="size-full bg-background" />,
-  },
+    () => import("./json-diff-view-inner").then((mod) => mod.JsonDiffViewInner),
+    {
+        ssr: false,
+        loading: () => <div className="bg-background size-full" />,
+    },
 ) as ComponentType<DiffViewProps>;
 
 export function JsonDiffView(props: DiffViewProps) {
-  return <JsonDiffViewInner {...props} />;
+    return <JsonDiffViewInner {...props} />;
 }
