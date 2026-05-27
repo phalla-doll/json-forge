@@ -147,14 +147,14 @@ To run JSON Forge locally:
 
 ## API Routes
 
-| Route                      | Method | Purpose                                                                                                                  | Rate Limited                |
-| -------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
-| `/api/ai/generate`         | POST   | Generate valid JSON from a natural language prompt                                                                       | Yes (5/hour/IP, AI bucket)  |
-| `/api/ai/fix`              | POST   | Repair broken JSON syntax                                                                                                | Yes (5/hour/IP, AI bucket)  |
-| `/api/ai/types`            | POST   | Generate TypeScript / Zod / JSON Schema from a JSON document; body `{ json, target }`                                    | Yes (5/hour/IP, AI bucket)  |
-| `/api/share`               | POST   | Create a shareable snapshot (max 512 KB); body `{ json, expiresIn?, readOnly? }`; returns `{slug, url, expiresAt, readOnly, expiresIn}` | Yes (10/hour/IP)            |
-| `/api/share/[slug]`        | GET    | Fetch a snapshot by slug; returns 410 once expired                                                                       | No                          |
-| `/api/cron/cleanup-shares` | GET    | Vercel Cron sweep that deletes expired shares; requires `Authorization: Bearer $CRON_SECRET`                             | n/a                         |
+| Route                      | Method | Purpose                                                                                                                                 | Rate Limited               |
+| -------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `/api/ai/generate`         | POST   | Generate valid JSON from a natural language prompt                                                                                      | Yes (5/hour/IP, AI bucket) |
+| `/api/ai/fix`              | POST   | Repair broken JSON syntax                                                                                                               | Yes (5/hour/IP, AI bucket) |
+| `/api/ai/types`            | POST   | Generate TypeScript / Zod / JSON Schema from a JSON document; body `{ json, target }`                                                   | Yes (5/hour/IP, AI bucket) |
+| `/api/share`               | POST   | Create a shareable snapshot (max 512 KB); body `{ json, expiresIn?, readOnly? }`; returns `{slug, url, expiresAt, readOnly, expiresIn}` | Yes (10/hour/IP)           |
+| `/api/share/[slug]`        | GET    | Fetch a snapshot by slug; returns 410 once expired                                                                                      | No                         |
+| `/api/cron/cleanup-shares` | GET    | Vercel Cron sweep that deletes expired shares; requires `Authorization: Bearer $CRON_SECRET`                                            | n/a                        |
 
 Routes validate inputs and return structured JSON responses with proper HTTP status codes (400, 401, 410, 413, 429, 502).
 

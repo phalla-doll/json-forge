@@ -54,14 +54,14 @@ All server-only modules import `"server-only"` to crash the build if they leak i
 
 API routes:
 
-| Route                          | Notes                                                                                                                                                  |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `POST /api/ai/generate`        | NVIDIA chat completion via `lib/nvidia.ts`. Rate-limited (5/hour/IP).                                                                                  |
-| `POST /api/ai/fix`             | Same, with broken-JSON + error as input.                                                                                                               |
-| `POST /api/ai/types`           | `generateTypesOnServer` returns a `{ "code": "..." }` envelope (keeps `response_format: json_object`). Targets: `typescript` \| `zod` \| `json-schema`. Shares the AI 5/hour/IP bucket. |
+| Route                          | Notes                                                                                                                                                                                                     |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/ai/generate`        | NVIDIA chat completion via `lib/nvidia.ts`. Rate-limited (5/hour/IP).                                                                                                                                     |
+| `POST /api/ai/fix`             | Same, with broken-JSON + error as input.                                                                                                                                                                  |
+| `POST /api/ai/types`           | `generateTypesOnServer` returns a `{ "code": "..." }` envelope (keeps `response_format: json_object`). Targets: `typescript` \| `zod` \| `json-schema`. Shares the AI 5/hour/IP bucket.                   |
 | `POST /api/share`              | Streams body with a hard byte cap (don't trust Content-Length), validates JSON, inserts into D1. Accepts `{ expiresIn: "1h"\|"1d"\|"7d"\|"30d", readOnly: bool }` (defaults `30d`, editable). 10/hour/IP. |
-| `GET /api/share/[slug]`        | Returns `410` once `expires_at < now`. Forwards `read_only` (`NULL` from pre-v2 rows is treated as editable).                                          |
-| `GET /api/cron/cleanup-shares` | Vercel Cron (daily 04:00 UTC, see `vercel.json`). Requires `Authorization: Bearer $CRON_SECRET`.                                                       |
+| `GET /api/share/[slug]`        | Returns `410` once `expires_at < now`. Forwards `read_only` (`NULL` from pre-v2 rows is treated as editable).                                                                                             |
+| `GET /api/cron/cleanup-shares` | Vercel Cron (daily 04:00 UTC, see `vercel.json`). Requires `Authorization: Bearer $CRON_SECRET`.                                                                                                          |
 
 Shared cross-cutting guards every POST route uses:
 

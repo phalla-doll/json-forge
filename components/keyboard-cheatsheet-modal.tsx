@@ -10,6 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 
 interface KeyboardCheatsheetModalProps {
     isOpen: boolean;
@@ -56,14 +57,6 @@ const SECTIONS = (mod: string): Section[] => [
     },
 ];
 
-function Kbd({ children }: { children: React.ReactNode }) {
-    return (
-        <kbd className="border-border bg-muted text-foreground inline-flex h-6 min-w-6 items-center justify-center rounded border px-1.5 font-mono text-[11px] font-semibold shadow-sm">
-            {children}
-        </kbd>
-    );
-}
-
 export function KeyboardCheatsheetModal({
     isOpen,
     onClose,
@@ -107,11 +100,11 @@ export function KeyboardCheatsheetModal({
                                         <span className="text-foreground">
                                             {b.label}
                                         </span>
-                                        <span className="flex items-center gap-1">
+                                        <KbdGroup>
                                             {b.keys.map((key, i) => (
                                                 <Kbd key={i}>{key}</Kbd>
                                             ))}
-                                        </span>
+                                        </KbdGroup>
                                     </li>
                                 ))}
                             </ul>
