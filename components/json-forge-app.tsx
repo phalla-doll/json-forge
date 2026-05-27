@@ -15,7 +15,6 @@ import {
     Table,
     Sun,
     Moon,
-    ExternalLink,
     CloudUpload,
     AiContentGenerator02Icon,
     Share05Icon,
@@ -755,24 +754,6 @@ export function JsonForgeApp({
                             icon={HelpCircleIcon}
                             className="size-4"
                         />
-                    </Button>
-                    <Button
-                        asChild
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground hover:text-foreground"
-                    >
-                        <a
-                            href="https://github.com/phalla-doll/json-forge"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label="View source on GitHub"
-                        >
-                            <HugeiconsIcon
-                                icon={ExternalLink}
-                                className="size-4"
-                            />
-                        </a>
                     </Button>
                 </div>
             </header>
