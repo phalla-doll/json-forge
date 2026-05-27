@@ -123,7 +123,7 @@ export function ShareModal({
                                         key={opt.value}
                                         type="button"
                                         onClick={() => setExpiresIn(opt.value)}
-                                        className={`flex-1 rounded px-2 py-1.5 text-xs font-medium transition-colors ${
+                                        className={`flex-1 rounded-[calc(var(--radius-md)-2px)] px-2 py-1.5 text-xs font-medium transition-colors ${
                                             expiresIn === opt.value
                                                 ? "bg-foreground text-background shadow-sm"
                                                 : "text-muted-foreground hover:text-foreground"

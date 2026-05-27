@@ -120,7 +120,7 @@ export function SchemaModal({
                                     key={t.value}
                                     type="button"
                                     onClick={() => setTarget(t.value)}
-                                    className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+                                    className={`flex-1 rounded-[calc(var(--radius-md)-2px)] px-3 py-1.5 text-xs font-medium transition-colors ${
                                         target === t.value
                                             ? "bg-foreground text-background shadow-sm"
                                             : "text-muted-foreground hover:text-foreground"
