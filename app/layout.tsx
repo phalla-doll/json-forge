@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { Metadata } from "next";
 
@@ -14,21 +15,18 @@ const googleSansCode = Google_Sans_Code({
     variable: "--font-mono",
 });
 
-const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://json.manthaa.dev";
-const siteName = "JSON Forge";
 const title = "JSON Forge — JSON editor & visualizer";
 const description =
     "Modern JSON editor and visualizer with formatting, validation, interactive graph and table views, diff, and AI-assisted generation and repair.";
 
 export const metadata: Metadata = {
-    metadataBase: new URL(siteUrl),
+    metadataBase: new URL(SITE_URL),
     title: {
         default: title,
         template: "%s — JSON Forge",
     },
     description,
-    applicationName: siteName,
+    applicationName: SITE_NAME,
     keywords: [
         "JSON editor",
         "JSON visualizer",
@@ -50,8 +48,8 @@ export const metadata: Metadata = {
     },
     openGraph: {
         type: "website",
-        url: siteUrl,
-        siteName,
+        url: SITE_URL,
+        siteName: SITE_NAME,
         title,
         description,
         locale: "en_US",
