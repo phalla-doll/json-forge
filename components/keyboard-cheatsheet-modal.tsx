@@ -4,12 +4,13 @@ import { useSyncExternalStore } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { KeyboardIcon } from "@hugeicons/core-free-icons";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+    ResponsiveModal,
+    ResponsiveModalBody,
+    ResponsiveModalContent,
+    ResponsiveModalDescription,
+    ResponsiveModalHeader,
+    ResponsiveModalTitle,
+} from "@/components/ui/responsive-modal";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 
 interface KeyboardCheatsheetModalProps {
@@ -70,48 +71,53 @@ export function KeyboardCheatsheetModal({
     const sections = SECTIONS(mod);
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
+        <ResponsiveModal
+            open={isOpen}
+            onOpenChange={(open) => !open && onClose()}
+        >
+            <ResponsiveModalContent className="sm:max-w-lg">
+                <ResponsiveModalHeader>
+                    <ResponsiveModalTitle className="flex items-center gap-2">
                         <HugeiconsIcon icon={KeyboardIcon} className="size-5" />
                         Keyboard shortcuts
-                    </DialogTitle>
-                    <DialogDescription>
+                    </ResponsiveModalTitle>
+                    <ResponsiveModalDescription>
                         Press <Kbd>?</Kbd> any time to reopen this list.
-                    </DialogDescription>
-                </DialogHeader>
+                    </ResponsiveModalDescription>
+                </ResponsiveModalHeader>
 
-                <div className="flex flex-col gap-4">
-                    {sections.map((section) => (
-                        <div
-                            key={section.name}
-                            className="flex flex-col gap-1.5"
-                        >
-                            <h3 className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-                                {section.name}
-                            </h3>
-                            <ul className="flex flex-col gap-1">
-                                {section.bindings.map((b) => (
-                                    <li
-                                        key={b.label}
-                                        className="hover:bg-muted/50 flex items-center justify-between gap-2 rounded-md px-2 py-1 text-sm"
-                                    >
-                                        <span className="text-foreground">
-                                            {b.label}
-                                        </span>
-                                        <KbdGroup>
-                                            {b.keys.map((key, i) => (
-                                                <Kbd key={i}>{key}</Kbd>
-                                            ))}
-                                        </KbdGroup>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
-                </div>
-            </DialogContent>
-        </Dialog>
+                <ResponsiveModalBody>
+                    <div className="flex flex-col gap-4">
+                        {sections.map((section) => (
+                            <div
+                                key={section.name}
+                                className="flex flex-col gap-1.5"
+                            >
+                                <h3 className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                                    {section.name}
+                                </h3>
+                                <ul className="flex flex-col gap-1">
+                                    {section.bindings.map((b) => (
+                                        <li
+                                            key={b.label}
+                                            className="hover:bg-muted/50 flex items-center justify-between gap-2 rounded-md px-2 py-1 text-sm"
+                                        >
+                                            <span className="text-foreground">
+                                                {b.label}
+                                            </span>
+                                            <KbdGroup>
+                                                {b.keys.map((key, i) => (
+                                                    <Kbd key={i}>{key}</Kbd>
+                                                ))}
+                                            </KbdGroup>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+                </ResponsiveModalBody>
+            </ResponsiveModalContent>
+        </ResponsiveModal>
     );
 }

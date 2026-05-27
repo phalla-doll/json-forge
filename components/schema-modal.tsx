@@ -11,12 +11,13 @@ import {
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+    ResponsiveModal,
+    ResponsiveModalBody,
+    ResponsiveModalContent,
+    ResponsiveModalDescription,
+    ResponsiveModalHeader,
+    ResponsiveModalTitle,
+} from "@/components/ui/responsive-modal";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/utils";
 import { generateTypes, type SchemaTarget } from "@/lib/ai";
@@ -92,121 +93,130 @@ export function SchemaModal({
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent className="sm:max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
+        <ResponsiveModal
+            open={isOpen}
+            onOpenChange={(open) => !open && handleClose()}
+        >
+            <ResponsiveModalContent className="sm:max-w-2xl">
+                <ResponsiveModalHeader>
+                    <ResponsiveModalTitle className="flex items-center gap-2">
                         <HugeiconsIcon
                             icon={DocumentCodeIcon}
                             className="size-5"
                         />
                         Generate schema from JSON
-                    </DialogTitle>
-                    <DialogDescription>
+                    </ResponsiveModalTitle>
+                    <ResponsiveModalDescription>
                         Pick a target — the model reads your current JSON and
                         returns a schema in that language.
-                    </DialogDescription>
-                </DialogHeader>
+                    </ResponsiveModalDescription>
+                </ResponsiveModalHeader>
 
-                <div className="flex flex-col gap-3">
-                    <div className="border-border bg-muted flex items-center gap-1 rounded-md border p-0.5">
-                        {TARGETS.map((t) => (
-                            <button
-                                key={t.value}
-                                type="button"
-                                onClick={() => setTarget(t.value)}
-                                className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-                                    target === t.value
-                                        ? "bg-foreground text-background shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground"
-                                }`}
-                            >
-                                {t.label}
-                            </button>
-                        ))}
-                    </div>
+                <ResponsiveModalBody>
+                    <div className="flex flex-col gap-3">
+                        <div className="border-border bg-muted flex items-center gap-1 rounded-md border p-0.5">
+                            {TARGETS.map((t) => (
+                                <button
+                                    key={t.value}
+                                    type="button"
+                                    onClick={() => setTarget(t.value)}
+                                    className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+                                        target === t.value
+                                            ? "bg-foreground text-background shadow-sm"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                >
+                                    {t.label}
+                                </button>
+                            ))}
+                        </div>
 
-                    <div className="border-border bg-muted/30 min-h-[14rem] rounded-md border p-3">
-                        {loading === target ? (
-                            <div className="text-muted-foreground flex h-56 items-center justify-center text-sm">
-                                <HugeiconsIcon
-                                    icon={LoaderCircle}
-                                    className="size-4 animate-spin"
-                                />
-                                <span className="ml-2">Generating…</span>
+                        <div className="border-border bg-muted/30 min-h-[14rem] rounded-md border p-3">
+                            {loading === target ? (
+                                <div className="text-muted-foreground flex h-56 items-center justify-center text-sm">
+                                    <HugeiconsIcon
+                                        icon={LoaderCircle}
+                                        className="size-4 animate-spin"
+                                    />
+                                    <span className="ml-2">Generating…</span>
+                                </div>
+                            ) : code ? (
+                                <pre className="text-foreground max-h-80 overflow-auto font-mono text-xs leading-relaxed break-all whitespace-pre-wrap">
+                                    {code}
+                                </pre>
+                            ) : (
+                                <div className="text-muted-foreground flex h-56 flex-col items-center justify-center gap-2 text-sm">
+                                    <HugeiconsIcon
+                                        icon={Sparkles}
+                                        className="size-5"
+                                    />
+                                    <span>
+                                        Click <strong>Generate</strong> to
+                                        produce{" "}
+                                        {
+                                            TARGETS.find(
+                                                (t) => t.value === target,
+                                            )?.label
+                                        }
+                                        .
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <span className="text-muted-foreground text-xs">
+                                {remaining !== null
+                                    ? `${remaining}/5 AI requests left this hour`
+                                    : ""}
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleCopy}
+                                    disabled={!code || loading !== null}
+                                    className="flex-1 sm:flex-none"
+                                >
+                                    <HugeiconsIcon
+                                        icon={copied ? CheckCircle : Copy}
+                                        className={
+                                            copied
+                                                ? "size-3.5 text-green-500"
+                                                : "size-3.5"
+                                        }
+                                    />
+                                    {copied ? "Copied" : "Copy"}
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    onClick={handleGenerate}
+                                    disabled={!json.trim() || loading !== null}
+                                    className="flex-1 sm:flex-none"
+                                >
+                                    {loading === target ? (
+                                        <>
+                                            <HugeiconsIcon
+                                                icon={LoaderCircle}
+                                                className="size-4 animate-spin"
+                                            />
+                                            Generating
+                                        </>
+                                    ) : (
+                                        <>
+                                            <HugeiconsIcon
+                                                icon={Sparkles}
+                                                className="size-4"
+                                            />
+                                            {code ? "Regenerate" : "Generate"}
+                                        </>
+                                    )}
+                                </Button>
                             </div>
-                        ) : code ? (
-                            <pre className="text-foreground max-h-80 overflow-auto font-mono text-xs leading-relaxed break-all whitespace-pre-wrap">
-                                {code}
-                            </pre>
-                        ) : (
-                            <div className="text-muted-foreground flex h-56 flex-col items-center justify-center gap-2 text-sm">
-                                <HugeiconsIcon
-                                    icon={Sparkles}
-                                    className="size-5"
-                                />
-                                <span>
-                                    Click <strong>Generate</strong> to produce{" "}
-                                    {
-                                        TARGETS.find((t) => t.value === target)
-                                            ?.label
-                                    }
-                                    .
-                                </span>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-muted-foreground text-xs">
-                            {remaining !== null
-                                ? `${remaining}/5 AI requests left this hour`
-                                : ""}
-                        </span>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleCopy}
-                                disabled={!code || loading !== null}
-                            >
-                                <HugeiconsIcon
-                                    icon={copied ? CheckCircle : Copy}
-                                    className={
-                                        copied
-                                            ? "size-3.5 text-green-500"
-                                            : "size-3.5"
-                                    }
-                                />
-                                {copied ? "Copied" : "Copy"}
-                            </Button>
-                            <Button
-                                size="sm"
-                                onClick={handleGenerate}
-                                disabled={!json.trim() || loading !== null}
-                            >
-                                {loading === target ? (
-                                    <>
-                                        <HugeiconsIcon
-                                            icon={LoaderCircle}
-                                            className="size-4 animate-spin"
-                                        />
-                                        Generating
-                                    </>
-                                ) : (
-                                    <>
-                                        <HugeiconsIcon
-                                            icon={Sparkles}
-                                            className="size-4"
-                                        />
-                                        {code ? "Regenerate" : "Generate"}
-                                    </>
-                                )}
-                            </Button>
                         </div>
                     </div>
-                </div>
-            </DialogContent>
-        </Dialog>
+                </ResponsiveModalBody>
+            </ResponsiveModalContent>
+        </ResponsiveModal>
     );
 }

@@ -561,8 +561,8 @@ export function JsonForgeApp({
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
-            <header className="border-border bg-background/50 flex h-14 shrink-0 items-center justify-between border-b px-4 backdrop-blur-md md:px-6">
-                <div className="flex items-center gap-3 overflow-hidden md:gap-4">
+            <header className="border-border bg-background/50 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-3 backdrop-blur-md sm:px-4 md:px-6">
+                <div className="flex items-center gap-2 overflow-hidden sm:gap-3 md:gap-4">
                     <div className="bg-foreground shrink-0 rounded-md p-1.5 shadow-sm">
                         <svg
                             viewBox="0 0 32 32"
@@ -591,7 +591,7 @@ export function JsonForgeApp({
                             />
                         </svg>
                     </div>
-                    <div className="flex min-w-0 flex-col">
+                    <div className="hidden min-w-0 flex-col sm:flex">
                         <h1 className="truncate text-sm font-semibold tracking-wide">
                             JSON Forge
                         </h1>
@@ -611,12 +611,12 @@ export function JsonForgeApp({
                                 trackEvent("switch_view", { mode: val });
                             }
                         }}
-                        className="border-border bg-muted ml-2 shrink-0 rounded-md border p-px md:ml-0"
+                        className="border-border bg-muted shrink-0 rounded-md border p-px sm:ml-2 md:ml-0"
                     >
                         <ToggleGroupItem
                             value="code"
                             aria-label="Code view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded px-2 text-xs data-[state=on]:shadow-sm md:px-3"
+                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
                         >
                             <HugeiconsIcon icon={Code} className="size-3.5" />
                             <span className="hidden sm:inline">Code</span>
@@ -624,7 +624,7 @@ export function JsonForgeApp({
                         <ToggleGroupItem
                             value="graph"
                             aria-label="Graph view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded px-2 text-xs data-[state=on]:shadow-sm md:px-3"
+                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
                         >
                             <HugeiconsIcon
                                 icon={GitGraph}
@@ -635,7 +635,7 @@ export function JsonForgeApp({
                         <ToggleGroupItem
                             value="table"
                             aria-label="Table view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded px-2 text-xs data-[state=on]:shadow-sm md:px-3"
+                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
                         >
                             <HugeiconsIcon icon={Table} className="size-3.5" />
                             <span className="hidden sm:inline">Table</span>
@@ -643,7 +643,7 @@ export function JsonForgeApp({
                         <ToggleGroupItem
                             value="diff"
                             aria-label="Diff view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded px-2 text-xs data-[state=on]:shadow-sm md:px-3"
+                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-6 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
                         >
                             <HugeiconsIcon
                                 icon={GitCompareIcon}
@@ -654,7 +654,7 @@ export function JsonForgeApp({
                     </ToggleGroup>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-3 pl-2 md:gap-4">
+                <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">
                     <Button
                         variant="outline"
                         size="sm"
