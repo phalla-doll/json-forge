@@ -10,6 +10,7 @@ import {
   Upload,
   Trash2,
   Search,
+  Share05Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,9 @@ interface ToolbarProps {
   onClear: () => void;
   onDownload: () => void;
   onUpload: (file: File) => void;
+  onShare: () => void;
+  canShare: boolean;
+  isSharing: boolean;
   hasContent: boolean;
   indentation: number | string;
   onIndentChange: (value: number | string) => void;
@@ -44,6 +48,9 @@ export function Toolbar({
   onClear,
   onDownload,
   onUpload,
+  onShare,
+  canShare,
+  isSharing,
   hasContent,
   indentation,
   onIndentChange,
@@ -131,7 +138,9 @@ export function Toolbar({
             <Input
               ref={searchInputRef}
               type="text"
-              placeholder={shortcutLabel ? `Search... (${shortcutLabel})` : "Search..."}
+              placeholder={
+                shortcutLabel ? `Search... (${shortcutLabel})` : "Search..."
+              }
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               onKeyDown={(e) => {
@@ -173,6 +182,23 @@ export function Toolbar({
           >
             <HugeiconsIcon icon={Download} className="size-3.5" />
             <span className="hidden sm:inline">Export</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onShare}
+            disabled={!canShare || isSharing}
+            title={
+              canShare
+                ? "Create a shareable link"
+                : "Editor is empty or invalid"
+            }
+          >
+            <HugeiconsIcon icon={Share05Icon} className="size-3.5" />
+            <span className="hidden sm:inline">
+              {isSharing ? "Sharing…" : "Share"}
+            </span>
           </Button>
         </div>
       </div>

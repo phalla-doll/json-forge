@@ -74,10 +74,7 @@ export function enforceSameOrigin(request: Request): NextResponse | null {
   }
 
   if (!allowed.has(host)) {
-    return NextResponse.json(
-      { error: "Origin not allowed" },
-      { status: 403 },
-    );
+    return NextResponse.json({ error: "Origin not allowed" }, { status: 403 });
   }
 
   return null;

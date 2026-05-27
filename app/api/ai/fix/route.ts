@@ -58,7 +58,10 @@ export async function POST(request: Request) {
     if (err instanceof AiOutputError) {
       console.error("AI fix output error:", err.message);
       return NextResponse.json(
-        { error: "Model returned invalid output. Please edit the JSON manually." },
+        {
+          error:
+            "Model returned invalid output. Please edit the JSON manually.",
+        },
         { status: 502 },
       );
     }

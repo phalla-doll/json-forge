@@ -31,6 +31,13 @@
 *   **AI Fix**: When JSON has errors, the AI button becomes "AI Fix" — sends the broken JSON along with the error message to the LLM for automatic repair.
 *   **Rate Limited**: AI endpoints are rate limited (10 requests/min, 50 requests/day per IP) via Upstash Redis to prevent abuse.
 
+### Share Snapshots
+*   **One-Click Share Links**: Click **Share** in the toolbar to create a public link (`/s/<slug>`) that opens the current JSON in any browser.
+*   **Cloudflare D1 Backed**: Snapshots are stored in a Cloudflare D1 SQLite database; the Vercel-hosted app talks to D1 via its REST API.
+*   **Auto-Expiring**: Each share expires after 30 days. A daily Vercel Cron job (`/api/cron/cleanup-shares`) sweeps expired rows.
+*   **Read Cap & Rate Limit**: Payloads are capped at 512 KB; share creation is rate-limited to 10/hour per IP via the existing Upstash limiter.
+*   **Recipient UX**: Shared links open the full editor with a dismissible "Shared snapshot from …" banner. Recipients can edit locally; their edits never update the original link.
+
 ### Live Statistics & Utilities
 *   **Real-time Stats**: Always-visible status bar tracking Line Count, Character Count, and Estimated File Size.
 *   **File Operations**: Drag-and-drop import for `.json` files and one-click export/download. File picker with 5 MB warning threshold.
@@ -58,6 +65,7 @@ JSON Forge is engineered to handle large datasets that crash typical web-based f
 *   **Editor**: `@monaco-editor/react`
 *   **Icons**: `@hugeicons/react`
 *   **AI**: NVIDIA API via `openai` SDK (model: `openai/gpt-oss-120b`)
+*   **Share Storage**: Cloudflare D1 (SQLite) over REST; schema in `db/schema.sql`, client in `lib/d1.ts`
 *   **Rate Limiting**: `@upstash/ratelimit` + `@upstash/redis`
 *   **Fonts**: Google Sans Code (mono) + Geist (sans)
 *   **State**: React Hooks (Context, Memo, UseState)
@@ -85,13 +93,20 @@ To run JSON Forge locally:
     *   `NVIDIA_API_KEY` — Required for AI features (get from [NVIDIA Build](https://build.nvidia.com/))
     *   `NVIDIA_MODEL` — Optional, defaults to `openai/gpt-oss-120b`
     *   `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — Optional for AI rate limiting (gracefully degrades without them)
+    *   `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_D1_DATABASE_ID` / `CLOUDFLARE_D1_API_TOKEN` — Required for the share feature. Create a D1 database with `pnpm wrangler d1 create json-forge-shares` and an API token at https://dash.cloudflare.com/profile/api-tokens with scope **Account → D1 → Edit**.
+    *   `CRON_SECRET` — Random string protecting the cleanup cron endpoint. Generate with `openssl rand -hex 32`.
 
-4.  **Start the development server**
+4.  **Apply the share schema** (one-time, after D1 credentials are set)
+    ```bash
+    pnpm wrangler d1 execute json-forge-shares --remote --file=db/schema.sql
+    ```
+
+5.  **Start the development server**
     ```bash
     pnpm dev
     ```
 
-5.  **Build for production**
+6.  **Build for production**
     ```bash
     pnpm build
     ```
@@ -102,42 +117,62 @@ To run JSON Forge locally:
 |---|---|---|---|
 | `/api/ai/generate` | POST | Generate valid JSON from a natural language prompt (max 4000 chars) | Yes |
 | `/api/ai/fix` | POST | Repair broken JSON syntax (max 1 MB) | Yes |
+| `/api/share` | POST | Create a shareable snapshot (max 512 KB); returns `{slug, url, expiresAt}` | Yes (10/hour/IP) |
+| `/api/share/[slug]` | GET | Fetch a snapshot by slug; returns 410 once expired | No |
+| `/api/cron/cleanup-shares` | GET | Vercel Cron sweep that deletes expired shares; requires `Authorization: Bearer $CRON_SECRET` | n/a |
 
-Both routes validate inputs and return structured JSON responses with proper HTTP status codes (400, 413, 429, 502).
+Routes validate inputs and return structured JSON responses with proper HTTP status codes (400, 401, 410, 413, 429, 502).
 
 ## Project Structure
 
 ```
 app/
 ├── layout.tsx              # Root layout (ThemeProvider, Toaster, fonts)
-├── page.tsx                # Main application (client component, state orchestration)
+├── page.tsx                # Home route — thin wrapper around <JsonForgeApp>
 ├── loading.tsx             # ASCII pre-React loader
 ├── globals.css             # Tailwind v4 + theme tokens (light & dark)
 ├── loader.css              # ASCII loader styles
 ├── apple-icon.tsx          # Dynamic Apple touch icon
 ├── icon.svg                # Favicon
+├── s/[slug]/
+│   ├── page.tsx            # Server-rendered share viewer
+│   └── expired-view.tsx    # "This share has expired" UI
 └── api/
-    └── ai/
-        ├── generate/route.ts  # AI JSON generation endpoint
-        └── fix/route.ts       # AI JSON repair endpoint
+    ├── ai/
+    │   ├── generate/route.ts  # AI JSON generation endpoint
+    │   └── fix/route.ts       # AI JSON repair endpoint
+    ├── share/
+    │   ├── route.ts        # POST — create a snapshot
+    │   └── [slug]/route.ts # GET — fetch a snapshot
+    └── cron/
+        └── cleanup-shares/route.ts  # Cron-only DELETE WHERE expires_at < now
 components/
 ├── ui/                     # shadcn/ui primitives (Button, Dialog, Select, etc.)
 ├── json-editor.tsx         # Monaco Editor dynamic import wrapper
 ├── json-editor-inner.tsx   # Monaco Editor with custom themes & search highlighting
 ├── json-tree-view.tsx      # Interactive graph/tree visualization
 ├── json-table-view.tsx     # Data table view with breadcrumb drill-down
+├── json-forge-app.tsx      # Main client component (shared by / and /s/[slug])
 ├── ai-modal.tsx            # AI prompt dialog modal
-├── toolbar.tsx             # Actions (Format, Minify, Search, Import, Export, etc.)
+├── share-modal.tsx         # Share-link dialog with copy button
+├── toolbar.tsx             # Actions (Format, Minify, Search, Import, Export, Share, etc.)
 ├── status-bar.tsx          # Footer stats and validation indicator
 └── theme-provider.tsx      # next-themes wrapper with D-key hotkey toggle
 lib/
 ├── ai.ts                   # Client-side AI helpers (generateJson, fixJson)
+├── share.ts                # Client-side share helper (createShare)
 ├── nvidia.ts               # Server-side NVIDIA AI integration (server-only)
-├── ratelimit.ts            # Upstash Redis rate limiting (10/min, 50/day per IP)
+├── d1.ts                   # Cloudflare D1 REST client (server-only)
+├── slug.ts                 # URL-safe 10-char slug generator (server-only)
+├── origin.ts               # Same-origin guard for POST routes
+├── ratelimit.ts            # Upstash Redis rate limiting (AI + Share)
 └── utils.ts                # Helpers (cn, formatFileSize, getStats, isValidJson, downloadFile)
+db/
+└── schema.sql              # D1 shares table DDL
 types.ts                    # TypeScript definitions (EditorStats, ToastType)
 public/
 └── logo.svg                # JSON Forge logo
+vercel.json                 # Vercel Cron config (daily cleanup at 04:00 UTC)
 ```
 
 ## License

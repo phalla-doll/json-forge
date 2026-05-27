@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
@@ -15,7 +16,8 @@ const onVercel = !!process.env.VERCEL;
 let warned = false;
 
 type Limiters = {
-  perHour: Ratelimit;
+  ai: Ratelimit;
+  share: Ratelimit;
 };
 
 let cached: Limiters | null = null;
@@ -24,7 +26,7 @@ function getLimiters(): Limiters | null {
   if (!url || !token) {
     if (!warned) {
       console.warn(
-        "[ratelimit] Upstash creds missing (UPSTASH_REDIS_REST_URL/TOKEN or KV_REST_API_URL/TOKEN) — AI rate limiting disabled.",
+        "[ratelimit] Upstash creds missing (UPSTASH_REDIS_REST_URL/TOKEN or KV_REST_API_URL/TOKEN) — rate limiting disabled.",
       );
       warned = true;
     }
@@ -33,10 +35,16 @@ function getLimiters(): Limiters | null {
   if (!cached) {
     const redis = new Redis({ url, token });
     cached = {
-      perHour: new Ratelimit({
+      ai: new Ratelimit({
         redis,
         limiter: Ratelimit.fixedWindow(5, "1 h"),
         prefix: "json-forge:ai:hour",
+        analytics: false,
+      }),
+      share: new Ratelimit({
+        redis,
+        limiter: Ratelimit.fixedWindow(10, "1 h"),
+        prefix: "json-forge:share:hour",
         analytics: false,
       }),
     };
@@ -44,7 +52,7 @@ function getLimiters(): Limiters | null {
   return cached;
 }
 
-function getClientIp(request: Request): string {
+export function getClientIp(request: Request): string {
   // Vercel sets x-vercel-forwarded-for to the real client IP after stripping
   // any client-supplied value. This is the only header we can trust on Vercel.
   if (onVercel) {
@@ -85,27 +93,34 @@ function failClosedResponse(reason: string): NextResponse {
   );
 }
 
-export async function enforceAiRateLimit(
+type RunOpts = {
+  pick: (l: Limiters) => Ratelimit;
+  defaultLimit: number;
+  quotaMessage: string;
+};
+
+async function runLimiter(
   request: Request,
+  opts: RunOpts,
 ): Promise<RateLimitResult> {
   const limiters = getLimiters();
   if (!limiters) {
-    // Fail closed in production unless the operator explicitly opts out.
     if (isProd && !allowUnlimited) {
       return {
         ok: false,
         response: failClosedResponse("Upstash creds missing in production"),
       };
     }
-    return { ok: true, remaining: 5 };
+    return { ok: true, remaining: opts.defaultLimit };
   }
 
   const ip = getClientIp(request);
+  const limiter = opts.pick(limiters);
 
-  let hour: Awaited<ReturnType<typeof limiters.perHour.limit>>;
+  let hour: Awaited<ReturnType<typeof limiter.limit>>;
   try {
     hour = await Promise.race([
-      limiters.perHour.limit(ip),
+      limiter.limit(ip),
       new Promise<never>((_, reject) =>
         setTimeout(
           () => reject(new Error("upstash-timeout")),
@@ -122,7 +137,7 @@ export async function enforceAiRateLimit(
         ),
       };
     }
-    return { ok: true, remaining: 5 };
+    return { ok: true, remaining: opts.defaultLimit };
   }
 
   if (hour.success) return { ok: true, remaining: hour.remaining };
@@ -135,10 +150,7 @@ export async function enforceAiRateLimit(
   return {
     ok: false,
     response: NextResponse.json(
-      {
-        error:
-          "Hourly limit reached. You have 5 AI generations per hour. Try again later.",
-      },
+      { error: opts.quotaMessage },
       {
         status: 429,
         headers: {
@@ -149,4 +161,44 @@ export async function enforceAiRateLimit(
       },
     ),
   };
+}
+
+export function enforceAiRateLimit(request: Request): Promise<RateLimitResult> {
+  return runLimiter(request, {
+    pick: (l) => l.ai,
+    defaultLimit: 5,
+    quotaMessage:
+      "Hourly limit reached. You have 5 AI generations per hour. Try again later.",
+  });
+}
+
+export function enforceShareRateLimit(
+  request: Request,
+): Promise<RateLimitResult> {
+  return runLimiter(request, {
+    pick: (l) => l.share,
+    defaultLimit: 10,
+    quotaMessage:
+      "Hourly limit reached. You can create up to 10 share links per hour. Try again later.",
+  });
+}
+
+// Salted IP hash for abuse triage. Stored on the row so a DB leak doesn't
+// expose raw IPs. CRON_SECRET doubles as the salt — if it rotates, existing
+// rows just become un-correlatable to new ones (acceptable for triage use).
+// In production we refuse to fall back to a literal salt — a known salt
+// defeats the hash. Callers should treat `null` as "store NULL for ip_hash".
+export function hashIp(ip: string): string | null {
+  const salt = process.env.CRON_SECRET;
+  if (!salt) {
+    if (isProd) return null;
+    return createHash("sha256")
+      .update(`${ip}:json-forge-dev-salt`)
+      .digest("hex")
+      .slice(0, 16);
+  }
+  return createHash("sha256")
+    .update(`${ip}:${salt}`)
+    .digest("hex")
+    .slice(0, 16);
 }

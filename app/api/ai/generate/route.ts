@@ -53,7 +53,10 @@ export async function POST(request: Request) {
     if (error instanceof AiOutputError) {
       console.error("AI generate output error:", error.message);
       return NextResponse.json(
-        { error: "Model returned invalid output. Please try a different prompt." },
+        {
+          error:
+            "Model returned invalid output. Please try a different prompt.",
+        },
         { status: 502 },
       );
     }
