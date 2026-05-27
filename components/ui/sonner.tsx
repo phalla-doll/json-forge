@@ -20,17 +20,33 @@ const Toaster = ({ ...props }: ToasterProps) => {
             className="toaster group"
             icons={{
                 success: (
-                    <HugeiconsIcon icon={CircleCheck} className="size-4" />
+                    <HugeiconsIcon
+                        icon={CircleCheck}
+                        className="size-4 text-emerald-500"
+                    />
                 ),
-                info: <HugeiconsIcon icon={Info} className="size-4" />,
+                info: (
+                    <HugeiconsIcon
+                        icon={Info}
+                        className="size-4 text-sky-500"
+                    />
+                ),
                 warning: (
-                    <HugeiconsIcon icon={AlertTriangle} className="size-4" />
+                    <HugeiconsIcon
+                        icon={AlertTriangle}
+                        className="size-4 text-amber-500"
+                    />
                 ),
-                error: <HugeiconsIcon icon={OctagonXIcon} className="size-4" />,
+                error: (
+                    <HugeiconsIcon
+                        icon={OctagonXIcon}
+                        className="size-4 text-red-500"
+                    />
+                ),
                 loading: (
                     <HugeiconsIcon
                         icon={LoaderCircle}
-                        className="size-4 animate-spin"
+                        className="size-4 animate-spin text-muted-foreground"
                     />
                 ),
             }}
