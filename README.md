@@ -33,6 +33,7 @@
 
 ### Share Snapshots
 *   **One-Click Share Links**: Click **Share** in the toolbar to create a public link (`/s/<slug>`) that opens the current JSON in any browser.
+*   **QR Code**: The share dialog renders a scannable QR code alongside the link so you can open the snapshot on a phone or another device without copy-pasting.
 *   **Cloudflare D1 Backed**: Snapshots are stored in a Cloudflare D1 SQLite database; the Vercel-hosted app talks to D1 via its REST API.
 *   **Auto-Expiring**: Each share expires after 30 days. A daily Vercel Cron job (`/api/cron/cleanup-shares`) sweeps expired rows.
 *   **Read Cap & Rate Limit**: Payloads are capped at 512 KB; share creation is rate-limited to 10/hour per IP via the existing Upstash limiter.
@@ -64,6 +65,7 @@ JSON Forge is engineered to handle large datasets that crash typical web-based f
 *   **UI**: shadcn/ui (Radix primitives), Tailwind CSS v4
 *   **Editor**: `@monaco-editor/react`
 *   **Icons**: `@hugeicons/react`
+*   **QR Codes**: `qrcode.react`
 *   **AI**: NVIDIA API via `openai` SDK (model: `openai/gpt-oss-120b`)
 *   **Share Storage**: Cloudflare D1 (SQLite) over REST; schema in `db/schema.sql`, client in `lib/d1.ts`
 *   **Rate Limiting**: `@upstash/ratelimit` + `@upstash/redis`
@@ -154,7 +156,7 @@ components/
 ├── json-table-view.tsx     # Data table view with breadcrumb drill-down
 ├── json-forge-app.tsx      # Main client component (shared by / and /s/[slug])
 ├── ai-modal.tsx            # AI prompt dialog modal
-├── share-modal.tsx         # Share-link dialog with copy button
+├── share-modal.tsx         # Share-link dialog with copy button + QR code
 ├── toolbar.tsx             # Actions (Format, Minify, Search, Import, Export, Share, etc.)
 ├── status-bar.tsx          # Footer stats and validation indicator
 └── theme-provider.tsx      # next-themes wrapper with D-key hotkey toggle
