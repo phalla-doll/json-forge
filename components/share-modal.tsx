@@ -8,6 +8,7 @@ import {
   Share05Icon,
   CheckCircle,
 } from "@hugeicons/core-free-icons";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -94,7 +95,23 @@ export function ShareModal({
             <span className="ml-2">Creating share link…</span>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col items-center gap-2">
+              <div className="rounded-lg border bg-white p-3 shadow-sm">
+                <QRCodeSVG
+                  value={absoluteUrl}
+                  size={180}
+                  level="M"
+                  marginSize={0}
+                  bgColor="#ffffff"
+                  fgColor="#0a0a0a"
+                  aria-label="QR code for share link"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Scan to open on another device
+              </p>
+            </div>
             <div className="flex items-center gap-2">
               <Input
                 readOnly
