@@ -58,7 +58,7 @@ const SECTIONS = (mod: string): Section[] => [
 
 function Kbd({ children }: { children: React.ReactNode }) {
     return (
-        <kbd className="border-border bg-muted text-foreground inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded border px-1.5 font-mono text-[11px] font-semibold shadow-sm">
+        <kbd className="border-border bg-muted text-foreground inline-flex h-6 min-w-6 items-center justify-center rounded border px-1.5 font-mono text-[11px] font-semibold shadow-sm">
             {children}
         </kbd>
     );
