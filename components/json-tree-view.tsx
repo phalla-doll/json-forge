@@ -502,7 +502,7 @@ const NodeTooltip: React.FC<NodeTooltipProps> = ({
                 <span className="text-muted-foreground text-[10px] tracking-wider uppercase">
                     Value
                 </span>
-                <div className="text-foreground bg-background border-border max-h-48 cursor-text scrollbar-thin overflow-y-auto rounded border p-1.5 break-words whitespace-pre-wrap select-text">
+                <div className="text-foreground bg-background border-border max-h-48 cursor-text scrollbar-thin overflow-y-auto rounded border p-1.5 wrap-break-word whitespace-pre-wrap select-text">
                     {renderTooltipValue()}
                 </div>
             </div>
