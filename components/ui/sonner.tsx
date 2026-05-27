@@ -46,7 +46,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
                 loading: (
                     <HugeiconsIcon
                         icon={LoaderCircle}
-                        className="size-4 animate-spin text-muted-foreground"
+                        className="text-muted-foreground size-4 animate-spin"
                     />
                 ),
             }}
