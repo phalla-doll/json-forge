@@ -27,12 +27,16 @@ function isTypingTarget(target: EventTarget | null) {
         return false;
     }
 
-    return (
+    if (
         target.isContentEditable ||
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT"
-    );
+    ) {
+        return true;
+    }
+
+    return !!target.closest(".monaco-editor");
 }
 
 function ThemeHotkey() {
