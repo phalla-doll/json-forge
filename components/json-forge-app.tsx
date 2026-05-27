@@ -925,7 +925,7 @@ function SharedSnapshotBanner({
     return (
         <div
             role="status"
-            className="border-border flex shrink-0 items-start justify-between gap-3 border-b bg-amber-500/10 px-4 py-2 text-xs text-amber-700 md:px-6 dark:text-amber-300"
+            className="border-border flex shrink-0 items-center justify-between gap-3 border-b bg-amber-500/10 px-4 py-2 text-xs text-amber-700 md:px-6 dark:text-amber-300"
         >
             <div className="flex items-center gap-2">
                 <HugeiconsIcon
