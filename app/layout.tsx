@@ -14,9 +14,9 @@ const googleSansCode = Google_Sans_Code({
 });
 
 export const metadata = {
-  title: "JSON Forge - Professional JSON Editor & Visualizer",
+  title: "JSON Forge — JSON editor & visualizer",
   description:
-    "A professional-grade JSON formatter, validator, and minifier with interactive graph visualization.",
+    "JSON editor and visualizer with formatting, validation, interactive graph and table views, and AI-assisted generation and repair.",
 };
 
 export default function RootLayout({

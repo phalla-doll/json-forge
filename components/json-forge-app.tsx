@@ -377,7 +377,7 @@ export function JsonForgeApp({
               JSON Forge
             </h1>
             <span className="hidden text-xs text-muted-foreground sm:block">
-              Open-source JSON visualizer
+              JSON editor & visualizer
             </span>
           </div>
           <div className="mx-1 hidden h-6 w-px bg-border md:mx-2 md:block" />
