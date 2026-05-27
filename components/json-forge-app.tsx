@@ -22,6 +22,7 @@ import {
     HelpCircleIcon,
     GitCompareIcon,
     DocumentCodeIcon,
+    LinkSquare02Icon,
 } from "@hugeicons/core-free-icons";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -655,29 +656,51 @@ export function JsonForgeApp({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                            if (error) {
-                                handleAiFix();
-                            } else {
-                                setIsAiModalOpen(true);
-                            }
-                        }}
-                        disabled={sharedSnapshot?.readOnly === true}
-                        className="border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
-                    >
-                        <HugeiconsIcon
-                            icon={AiContentGenerator02Icon}
-                            className="size-3.5"
-                        />
-                        <span className="hidden sm:inline">
-                            {error
-                                ? `AI Fix${aiRemaining !== null ? ` (${aiRemaining}/5)` : ""}`
-                                : `Generate JSON${aiRemaining !== null ? ` (${aiRemaining}/5)` : ""}`}
-                        </span>
-                    </Button>
+                    {sharedSnapshot?.readOnly === true ? (
+                        <Button variant="outline" size="sm" asChild>
+                            <a
+                                href="/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() =>
+                                    trackEvent("new_snapshot_click", {
+                                        source: "snapshot_header",
+                                    })
+                                }
+                            >
+                                <HugeiconsIcon
+                                    icon={LinkSquare02Icon}
+                                    className="size-3.5"
+                                />
+                                <span className="hidden sm:inline">
+                                    New Snapshot
+                                </span>
+                            </a>
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                if (error) {
+                                    handleAiFix();
+                                } else {
+                                    setIsAiModalOpen(true);
+                                }
+                            }}
+                            className="border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
+                        >
+                            <HugeiconsIcon
+                                icon={AiContentGenerator02Icon}
+                                className="size-3.5"
+                            />
+                            <span className="hidden sm:inline">
+                                {error
+                                    ? `AI Fix${aiRemaining !== null ? ` (${aiRemaining}/5)` : ""}`
+                                    : `Generate JSON${aiRemaining !== null ? ` (${aiRemaining}/5)` : ""}`}
+                            </span>
+                        </Button>
+                    )}
 
                     <Button
                         variant="outline"
