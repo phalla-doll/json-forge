@@ -18,13 +18,13 @@ import {
   Hash,
   ToggleLeft,
   AlertTriangle,
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
-  Shrink,
+  SearchAddIcon,
+  SearchMinusIcon,
+  Refresh01Icon,
+  ComputerIcon,
   MoreHorizontal,
-  ChevronsDown,
-  ChevronsUp,
+  ArrowShrinkIcon,
+  ArrowExpandIcon,
 } from "@hugeicons/core-free-icons";
 import { trackEvent } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -70,12 +70,18 @@ interface TooltipData {
   name?: string;
 }
 
-type GlobalActionType = "expand" | "collapse" | "idle";
+type GlobalActionType = "expand" | "collapse" | "collapse-depth" | "idle";
+
+type GlobalAction = {
+  type: GlobalActionType;
+  id: number;
+  depth?: number;
+};
 
 interface GraphContextType {
   showTooltip: (data: TooltipData) => void;
   hideTooltip: () => void;
-  globalAction: { type: GlobalActionType; id: number };
+  globalAction: GlobalAction;
   searchTerm: string;
   focusNode: (rect: DOMRect) => void;
   initiallyExpandedPaths: Set<string>;
@@ -230,6 +236,12 @@ const GraphNode: React.FC<GraphNodeProps> = React.memo(function GraphNode({
       isExpanded = true;
     } else if (globalAction.type === "collapse" && depth !== 0) {
       isExpanded = false;
+    } else if (
+      globalAction.type === "collapse-depth" &&
+      isExpandable &&
+      typeof globalAction.depth === "number"
+    ) {
+      isExpanded = depth < globalAction.depth;
     }
     if (isExpanded !== userExpanded) setUserExpanded(isExpanded);
     setAppliedActionId(globalAction.id);
@@ -497,10 +509,10 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
   const [position, setPosition] = useState({ x: 40, y: 40 });
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const [isPanning, setIsPanning] = useState(false);
-  const [globalAction, setGlobalAction] = useState<{
-    type: GlobalActionType;
-    id: number;
-  }>({ type: "idle", id: 0 });
+  const [globalAction, setGlobalAction] = useState<GlobalAction>({
+    type: "idle",
+    id: 0,
+  });
 
   const scaleRef = useRef(1);
   const positionRef = useRef({ x: 40, y: 40 });
@@ -838,6 +850,16 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
     setGlobalAction((prev) => ({ type: "collapse", id: prev.id + 1 }));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleCollapseToDepth = (depth: number) => {
+    trackEvent("graph_collapse_depth", { depth });
+    setGlobalAction((prev) => ({
+      type: "collapse-depth",
+      id: prev.id + 1,
+      depth,
+    }));
+  };
+
   const iconButtonClasses =
     "size-8 text-muted-foreground hover:text-foreground";
 
@@ -858,7 +880,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                 className={iconButtonClasses}
                 aria-label="Zoom in"
               >
-                <HugeiconsIcon icon={ZoomIn} size={16} />
+                <HugeiconsIcon icon={SearchAddIcon} size={16} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">Zoom in (+)</TooltipContent>
@@ -872,7 +894,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                 className={iconButtonClasses}
                 aria-label="Zoom out"
               >
-                <HugeiconsIcon icon={ZoomOut} size={16} />
+                <HugeiconsIcon icon={SearchMinusIcon} size={16} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">Zoom out (-)</TooltipContent>
@@ -886,7 +908,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                 className={iconButtonClasses}
                 aria-label="Reset zoom"
               >
-                <HugeiconsIcon icon={RotateCcw} size={16} />
+                <HugeiconsIcon icon={Refresh01Icon} size={16} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">Reset scale (0)</TooltipContent>
@@ -900,7 +922,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                 className={iconButtonClasses}
                 aria-label="Fit to screen"
               >
-                <HugeiconsIcon icon={Shrink} size={16} />
+                <HugeiconsIcon icon={ComputerIcon} size={16} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">Fit to screen</TooltipContent>
@@ -917,7 +939,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                 className={iconButtonClasses}
                 aria-label="Expand all nodes"
               >
-                <HugeiconsIcon icon={ChevronsDown} size={16} />
+                <HugeiconsIcon icon={ArrowExpandIcon} size={16} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">Expand all</TooltipContent>
@@ -931,11 +953,13 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                 className={iconButtonClasses}
                 aria-label="Collapse all nodes"
               >
-                <HugeiconsIcon icon={ChevronsUp} size={16} />
+                <HugeiconsIcon icon={ArrowShrinkIcon} size={16} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">Collapse all</TooltipContent>
           </ShadTooltip>
+
+          {/* Collapse-to-depth control hidden for now; handler kept for re-enable. */}
         </div>
 
         <div

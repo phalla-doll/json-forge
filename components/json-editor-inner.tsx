@@ -15,6 +15,8 @@ export function JsonEditorInner({
   searchTerm,
   theme = "dark",
   onMatchCountChange,
+  wordWrap = false,
+  readOnly = false,
 }: EditorProps) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<MonacoNS | null>(null);
@@ -170,6 +172,8 @@ export function JsonEditorInner({
           tabSize: typeof indentation === "number" ? indentation : 4,
           insertSpaces: typeof indentation === "number",
           detectIndentation: false,
+          wordWrap: wordWrap ? "on" : "off",
+          readOnly,
         }}
         theme={theme === "dark" ? "vercel-dark" : "vercel-light"}
       />

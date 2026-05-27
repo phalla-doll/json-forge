@@ -9,6 +9,9 @@ import {
   Home,
   FolderOpen,
   ArrowLeft,
+  ArrowUp01Icon,
+  ArrowDown01Icon,
+  Download,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { trackEvent, downloadBlob, toCsv } from "@/lib/utils";
 
 interface JsonTableViewProps {
   value: string;
@@ -197,11 +201,56 @@ function Breadcrumbs({ path, onReset, onClick }: BreadcrumbsProps) {
   );
 }
 
+type SortState = { column: string; direction: "asc" | "desc" } | null;
+
+function compareValues(a: JsonValue | undefined, b: JsonValue | undefined): number {
+  const undefA = a === undefined || a === null;
+  const undefB = b === undefined || b === null;
+  if (undefA && undefB) return 0;
+  if (undefA) return 1;
+  if (undefB) return -1;
+  const ta = typeof a;
+  const tb = typeof b;
+  if (ta === "number" && tb === "number") return (a as number) - (b as number);
+  if (ta === "boolean" && tb === "boolean") {
+    return (a ? 1 : 0) - (b ? 1 : 0);
+  }
+  if (ta === "object" && tb === "object") {
+    return JSON.stringify(a).length - JSON.stringify(b).length;
+  }
+  return String(a).localeCompare(String(b), undefined, { numeric: true });
+}
+
 export const JsonTableView: React.FC<JsonTableViewProps> = ({
   value,
   searchTerm = "",
 }) => {
   const [path, setPath] = useState<PathKey[]>([]);
+  const [sort, setSort] = useState<SortState>(null);
+
+  // Reset sort when navigating to a different table. Mirroring the
+  // "store info from previous render" pattern used in json-tree-view.tsx:
+  // React converges in one extra render without an effect.
+  const [prevPath, setPrevPath] = useState(path);
+  if (prevPath !== path) {
+    setPrevPath(path);
+    if (sort !== null) setSort(null);
+  }
+
+  const cycleSort = (column: string) => {
+    setSort((prev) => {
+      let next: SortState;
+      if (!prev || prev.column !== column) {
+        next = { column, direction: "asc" };
+      } else if (prev.direction === "asc") {
+        next = { column, direction: "desc" };
+      } else {
+        next = null;
+      }
+      if (next) trackEvent("table_sort_column", next);
+      return next;
+    });
+  };
 
   const { rootData, error } = useMemo(() => {
     try {
@@ -252,15 +301,26 @@ export const JsonTableView: React.FC<JsonTableViewProps> = ({
   }, [currentData, currentType]);
 
   const handleNavigate = (segments: PathKey[]) => {
-    setPath((prev) => [...prev, ...segments]);
+    setPath((prev) => {
+      const nextPath = [...prev, ...segments];
+      trackEvent("table_navigate", { depth: nextPath.length });
+      return nextPath;
+    });
   };
 
   const handleBreadcrumbClick = (index: number) => {
+    trackEvent("table_breadcrumb_click", { index });
     setPath((prev) => prev.slice(0, index + 1));
   };
 
-  const handleReset = () => setPath([]);
-  const handleBack = () => setPath((prev) => prev.slice(0, -1));
+  const handleReset = () => {
+    trackEvent("table_reset_root");
+    setPath([]);
+  };
+  const handleBack = () => {
+    trackEvent("table_back");
+    setPath((prev) => prev.slice(0, -1));
+  };
 
   if (error) {
     return (
@@ -307,6 +367,29 @@ export const JsonTableView: React.FC<JsonTableViewProps> = ({
                 )
               : indexed;
 
+            const sorted = sort
+              ? [...filtered].sort((a, b) => {
+                  const av =
+                    typeof a.row === "object" &&
+                    a.row !== null &&
+                    !Array.isArray(a.row)
+                      ? (a.row as Record<string, JsonValue>)[sort.column]
+                      : sort.column === VALUE_HEADER
+                        ? (a.row as JsonValue)
+                        : undefined;
+                  const bv =
+                    typeof b.row === "object" &&
+                    b.row !== null &&
+                    !Array.isArray(b.row)
+                      ? (b.row as Record<string, JsonValue>)[sort.column]
+                      : sort.column === VALUE_HEADER
+                        ? (b.row as JsonValue)
+                        : undefined;
+                  const cmp = compareValues(av, bv);
+                  return sort.direction === "asc" ? cmp : -cmp;
+                })
+              : filtered;
+
             if (filtered.length === 0) {
               return (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-2">
@@ -316,25 +399,82 @@ export const JsonTableView: React.FC<JsonTableViewProps> = ({
               );
             }
 
+            const handleExportCsv = () => {
+              const exportRows = sorted.map((entry) => entry.row);
+              const csv = toCsv(exportRows, headers);
+              downloadBlob(csv, "table.csv", "text/csv;charset=utf-8");
+              trackEvent("table_export_csv", {
+                rows: exportRows.length,
+                columns: headers.length,
+              });
+            };
+
             return (
-              <table className="w-full text-left border-collapse">
+              <>
+                <div className="sticky top-0 z-20 flex items-center justify-between gap-2 bg-background px-3 py-2 border-b border-border">
+                  <span className="text-[11px] text-muted-foreground">
+                    {sorted.length.toLocaleString()} row
+                    {sorted.length === 1 ? "" : "s"}
+                    {sort && (
+                      <>
+                        {" "}· sorted by{" "}
+                        <span className="font-semibold text-foreground">
+                          {sort.column}
+                        </span>{" "}
+                        {sort.direction}
+                      </>
+                    )}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportCsv}
+                    className="h-7"
+                  >
+                    <HugeiconsIcon icon={Download} className="size-3.5" />
+                    <span className="hidden sm:inline">Export CSV</span>
+                  </Button>
+                </div>
+                <table className="w-full text-left border-collapse">
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-muted shadow-sm">
                     <th className="p-2 border-b border-border font-medium text-muted-foreground text-[11px] uppercase tracking-wider w-12 text-center sticky left-0 bg-muted border-r">
                       #
                     </th>
-                    {headers.map((h) => (
-                      <th
-                        key={h}
-                        className="p-2 border-b border-border font-medium text-muted-foreground text-[11px] uppercase tracking-wider min-w-[120px] whitespace-nowrap"
-                      >
-                        {h}
-                      </th>
-                    ))}
+                    {headers.map((h) => {
+                      const isActive = sort?.column === h;
+                      return (
+                        <th
+                          key={h}
+                          className="p-0 border-b border-border font-medium text-muted-foreground text-[11px] uppercase tracking-wider min-w-[120px] whitespace-nowrap"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => cycleSort(h)}
+                            className={`flex w-full items-center justify-between gap-1 px-2 py-2 text-left hover:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                              isActive ? "text-foreground" : ""
+                            }`}
+                            aria-label={`Sort by ${h}`}
+                          >
+                            <span>{h}</span>
+                            {isActive && (
+                              <HugeiconsIcon
+                                icon={
+                                  sort.direction === "asc"
+                                    ? ArrowUp01Icon
+                                    : ArrowDown01Icon
+                                }
+                                size={12}
+                              />
+                            )}
+                          </button>
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filtered.map(({ row, i: realIndex }) => (
+                  {sorted.map(({ row, i: realIndex }) => (
                     <tr
                       key={realIndex}
                       className="hover:bg-muted/50 transition-colors group"
@@ -371,6 +511,7 @@ export const JsonTableView: React.FC<JsonTableViewProps> = ({
                   ))}
                 </tbody>
               </table>
+              </>
             );
           })()}
 

@@ -51,8 +51,33 @@ export const isValidJson = (text: string): boolean => {
   }
 };
 
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+
+export function sortKeysDeep(value: JsonValue): JsonValue {
+  if (Array.isArray(value)) {
+    return value.map(sortKeysDeep);
+  }
+  if (value !== null && typeof value === "object") {
+    const sorted: Record<string, JsonValue> = {};
+    for (const key of Object.keys(value).sort()) {
+      sorted[key] = sortKeysDeep((value as Record<string, JsonValue>)[key]);
+    }
+    return sorted;
+  }
+  return value;
+}
+
 export const downloadFile = (content: string, filename: string) => {
-  const blob = new Blob([content], { type: "application/json" });
+  downloadBlob(content, filename, "application/json");
+};
+
+export const downloadBlob = (
+  content: string,
+  filename: string,
+  mime: string,
+) => {
+  const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -62,3 +87,38 @@ export const downloadFile = (content: string, filename: string) => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
+
+function csvEscape(cell: unknown): string {
+  if (cell === null || cell === undefined) return "";
+  let str: string;
+  if (typeof cell === "object") {
+    try {
+      str = JSON.stringify(cell);
+    } catch {
+      str = String(cell);
+    }
+  } else {
+    str = String(cell);
+  }
+  if (/[",\r\n]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+export function toCsv(rows: JsonValue[], columns: string[]): string {
+  const header = columns.map(csvEscape).join(",");
+  const lines = rows.map((row) => {
+    const isObject =
+      typeof row === "object" && row !== null && !Array.isArray(row);
+    return columns
+      .map((col) => {
+        if (isObject) {
+          return csvEscape((row as Record<string, JsonValue>)[col]);
+        }
+        return csvEscape(row);
+      })
+      .join(",");
+  });
+  return [header, ...lines].join("\n");
+}

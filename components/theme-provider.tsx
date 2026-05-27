@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
+import { trackEvent } from "@/lib/utils";
 
 function ThemeProvider({
   children,
@@ -55,7 +56,9 @@ function ThemeHotkey() {
         return;
       }
 
-      setTheme(resolvedTheme === "dark" ? "light" : "dark");
+      const next = resolvedTheme === "dark" ? "light" : "dark";
+      trackEvent("theme_toggle", { source: "hotkey", next });
+      setTheme(next);
     }
 
     window.addEventListener("keydown", onKeyDown);

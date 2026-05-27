@@ -12,6 +12,8 @@ export interface EditorProps {
   searchTerm?: string;
   theme?: "light" | "dark";
   onMatchCountChange?: (count: number | null) => void;
+  wordWrap?: boolean;
+  readOnly?: boolean;
 }
 
 const JsonEditorInner = dynamic(
