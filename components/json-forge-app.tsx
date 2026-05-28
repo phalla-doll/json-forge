@@ -245,15 +245,18 @@ export function JsonForgeApp({
             value: newIndent === "\t" ? "tab" : newIndent,
         });
         setIndentation(newIndent);
-        if (jsonInput.trim() && isValidJson(jsonInput)) {
-            try {
-                const parsed = JSON.parse(jsonInput);
-                const formatted = JSON.stringify(parsed, null, newIndent);
-                setJsonInput(formatted);
-                setDebouncedInput(formatted);
-            } catch {
-                // silent
-            }
+        if (!jsonInput.trim()) return;
+        if (!isValidJson(jsonInput)) {
+            toast.info("Indent saved. Fix JSON to reformat.");
+            return;
+        }
+        try {
+            const parsed = JSON.parse(jsonInput);
+            const formatted = JSON.stringify(parsed, null, newIndent);
+            setJsonInput(formatted);
+            setDebouncedInput(formatted);
+        } catch {
+            // isValidJson already passed; nothing to do here.
         }
     };
 
