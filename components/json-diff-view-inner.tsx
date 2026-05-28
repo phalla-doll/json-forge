@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useSyncExternalStore } from "react";
 import { DiffEditor, type DiffOnMount } from "@monaco-editor/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ClipboardPasteIcon, Trash2 } from "@hugeicons/core-free-icons";
@@ -10,6 +10,22 @@ import type { DiffViewProps } from "./json-diff-view";
 
 type MonacoNS = Parameters<DiffOnMount>[1];
 
+const NARROW_QUERY = "(max-width: 767px)";
+
+function subscribeToNarrow(callback: () => void) {
+    const mql = window.matchMedia(NARROW_QUERY);
+    mql.addEventListener("change", callback);
+    return () => mql.removeEventListener("change", callback);
+}
+
+function useIsNarrow() {
+    return useSyncExternalStore(
+        subscribeToNarrow,
+        () => window.matchMedia(NARROW_QUERY).matches,
+        () => false,
+    );
+}
+
 export function JsonDiffViewInner({
     original,
     modified,
@@ -18,6 +34,7 @@ export function JsonDiffViewInner({
 }: DiffViewProps) {
     const monacoRef = useRef<MonacoNS | null>(null);
     const [isEditorReady, setIsEditorReady] = useState(false);
+    const isNarrow = useIsNarrow();
 
     const defineThemes = (monaco: MonacoNS) => {
         monaco.editor.defineTheme("vercel-dark", {
@@ -109,12 +126,12 @@ export function JsonDiffViewInner({
     return (
         <div className="bg-background flex size-full flex-col">
             <div className="border-border bg-muted/40 flex h-10 shrink-0 items-center justify-between gap-2 border-b px-4 text-xs">
-                <div className="text-muted-foreground flex items-center gap-4">
-                    <span className="font-medium">Left:</span>
-                    <span>Current editor</span>
-                    <span className="text-border">·</span>
-                    <span className="font-medium">Right:</span>
-                    <span>
+                <div className="text-muted-foreground flex min-w-0 items-center gap-4">
+                    <span className="hidden font-medium sm:inline">Left:</span>
+                    <span className="hidden sm:inline">Current editor</span>
+                    <span className="text-border hidden sm:inline">·</span>
+                    <span className="hidden font-medium sm:inline">Right:</span>
+                    <span className="truncate">
                         Comparison ({modified.length.toLocaleString()} chars)
                     </span>
                 </div>
@@ -150,7 +167,7 @@ export function JsonDiffViewInner({
                     onMount={handleMount}
                     loading={<div className="bg-background size-full" />}
                     options={{
-                        renderSideBySide: true,
+                        renderSideBySide: !isNarrow,
                         originalEditable: false,
                         readOnly: false,
                         fontSize: 13,
