@@ -548,9 +548,7 @@ export function Toolbar({
                     >
                         <HugeiconsIcon
                             icon={copied ? CheckCircle : Copy}
-                            className={
-                                copied ? "size-3.5 text-green-500" : "size-3.5"
-                            }
+                            className="size-3.5"
                         />
                         <span className="hidden lg:inline">
                             {copied ? "Copied" : "Copy"}
