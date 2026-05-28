@@ -215,6 +215,17 @@ export function JsonForgeApp({
                 const mode = VIEW_KEYS[event.key];
                 setViewMode(mode);
                 trackEvent("view_switch_hotkey", { mode });
+                // Monaco stays focused after the view switches, so subsequent
+                // keystrokes would land in the now-hidden Code editor. Blur
+                // it so the page receives keys as expected.
+                const active = document.activeElement;
+                if (
+                    mode !== "code" &&
+                    active instanceof HTMLElement &&
+                    active.closest(".monaco-editor")
+                ) {
+                    active.blur();
+                }
                 return;
             }
 
