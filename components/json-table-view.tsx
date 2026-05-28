@@ -294,7 +294,9 @@ export const JsonTableView: React.FC<JsonTableViewProps> = ({
         const allKeys = new Set<string>();
         let hasPrimitives = false;
 
-        arr.slice(0, 50).forEach((item) => {
+        // Scan every row: sparse arrays (typical of API dumps where new fields
+        // appear in later items) used to lose columns past row 50.
+        for (const item of arr) {
             if (
                 typeof item === "object" &&
                 item !== null &&
@@ -304,7 +306,7 @@ export const JsonTableView: React.FC<JsonTableViewProps> = ({
             } else {
                 hasPrimitives = true;
             }
-        });
+        }
 
         const headerArray = Array.from(allKeys).sort();
         if (hasPrimitives || headerArray.length === 0) {
