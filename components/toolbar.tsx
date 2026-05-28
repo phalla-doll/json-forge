@@ -5,6 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
     PaintBrush04Icon,
     ArrowShrinkIcon,
+    CheckCircle,
     Copy,
     Download,
     Upload,
@@ -40,7 +41,7 @@ interface ToolbarProps {
     onFormat: () => void;
     onMinify: () => void;
     onSortKeys: () => void;
-    onCopy: () => void;
+    onCopy: () => Promise<boolean> | void;
     onClear: () => void;
     onDownload: () => void;
     onUpload: (file: File) => void;
@@ -86,6 +87,18 @@ export function Toolbar({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const [isMoreOpen, setIsMoreOpen] = useState(false);
+    const [copied, setCopied] = useState(false);
+
+    useEffect(() => {
+        if (!copied) return;
+        const timer = setTimeout(() => setCopied(false), 2000);
+        return () => clearTimeout(timer);
+    }, [copied]);
+
+    const handleCopyClick = async () => {
+        const result = await onCopy();
+        if (result === true) setCopied(true);
+    };
     const shortcutLabel = useSyncExternalStore(
         () => () => {},
         () =>
@@ -159,11 +172,14 @@ export function Toolbar({
 
                 <Button
                     size="sm"
-                    onClick={onCopy}
+                    onClick={handleCopyClick}
                     disabled={!hasContent}
-                    aria-label="Copy"
+                    aria-label={copied ? "Copied" : "Copy"}
                 >
-                    <HugeiconsIcon icon={Copy} className="size-3.5" />
+                    <HugeiconsIcon
+                        icon={copied ? CheckCircle : Copy}
+                        className="size-3.5"
+                    />
                 </Button>
 
                 <Drawer open={isMoreOpen} onOpenChange={setIsMoreOpen}>
@@ -525,9 +541,20 @@ export function Toolbar({
                         <span className="hidden lg:inline">Clear</span>
                     </Button>
 
-                    <Button size="sm" onClick={onCopy} disabled={!hasContent}>
-                        <HugeiconsIcon icon={Copy} className="size-3.5" />
-                        <span className="hidden lg:inline">Copy</span>
+                    <Button
+                        size="sm"
+                        onClick={handleCopyClick}
+                        disabled={!hasContent}
+                    >
+                        <HugeiconsIcon
+                            icon={copied ? CheckCircle : Copy}
+                            className={
+                                copied ? "size-3.5 text-green-500" : "size-3.5"
+                            }
+                        />
+                        <span className="hidden lg:inline">
+                            {copied ? "Copied" : "Copy"}
+                        </span>
                     </Button>
                 </div>
             </div>

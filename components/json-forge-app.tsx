@@ -310,12 +310,14 @@ export function JsonForgeApp({
 
     const handleCopy = async () => {
         trackEvent("click_copy");
-        if (!jsonInput) return;
+        if (!jsonInput) return false;
         try {
             await navigator.clipboard.writeText(jsonInput);
             toast.success("Copied to clipboard");
+            return true;
         } catch {
             toast.error("Failed to copy to clipboard");
+            return false;
         }
     };
 
