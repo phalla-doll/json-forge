@@ -90,6 +90,8 @@ interface GraphContextType {
     hideTooltip: () => void;
     globalAction: GlobalAction;
     searchTerm: string;
+    searchExpandedPaths: Set<string>;
+    searchExpansionKey: string;
     focusNode: (rect: DOMRect) => void;
     initiallyExpandedPaths: Set<string>;
 }
@@ -99,6 +101,8 @@ const GraphContext = createContext<GraphContextType>({
     hideTooltip: () => {},
     globalAction: { type: "idle", id: 0 },
     searchTerm: "",
+    searchExpandedPaths: new Set(),
+    searchExpansionKey: "",
     focusNode: () => {},
     initiallyExpandedPaths: new Set(),
 });
@@ -218,6 +222,8 @@ const GraphNode: React.FC<GraphNodeProps> = React.memo(function GraphNode({
         hideTooltip,
         globalAction,
         searchTerm,
+        searchExpandedPaths,
+        searchExpansionKey,
         focusNode,
         initiallyExpandedPaths,
     } = useContext(GraphContext);
@@ -235,6 +241,8 @@ const GraphNode: React.FC<GraphNodeProps> = React.memo(function GraphNode({
     const initialExpanded = initiallyExpandedPaths.has(path);
     const [userExpanded, setUserExpanded] = useState<boolean>(initialExpanded);
     const [appliedActionId, setAppliedActionId] = useState(globalAction.id);
+    const [appliedSearchKey, setAppliedSearchKey] =
+        useState(searchExpansionKey);
 
     // Sync to a new global expand/collapse action by adjusting state during
     // render — React's "store info from previous render" pattern. The
@@ -254,6 +262,21 @@ const GraphNode: React.FC<GraphNodeProps> = React.memo(function GraphNode({
         }
         if (isExpanded !== userExpanded) setUserExpanded(isExpanded);
         setAppliedActionId(globalAction.id);
+    }
+
+    // Same pattern for search: when the search term changes, force-expand
+    // this node if it's on the path to a match. Only fires once per search
+    // change so the user can collapse the branch back if they want.
+    if (searchExpansionKey !== appliedSearchKey) {
+        if (
+            isExpandable &&
+            !isExpanded &&
+            searchExpandedPaths.has(path)
+        ) {
+            isExpanded = true;
+            setUserExpanded(true);
+        }
+        setAppliedSearchKey(searchExpansionKey);
     }
 
     const setIsExpanded = setUserExpanded;
@@ -593,6 +616,92 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
         }
     }, [value]);
 
+    // Walk the parsed tree once per search change. Collect:
+    //   - matchPaths: paths whose name OR primitive value contains the term
+    //   - searchExpandedPaths: ancestors of every match (plus the matched
+    //     node itself when expandable) so the match is visible in the DOM
+    //     and graph-search-match-based focus navigation can find it.
+    // Without this, collapsed branches stayed out of the DOM and the
+    // count/navigation silently skipped them.
+    const { matchPaths, searchExpandedPaths, searchExpansionKey } =
+        useMemo(() => {
+            const trimmed = searchTerm.trim().toLowerCase();
+            if (!trimmed || parsedData === null) {
+                return {
+                    matchPaths: [] as string[],
+                    searchExpandedPaths: new Set<string>(),
+                    searchExpansionKey: trimmed,
+                };
+            }
+            const paths: string[] = [];
+            const expanded = new Set<string>();
+            const ancestors: string[] = [];
+
+            const visit = (
+                node: JsonValue,
+                path: string,
+                name?: string,
+            ): void => {
+                const type = getDataType(node);
+                const isExpandable = type === "object" || type === "array";
+
+                let isMatch = false;
+                if (name && name.toLowerCase().includes(trimmed))
+                    isMatch = true;
+                if (
+                    !isMatch &&
+                    !isExpandable &&
+                    node !== null &&
+                    String(node).toLowerCase().includes(trimmed)
+                )
+                    isMatch = true;
+
+                if (isMatch) {
+                    paths.push(path);
+                    for (const a of ancestors) expanded.add(a);
+                    if (isExpandable) expanded.add(path);
+                }
+
+                if (isExpandable) {
+                    ancestors.push(path);
+                    const obj = node as
+                        | Record<string, JsonValue>
+                        | JsonValue[];
+                    const keys = Array.isArray(obj)
+                        ? obj.map((_, i) => String(i))
+                        : Object.keys(obj);
+                    for (const key of keys) {
+                        const childPath = getChildPath(path, key, type);
+                        const childName =
+                            type === "array" ? `[${key}]` : key;
+                        visit(
+                            (obj as Record<string, JsonValue>)[key],
+                            childPath,
+                            childName,
+                        );
+                    }
+                    ancestors.pop();
+                }
+            };
+            visit(parsedData, "$");
+
+            return {
+                matchPaths: paths,
+                searchExpandedPaths: expanded,
+                searchExpansionKey: trimmed,
+            };
+        }, [parsedData, searchTerm]);
+
+    // Push the authoritative count from the data walk (not the DOM) so
+    // matches inside collapsed branches still get counted.
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            onMatchCountChange?.(null);
+            return;
+        }
+        onMatchCountChange?.(matchPaths.length);
+    }, [matchPaths, searchTerm, onMatchCountChange]);
+
     const focusNode = useCallback((nodeRect: DOMRect) => {
         if (!containerRef.current) return;
 
@@ -621,35 +730,30 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
         setPosition({ x: newX, y: newY });
     }, []);
 
-    const findAndFocusMatch = useCallback(
-        (index: number) => {
-            if (!containerRef.current) return;
-            const matches = containerRef.current.querySelectorAll(
-                ".graph-search-match",
-            );
+    const findAndFocusMatch = useCallback((index: number) => {
+        if (!containerRef.current) return;
+        const matches = containerRef.current.querySelectorAll(
+            ".graph-search-match",
+        );
 
-            onMatchCountChange?.(matches.length);
+        if (matches.length === 0) return;
 
-            if (matches.length === 0) return;
+        const safeIndex = index % matches.length;
+        matchIndexRef.current = safeIndex;
 
-            const safeIndex = index % matches.length;
-            matchIndexRef.current = safeIndex;
-
-            const target = matches[safeIndex];
-            focusNode(target.getBoundingClientRect());
-        },
-        [focusNode, onMatchCountChange],
-    );
+        const target = matches[safeIndex];
+        focusNode(target.getBoundingClientRect());
+    }, [focusNode]);
 
     useEffect(() => {
-        if (!searchTerm) {
-            onMatchCountChange?.(null);
-            return;
-        }
+        if (!searchTerm) return;
         matchIndexRef.current = 0;
         if (focusFrameRef.current !== null) {
             cancelAnimationFrame(focusFrameRef.current);
         }
+        // Two rAFs: first lets force-expansion of matched branches commit to
+        // the DOM, second runs after layout so the focus target rect is
+        // correct. Without the double rAF, focusNode receives stale rects.
         const raf1 = requestAnimationFrame(() => {
             focusFrameRef.current = requestAnimationFrame(() =>
                 findAndFocusMatch(0),
@@ -662,7 +766,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                 focusFrameRef.current = null;
             }
         };
-    }, [searchTerm, findAndFocusMatch, onMatchCountChange]);
+    }, [searchTerm, findAndFocusMatch]);
 
     useEffect(() => {
         if (searchTerm && searchTrigger > 0) {
@@ -686,10 +790,19 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
             },
             globalAction,
             searchTerm,
+            searchExpandedPaths,
+            searchExpansionKey,
             focusNode,
             initiallyExpandedPaths,
         }),
-        [globalAction, searchTerm, focusNode, initiallyExpandedPaths],
+        [
+            globalAction,
+            searchTerm,
+            searchExpandedPaths,
+            searchExpansionKey,
+            focusNode,
+            initiallyExpandedPaths,
+        ],
     );
 
     const handleTooltipMouseEnter = () => {
