@@ -177,6 +177,12 @@ export function JsonDiffViewInner({
                         padding: { top: 16, bottom: 16 },
                         scrollBeyondLastLine: false,
                         renderLineHighlight: "all",
+                        // Sticky scroll pins parent scope lines at the top
+                        // without inheriting their diff color, which makes
+                        // a fully-removed pane look like the red highlight
+                        // is sliced in half. Off in the diff view; the
+                        // Code editor keeps it.
+                        stickyScroll: { enabled: false },
                         scrollbar: {
                             verticalScrollbarSize: 10,
                             horizontalScrollbarSize: 10,
