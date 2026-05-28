@@ -207,6 +207,19 @@ function Breadcrumbs({ path, onReset, onClick }: BreadcrumbsProps) {
 
 type SortState = { column: string; direction: "asc" | "desc" } | null;
 
+// Cache JSON.stringify of object cells across comparator calls. Without this
+// the previous implementation re-stringified each cell O(log n) times during
+// a sort, which was painful for large/nested rows.
+const objectKeyCache = new WeakMap<object, string>();
+function objectSortKey(obj: object): string {
+    let s = objectKeyCache.get(obj);
+    if (s === undefined) {
+        s = JSON.stringify(obj);
+        objectKeyCache.set(obj, s);
+    }
+    return s;
+}
+
 function compareValues(
     a: JsonValue | undefined,
     b: JsonValue | undefined,
@@ -224,7 +237,11 @@ function compareValues(
         return (a ? 1 : 0) - (b ? 1 : 0);
     }
     if (ta === "object" && tb === "object") {
-        return JSON.stringify(a).length - JSON.stringify(b).length;
+        return objectSortKey(a as object).localeCompare(
+            objectSortKey(b as object),
+            undefined,
+            { numeric: true },
+        );
     }
     return String(a).localeCompare(String(b), undefined, { numeric: true });
 }
