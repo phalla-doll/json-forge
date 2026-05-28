@@ -342,7 +342,7 @@ export function Toolbar({
             </div>
 
             {/* ─── Desktop layout (sm+): full toolbar ─── */}
-            <div className="hidden w-full items-center justify-between gap-4 overflow-x-auto sm:flex">
+            <div className="hidden w-full items-center justify-between gap-4 overflow-x-auto overflow-y-clip sm:flex">
                 <div className="flex min-w-max items-center gap-4">
                     <div className="border-border flex items-center gap-2 border-r pr-4">
                         <Select
