@@ -1,7 +1,11 @@
 "use client";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CheckCircle, XCircle } from "@hugeicons/core-free-icons";
+import {
+    CheckCircle,
+    XCircle,
+    MinusSignCircleIcon,
+} from "@hugeicons/core-free-icons";
 import type { EditorStats } from "@/types";
 
 interface StatusBarProps {
@@ -10,23 +14,37 @@ interface StatusBarProps {
 }
 
 export function StatusBar({ stats, error }: StatusBarProps) {
+    const isEmpty = stats.chars === 0;
+    const statusColor = error
+        ? "text-destructive"
+        : isEmpty
+          ? "text-muted-foreground"
+          : "text-green-500";
+    const statusIcon = error
+        ? XCircle
+        : isEmpty
+          ? MinusSignCircleIcon
+          : CheckCircle;
+    const statusLabel = error
+        ? "Invalid JSON"
+        : isEmpty
+          ? "Empty"
+          : "Valid JSON";
+    const statusTitle = error
+        ? error
+        : isEmpty
+          ? "Editor is empty"
+          : "JSON syntax is valid";
+
     return (
         <div className="bg-muted border-border text-muted-foreground z-10 flex h-8 shrink-0 items-center justify-between border-t px-4 font-mono text-[11px] select-none">
             <div className="flex items-center gap-4">
                 <div
-                    className={`flex items-center gap-1.5 ${
-                        error ? "text-destructive" : "text-green-500"
-                    }`}
-                    title={error || "JSON syntax is valid"}
+                    className={`flex items-center gap-1.5 ${statusColor}`}
+                    title={statusTitle}
                 >
-                    {error ? (
-                        <HugeiconsIcon icon={XCircle} className="size-3" />
-                    ) : (
-                        <HugeiconsIcon icon={CheckCircle} className="size-3" />
-                    )}
-                    <span className="font-medium">
-                        {error ? "Invalid JSON" : "Valid JSON"}
-                    </span>
+                    <HugeiconsIcon icon={statusIcon} className="size-3" />
+                    <span className="font-medium">{statusLabel}</span>
                 </div>
             </div>
 
