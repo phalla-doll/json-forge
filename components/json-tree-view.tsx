@@ -25,6 +25,7 @@ import {
     MoreHorizontal,
     ArrowShrinkIcon,
     ArrowExpandIcon,
+    Layers01Icon,
 } from "@hugeicons/core-free-icons";
 import { trackEvent } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,11 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface JsonGraphViewProps {
     value: string;
@@ -520,6 +526,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
     const [position, setPosition] = useState({ x: 40, y: 40 });
     const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
     const [isPanning, setIsPanning] = useState(false);
+    const [isDepthMenuOpen, setIsDepthMenuOpen] = useState(false);
     const [globalAction, setGlobalAction] = useState<GlobalAction>({
         type: "idle",
         id: 0,
@@ -873,7 +880,6 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
         setGlobalAction((prev) => ({ type: "collapse", id: prev.id + 1 }));
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleCollapseToDepth = (depth: number) => {
         trackEvent("graph_collapse_depth", { depth });
         setGlobalAction((prev) => ({
@@ -881,6 +887,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
             id: prev.id + 1,
             depth,
         }));
+        setIsDepthMenuOpen(false);
     };
 
     const iconButtonClasses =
@@ -999,7 +1006,51 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                         </TooltipContent>
                     </ShadTooltip>
 
-                    {/* Collapse-to-depth control hidden for now; handler kept for re-enable. */}
+                    <Popover
+                        open={isDepthMenuOpen}
+                        onOpenChange={setIsDepthMenuOpen}
+                    >
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className={iconButtonClasses}
+                                aria-label="Collapse to depth"
+                                title="Collapse to depth"
+                            >
+                                <HugeiconsIcon
+                                    icon={Layers01Icon}
+                                    size={16}
+                                />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                            side="left"
+                            align="start"
+                            className="w-auto"
+                        >
+                            <div className="flex flex-col gap-1.5">
+                                <span className="text-muted-foreground px-1 text-[10px] font-medium tracking-wider uppercase">
+                                    Collapse to depth
+                                </span>
+                                <div className="flex gap-1">
+                                    {[1, 2, 3, 4, 5].map((d) => (
+                                        <Button
+                                            key={d}
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                                handleCollapseToDepth(d)
+                                            }
+                                            className="size-7 p-0 text-xs"
+                                        >
+                                            {d}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                 </div>
 
                 <div
