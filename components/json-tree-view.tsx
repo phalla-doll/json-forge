@@ -546,35 +546,43 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
 
-    const { parsedData, expandableNodeCount, initiallyExpandedPaths } =
-        useMemo(() => {
-            try {
-                const data = JSON.parse(value) as JsonValue;
+    const {
+        parsedData,
+        expandableNodeCount,
+        initiallyExpandedPaths,
+        treeFingerprint,
+    } = useMemo(() => {
+        // Short fingerprint used as the root GraphNode's React key so a new
+        // document forces a remount (resets per-node userExpanded state)
+        // without holding the entire JSON string as a React key.
+        const fingerprint = `${value.length}:${value.slice(0, 256)}`;
+        try {
+            const data = JSON.parse(value) as JsonValue;
 
-                let count = 0;
-                const traverse = (obj: JsonValue) => {
-                    if (typeof obj === "object" && obj !== null) {
-                        count++;
-                        Object.values(obj).forEach((v) =>
-                            traverse(v as JsonValue),
-                        );
-                    }
-                };
-                traverse(data);
+            let count = 0;
+            const traverse = (obj: JsonValue) => {
+                if (typeof obj === "object" && obj !== null) {
+                    count++;
+                    Object.values(obj).forEach((v) => traverse(v as JsonValue));
+                }
+            };
+            traverse(data);
 
-                return {
-                    parsedData: data,
-                    expandableNodeCount: count,
-                    initiallyExpandedPaths: collectInitiallyExpanded(data),
-                };
-            } catch {
-                return {
-                    parsedData: null,
-                    expandableNodeCount: 0,
-                    initiallyExpandedPaths: new Set<string>(),
-                };
-            }
-        }, [value]);
+            return {
+                parsedData: data,
+                expandableNodeCount: count,
+                initiallyExpandedPaths: collectInitiallyExpanded(data),
+                treeFingerprint: fingerprint,
+            };
+        } catch {
+            return {
+                parsedData: null,
+                expandableNodeCount: 0,
+                initiallyExpandedPaths: new Set<string>(),
+                treeFingerprint: fingerprint,
+            };
+        }
+    }, [value]);
 
     const focusNode = useCallback((nodeRect: DOMRect) => {
         if (!containerRef.current) return;
@@ -1018,7 +1026,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                         className="inline-block"
                         ref={contentRef}
                     >
-                        <GraphNode key={value} value={parsedData} />
+                        <GraphNode key={treeFingerprint} value={parsedData} />
                     </div>
                 </div>
 
