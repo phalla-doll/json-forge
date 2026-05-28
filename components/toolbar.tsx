@@ -5,7 +5,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
     PaintBrush04Icon,
     ArrowShrinkIcon,
-    CheckCircle,
     Copy,
     Download,
     Upload,
