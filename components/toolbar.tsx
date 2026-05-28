@@ -16,6 +16,7 @@ import {
     TextWrapIcon,
     ClipboardClockIcon,
     MoreHorizontalIcon,
+    CopyCheckIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -177,7 +178,7 @@ export function Toolbar({
                     aria-label={copied ? "Copied" : "Copy"}
                 >
                     <HugeiconsIcon
-                        icon={copied ? CheckCircle : Copy}
+                        icon={copied ? CopyCheckIcon : Copy}
                         className="size-3.5"
                     />
                 </Button>
@@ -547,7 +548,7 @@ export function Toolbar({
                         disabled={!hasContent}
                     >
                         <HugeiconsIcon
-                            icon={copied ? CheckCircle : Copy}
+                            icon={copied ? CopyCheckIcon : Copy}
                             className="size-3.5"
                         />
                         <span className="hidden lg:inline">
