@@ -55,6 +55,7 @@ import { generateJson, fixJson } from "@/lib/ai";
 import { createShare, type ShareResult, type ShareOptions } from "@/lib/share";
 import { saveCurrent, loadCurrent, pushRecent } from "@/lib/storage";
 import { RecentDocsModal } from "@/components/recent-docs-modal";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import type { EditorStats } from "@/types";
 
 type ViewMode = "code" | "graph" | "table" | "diff";
@@ -112,6 +113,7 @@ export function JsonForgeApp({
     const [isCheatsheetOpen, setIsCheatsheetOpen] = useState(false);
     const [isRecentsOpen, setIsRecentsOpen] = useState(false);
     const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
+    const [confirm, confirmDialog] = useConfirm();
 
     useEffect(() => {
         const handler = setTimeout(() => setDebouncedInput(jsonInput), 800);
@@ -335,11 +337,18 @@ export function JsonForgeApp({
         }
     };
 
-    const handleClear = () => {
+    const handleClear = async () => {
         trackEvent("click_clear_attempt");
         if (!jsonInput) return;
         if (jsonInput.length > 50) {
-            if (!window.confirm("Are you sure you want to clear the editor?")) {
+            const ok = await confirm({
+                title: "Clear editor?",
+                description:
+                    "This will discard the current JSON. It will be saved to Recents so you can restore it.",
+                confirmLabel: "Clear",
+                destructive: true,
+            });
+            if (!ok) {
                 trackEvent("click_clear_cancel");
                 return;
             }
@@ -353,7 +362,7 @@ export function JsonForgeApp({
         toast.info("Editor cleared");
     };
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
         trackEvent("click_export");
         if (!jsonInput) return;
         try {
@@ -361,7 +370,13 @@ export function JsonForgeApp({
             downloadFile(jsonInput, "data.json");
             toast.success("File downloaded");
         } catch {
-            if (window.confirm("The JSON is invalid. Save anyway?")) {
+            const ok = await confirm({
+                title: "Export invalid JSON?",
+                description:
+                    "The buffer doesn't parse as JSON. The file will be saved with whatever you have now.",
+                confirmLabel: "Export anyway",
+            });
+            if (ok) {
                 trackEvent("click_export_invalid");
                 downloadFile(jsonInput, "invalid-data.json");
             }
@@ -938,6 +953,8 @@ export function JsonForgeApp({
                 remaining={aiRemaining}
                 onRemainingChange={setAiRemaining}
             />
+
+            {confirmDialog}
         </div>
     );
 }

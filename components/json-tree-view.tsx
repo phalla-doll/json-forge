@@ -40,6 +40,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 interface JsonGraphViewProps {
     value: string;
@@ -531,6 +532,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
         type: "idle",
         id: 0,
     });
+    const [confirm, confirmDialog] = useConfirm();
 
     const scaleRef = useRef(1);
     const positionRef = useRef({ x: 40, y: 40 });
@@ -864,13 +866,15 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
         }
     };
 
-    const handleExpandAll = () => {
+    const handleExpandAll = async () => {
         trackEvent("graph_expand_all");
         if (expandableNodeCount > 1000) {
-            const confirmed = window.confirm(
-                `This JSON contains ${expandableNodeCount} expandable nodes. Expanding all may significantly slow down or freeze your browser. Are you sure you want to continue?`,
-            );
-            if (!confirmed) return;
+            const ok = await confirm({
+                title: "Expand all?",
+                description: `This JSON has ${expandableNodeCount} expandable nodes. Expanding all may slow down or freeze the browser.`,
+                confirmLabel: "Expand all",
+            });
+            if (!ok) return;
         }
         setGlobalAction((prev) => ({ type: "expand", id: prev.id + 1 }));
     };
@@ -1131,6 +1135,8 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                         onMouseLeave={handleTooltipMouseLeave}
                     />
                 )}
+
+                {confirmDialog}
             </div>
         </GraphContext.Provider>
     );
