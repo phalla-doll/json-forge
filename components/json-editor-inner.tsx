@@ -80,6 +80,9 @@ export function JsonEditorInner({
         monaco.editor.setTheme(
             theme === "dark" ? "vercel-dark" : "vercel-light",
         );
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
+            window.dispatchEvent(new Event("json-forge:focus-search"));
+        });
         setIsEditorReady(true);
         onReady?.();
     };

@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, useEffect, useState, useSyncExternalStore } from "react";
+import {
+    useRef,
+    useEffect,
+    useState,
+    useSyncExternalStore,
+    useCallback,
+} from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
     PaintBrush04Icon,
@@ -85,9 +91,22 @@ export function Toolbar({
     onOpenRecents,
 }: ToolbarProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const searchInputRef = useRef<HTMLInputElement>(null);
+    const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+    const desktopSearchInputRef = useRef<HTMLInputElement>(null);
     const [isMoreOpen, setIsMoreOpen] = useState(false);
     const [copied, setCopied] = useState(false);
+
+    const focusVisibleSearchInput = useCallback(() => {
+        const isVisibleInput = (input: HTMLInputElement | null) =>
+            !!input && input.getClientRects().length > 0;
+
+        const visibleInput = [
+            desktopSearchInputRef.current,
+            mobileSearchInputRef.current,
+        ].find(isVisibleInput);
+
+        visibleInput?.focus();
+    }, []);
 
     useEffect(() => {
         if (!copied) return;
@@ -110,13 +129,22 @@ export function Toolbar({
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
                 e.preventDefault();
-                searchInputRef.current?.focus();
+                focusVisibleSearchInput();
             }
         };
 
+        const handleFocusSearch = () => focusVisibleSearchInput();
+
         window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, []);
+        window.addEventListener("json-forge:focus-search", handleFocusSearch);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener(
+                "json-forge:focus-search",
+                handleFocusSearch,
+            );
+        };
+    }, [focusVisibleSearchInput]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -150,7 +178,7 @@ export function Toolbar({
                         className="text-muted-foreground absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
                     />
                     <Input
-                        ref={searchInputRef}
+                        ref={mobileSearchInputRef}
                         type="text"
                         placeholder={
                             shortcutLabel
@@ -447,6 +475,7 @@ export function Toolbar({
                                 className="text-muted-foreground absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
                             />
                             <Input
+                                ref={desktopSearchInputRef}
                                 type="text"
                                 placeholder={
                                     shortcutLabel
