@@ -2,7 +2,7 @@
 
 **JSON Forge** is a high-performance, professional-grade JSON editor, validator, and visualizer built for developers who handle complex data structures. It combines the power of the Monaco Editor (VS Code's engine) with an interactive graph visualization, a data table view, and AI-powered JSON generation and repair — all wrapped in a sleek, Vercel-inspired interface.
 
-![JSON Forge Preview](https://json-forge-rose.vercel.app/json-forge-og-image.png)
+![JSON Forge Preview](public/og-image-main.png)
 
 ## Key Features
 
