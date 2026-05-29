@@ -268,11 +268,7 @@ const GraphNode: React.FC<GraphNodeProps> = React.memo(function GraphNode({
     // this node if it's on the path to a match. Only fires once per search
     // change so the user can collapse the branch back if they want.
     if (searchExpansionKey !== appliedSearchKey) {
-        if (
-            isExpandable &&
-            !isExpanded &&
-            searchExpandedPaths.has(path)
-        ) {
+        if (isExpandable && !isExpanded && searchExpandedPaths.has(path)) {
             isExpanded = true;
             setUserExpanded(true);
         }
@@ -664,16 +660,13 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
 
                 if (isExpandable) {
                     ancestors.push(path);
-                    const obj = node as
-                        | Record<string, JsonValue>
-                        | JsonValue[];
+                    const obj = node as Record<string, JsonValue> | JsonValue[];
                     const keys = Array.isArray(obj)
                         ? obj.map((_, i) => String(i))
                         : Object.keys(obj);
                     for (const key of keys) {
                         const childPath = getChildPath(path, key, type);
-                        const childName =
-                            type === "array" ? `[${key}]` : key;
+                        const childName = type === "array" ? `[${key}]` : key;
                         visit(
                             (obj as Record<string, JsonValue>)[key],
                             childPath,
@@ -730,20 +723,23 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
         setPosition({ x: newX, y: newY });
     }, []);
 
-    const findAndFocusMatch = useCallback((index: number) => {
-        if (!containerRef.current) return;
-        const matches = containerRef.current.querySelectorAll(
-            ".graph-search-match",
-        );
+    const findAndFocusMatch = useCallback(
+        (index: number) => {
+            if (!containerRef.current) return;
+            const matches = containerRef.current.querySelectorAll(
+                ".graph-search-match",
+            );
 
-        if (matches.length === 0) return;
+            if (matches.length === 0) return;
 
-        const safeIndex = index % matches.length;
-        matchIndexRef.current = safeIndex;
+            const safeIndex = index % matches.length;
+            matchIndexRef.current = safeIndex;
 
-        const target = matches[safeIndex];
-        focusNode(target.getBoundingClientRect());
-    }, [focusNode]);
+            const target = matches[safeIndex];
+            focusNode(target.getBoundingClientRect());
+        },
+        [focusNode],
+    );
 
     useEffect(() => {
         if (!searchTerm) return;
@@ -1135,10 +1131,7 @@ export const JsonTreeView: React.FC<JsonGraphViewProps> = ({
                                 aria-label="Collapse to depth"
                                 title="Collapse to depth"
                             >
-                                <HugeiconsIcon
-                                    icon={Layers01Icon}
-                                    size={16}
-                                />
+                                <HugeiconsIcon icon={Layers01Icon} size={16} />
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent

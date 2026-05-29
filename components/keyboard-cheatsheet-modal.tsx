@@ -115,6 +115,28 @@ export function KeyboardCheatsheetModal({
                                 </ul>
                             </div>
                         ))}
+                        <div className="border-border text-muted-foreground flex flex-col gap-2 border-t pt-4 text-xs sm:flex-row sm:items-center sm:justify-between">
+                            <span>
+                                Built by{" "}
+                                <a
+                                    href="https://manthaa.dev/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hover:text-foreground font-medium underline-offset-4 transition-colors hover:underline"
+                                >
+                                    Manthaa
+                                </a>
+                                .
+                            </span>
+                            <a
+                                href="https://github.com/phalla-doll/json-forge/issues"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-foreground w-fit font-medium underline-offset-4 transition-colors hover:underline"
+                            >
+                                Request a feature or report an issue
+                            </a>
+                        </div>
                     </div>
                 </ResponsiveModalBody>
             </ResponsiveModalContent>
