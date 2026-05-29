@@ -1,0 +1,27 @@
+# JSON Forge
+
+JSON Forge is a browser-based JSON editor, validator, formatter, visualizer, and sharing tool for developers working with structured data.
+
+## Primary URLs
+
+- [Home/editor](https://json.manthaa.dev/)
+- [Sitemap](https://json.manthaa.dev/sitemap.xml)
+- [Robots](https://json.manthaa.dev/robots.txt)
+
+## Capabilities
+
+- Edit JSON with Monaco Editor.
+- Validate, prettify, minify, sort keys, search, copy, import, and export JSON.
+- Convert JSONL and YAML imports into canonical JSON.
+- Visualize JSON as a navigable graph.
+- Inspect arrays and objects in table view and export tables as CSV.
+- Compare JSON documents in a diff view.
+- Generate, repair, and derive schemas from JSON through optional AI features.
+- Create expiring public share links for JSON snapshots.
+
+## Agent Notes
+
+- The main user workflow is the single-page editor at `/`.
+- Public share links use `/s/{slug}` and may expire.
+- Mutating AI and share features are rate-limited.
+- User-provided JSON may be large, malformed, or sensitive; avoid sending it to external services unless the user explicitly requests an AI action.

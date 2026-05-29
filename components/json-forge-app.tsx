@@ -720,6 +720,11 @@ export function JsonForgeApp({
                                 }
                             }}
                             className="border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
+                            aria-label={
+                                error
+                                    ? "Fix JSON with AI"
+                                    : "Generate JSON with AI"
+                            }
                         >
                             <HugeiconsIcon
                                 icon={AiContentGenerator02Icon}
@@ -738,6 +743,7 @@ export function JsonForgeApp({
                         size="sm"
                         onClick={() => setIsSchemaModalOpen(true)}
                         disabled={!jsonInput.trim() || !!error}
+                        aria-label="Generate schema"
                         title={
                             error
                                 ? "Fix JSON first to generate a schema"
