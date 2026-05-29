@@ -8,11 +8,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Build / start:** `pnpm build` && `pnpm start`
 - **Typecheck:** `pnpm typecheck` (runs `tsc --noEmit`)
 - **Lint:** `pnpm lint`
+- **Agentic browsing audit:** `pnpm audit:agentic` (run `pnpm dev` first; override target with `LIGHTHOUSE_URL=http://localhost:3001 pnpm audit:agentic`)
 - **Format:** `pnpm format` (Prettier with `prettier-plugin-tailwindcss`)
 - **Apply D1 schema (remote):** `pnpm wrangler d1 execute json-forge-shares --remote --file=db/schema.sql`
 - **Apply D1 schema (local):** add `--local` instead of `--remote`
 
-There is no test runner in this project — do not invent one. Verify changes with `pnpm typecheck`, `pnpm lint`, and a manual smoke in the browser.
+There is no test runner in this project — do not invent one. Verify changes with `pnpm typecheck`, `pnpm lint`, and a manual smoke in the browser. For accessibility/agent-readiness work, also run `pnpm audit:agentic`.
 
 Package manager is **pnpm** (see `pnpm-lock.yaml`). Do not introduce npm/yarn lockfiles.
 
@@ -42,7 +43,15 @@ If you add a derived value, hang it off `debouncedInput`, not `jsonInput`, or yo
 
 ### Editor (`components/json-editor.tsx` + `json-editor-inner.tsx`)
 
-`json-editor.tsx` is a `next/dynamic` wrapper with `ssr: false`. The inner file owns the Monaco instance, custom "Vercel Dark/Light" themes, and search-match highlighting. Never import Monaco from a server component or page module.
+`json-editor.tsx` is a `next/dynamic` wrapper with `ssr: false`. The inner file owns the Monaco instance, custom "Vercel Dark/Light" themes, and search-match highlighting. Never import Monaco from a server component or page module. Monaco is hidden behind a fixed placeholder until `onMount` fires; this prevents the editor's internal scrollable nodes from creating Lighthouse CLS during startup.
+
+### Agentic browsing / WebMCP
+
+`public/llms.txt` is served at `/llms.txt` and should stay as Markdown with real links so Lighthouse's `llms.txt` audit passes.
+
+`JsonForgeApp` registers four imperative WebMCP tools when Chrome exposes `navigator.modelContext`: `replace_json`, `format_current_json`, `minify_current_json`, and `sort_current_json_keys`. The tools are guarded by feature detection, validate/parse JSON before mutating editor state, and refuse writes on view-only shared snapshots. Keep the ambient experimental API types in `webmcp.d.ts` until TypeScript DOM types include WebMCP.
+
+`pnpm audit:agentic` uses Lighthouse's experimental Agentic Browsing category and launches Chrome with WebMCP testing flags. The command writes `.lighthouse/agentic.report.html` and `.lighthouse/agentic.report.json`; `.lighthouse` is intentionally gitignored.
 
 ### Graph view (`components/json-tree-view.tsx`)
 

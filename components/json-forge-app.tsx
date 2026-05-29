@@ -98,9 +98,17 @@ export function JsonForgeApp({
     const [wordWrap, setWordWrap] = useState(false);
     const [diffRight, setDiffRight] = useState<string>("");
     const currentInputRef = useRef<string>(initialJson);
+    const indentationRef = useRef<number | string>(indentation);
+    const readOnlyRef = useRef(sharedSnapshot?.readOnly === true);
     useEffect(() => {
         currentInputRef.current = jsonInput;
     }, [jsonInput]);
+    useEffect(() => {
+        indentationRef.current = indentation;
+    }, [indentation]);
+    useEffect(() => {
+        readOnlyRef.current = sharedSnapshot?.readOnly === true;
+    }, [sharedSnapshot]);
     const [isDragging, setIsDragging] = useState(false);
     const dragCounterRef = useRef(0);
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -584,6 +592,147 @@ export function JsonForgeApp({
             setIsAiLoading(false);
         }
     };
+
+    useEffect(() => {
+        const modelContext = navigator.modelContext;
+        if (!modelContext?.registerTool) return;
+
+        const controller = new AbortController();
+        const updateEditor = (next: string) => {
+            currentInputRef.current = next;
+            setJsonInput(next);
+            setDebouncedInput(next);
+        };
+        const requireEditable = () => {
+            if (readOnlyRef.current) {
+                throw new Error("This shared snapshot is view-only.");
+            }
+        };
+        const parseCurrent = () => {
+            const current = currentInputRef.current;
+            if (!current.trim()) {
+                throw new Error("The editor is empty.");
+            }
+            return JSON.parse(current) as unknown;
+        };
+        const registerTool = (tool: WebMcpTool) => {
+            modelContext.registerTool(tool, { signal: controller.signal });
+        };
+
+        registerTool({
+            name: "replace_json",
+            description:
+                "Replace the JSON Forge editor content with a complete valid JSON document, formatted with the current indentation setting.",
+            inputSchema: {
+                type: "object",
+                properties: {
+                    json: {
+                        type: "string",
+                        description: "A complete valid JSON document.",
+                    },
+                },
+                required: ["json"],
+                additionalProperties: false,
+            },
+            annotations: {
+                readOnlyHint: false,
+                untrustedContentHint: true,
+            },
+            execute: async ({ json }) => {
+                requireEditable();
+                if (typeof json !== "string") {
+                    throw new Error("json must be a string.");
+                }
+                const parsed = JSON.parse(json) as unknown;
+                const formatted = JSON.stringify(
+                    parsed,
+                    null,
+                    indentationRef.current,
+                );
+                updateEditor(formatted);
+                trackEvent("webmcp_replace_json");
+                return "The editor JSON was replaced successfully.";
+            },
+        });
+
+        registerTool({
+            name: "format_current_json",
+            description:
+                "Prettify the current JSON Forge editor content using the current indentation setting.",
+            inputSchema: {
+                type: "object",
+                properties: {},
+                additionalProperties: false,
+            },
+            annotations: {
+                readOnlyHint: false,
+                untrustedContentHint: false,
+            },
+            execute: async () => {
+                requireEditable();
+                const formatted = JSON.stringify(
+                    parseCurrent(),
+                    null,
+                    indentationRef.current,
+                );
+                updateEditor(formatted);
+                trackEvent("webmcp_format_json");
+                return "The current JSON was formatted successfully.";
+            },
+        });
+
+        registerTool({
+            name: "minify_current_json",
+            description:
+                "Minify the current JSON Forge editor content into compact valid JSON.",
+            inputSchema: {
+                type: "object",
+                properties: {},
+                additionalProperties: false,
+            },
+            annotations: {
+                readOnlyHint: false,
+                untrustedContentHint: false,
+            },
+            execute: async () => {
+                requireEditable();
+                const minified = JSON.stringify(parseCurrent());
+                updateEditor(minified);
+                trackEvent("webmcp_minify_json");
+                return "The current JSON was minified successfully.";
+            },
+        });
+
+        registerTool({
+            name: "sort_current_json_keys",
+            description:
+                "Sort object keys alphabetically throughout the current JSON Forge editor content.",
+            inputSchema: {
+                type: "object",
+                properties: {},
+                additionalProperties: false,
+            },
+            annotations: {
+                readOnlyHint: false,
+                untrustedContentHint: false,
+            },
+            execute: async () => {
+                requireEditable();
+                const sorted = JSON.stringify(
+                    sortKeysDeep(
+                        parseCurrent() as Parameters<typeof sortKeysDeep>[0],
+                    ),
+                    null,
+                    indentationRef.current,
+                );
+                updateEditor(sorted);
+                trackEvent("webmcp_sort_json_keys");
+                return "The current JSON keys were sorted successfully.";
+            },
+        });
+
+        return () => controller.abort();
+    }, []);
 
     return (
         <div

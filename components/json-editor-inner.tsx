@@ -139,48 +139,65 @@ export function JsonEditorInner({
 
     return (
         <div className="group relative flex size-full flex-1 overflow-hidden">
-            <MonacoEditor
-                height="100%"
-                defaultLanguage="json"
-                value={value}
-                onChange={(v) => onChange(v || "")}
-                onMount={handleEditorDidMount}
-                loading={<div className="bg-background size-full" />}
-                options={{
-                    minimap: { enabled: false },
-                    lineNumbers: "on",
-                    folding: true,
-                    lineDecorationsWidth: 10,
-                    lineNumbersMinChars: 3,
-                    fontSize: 13,
-                    fontFamily: "'Google Sans Code', monospace",
-                    lineHeight: 24,
-                    padding: { top: 16, bottom: 16 },
-                    scrollBeyondLastLine: false,
-                    formatOnPaste: true,
-                    renderLineHighlight: "all",
-                    contextmenu: true,
-                    smoothScrolling: true,
-                    cursorBlinking: "smooth",
-                    mouseWheelZoom: true,
-                    guides: {
-                        indentation: true,
-                        bracketPairs: true,
-                    },
-                    scrollbar: {
-                        verticalScrollbarSize: 10,
-                        horizontalScrollbarSize: 10,
-                    },
-                    tabSize: typeof indentation === "number" ? indentation : 4,
-                    insertSpaces: typeof indentation === "number",
-                    detectIndentation: false,
-                    wordWrap: wordWrap ? "on" : "off",
-                    readOnly,
-                }}
-                theme={theme === "dark" ? "vercel-dark" : "vercel-light"}
-            />
+            <div
+                className={`absolute inset-0 ${
+                    isEditorReady ? "visible" : "invisible"
+                }`}
+            >
+                <MonacoEditor
+                    height="100%"
+                    defaultLanguage="json"
+                    value={value}
+                    onChange={(v) => onChange(v || "")}
+                    onMount={handleEditorDidMount}
+                    loading={<div className="bg-background size-full" />}
+                    options={{
+                        minimap: { enabled: false },
+                        lineNumbers: "on",
+                        folding: true,
+                        lineDecorationsWidth: 10,
+                        lineNumbersMinChars: 3,
+                        fontSize: 13,
+                        fontFamily: "'Google Sans Code', monospace",
+                        lineHeight: 24,
+                        padding: { top: 16, bottom: 16 },
+                        scrollBeyondLastLine: false,
+                        formatOnPaste: true,
+                        renderLineHighlight: "all",
+                        contextmenu: true,
+                        smoothScrolling: true,
+                        cursorBlinking: "smooth",
+                        mouseWheelZoom: true,
+                        guides: {
+                            indentation: true,
+                            bracketPairs: true,
+                        },
+                        scrollbar: {
+                            verticalScrollbarSize: 10,
+                            horizontalScrollbarSize: 10,
+                        },
+                        tabSize:
+                            typeof indentation === "number" ? indentation : 4,
+                        insertSpaces: typeof indentation === "number",
+                        detectIndentation: false,
+                        wordWrap: wordWrap ? "on" : "off",
+                        readOnly,
+                    }}
+                    theme={theme === "dark" ? "vercel-dark" : "vercel-light"}
+                />
+            </div>
 
-            {!value && (
+            {!isEditorReady && (
+                <div className="bg-background absolute inset-0 flex items-start px-[49px] py-4">
+                    <div className="flex w-full max-w-2xl flex-col gap-3">
+                        <div className="bg-muted h-3 w-3/4 rounded-sm" />
+                        <div className="bg-muted h-3 w-1/2 rounded-sm" />
+                        <div className="bg-muted h-3 w-2/3 rounded-sm" />
+                    </div>
+                </div>
+            )}
+
+            {isEditorReady && !value && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                     <div className="text-muted-foreground flex flex-col items-center gap-2 font-mono text-sm opacity-60">
                         <span className="text-4xl opacity-20">{"{ }"}</span>

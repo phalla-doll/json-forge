@@ -2,23 +2,41 @@ import "./loader.css";
 
 export default function Loading() {
     return (
-        <div className="loader-container">
-            <div className="loader-content">
-                <div>
-                    <span className="loader-text-blue">➜</span>{" "}
-                    <span className="loader-text-dim">~</span> json_forge --init
+        <div className="loader-shell">
+            <div className="loader-header">
+                <div className="loader-logo" />
+                <div className="loader-title">
+                    <div className="loader-line loader-line-short" />
+                    <div className="loader-line loader-line-tiny" />
                 </div>
-                <div>
-                    <span className="loader-text-green">✓</span>{" "}
-                    <span className="loader-text-dim">core_modules_loaded</span>
+                <div className="loader-tabs">
+                    <div className="loader-pill loader-pill-active" />
+                    <div className="loader-pill" />
+                    <div className="loader-pill" />
+                    <div className="loader-pill" />
                 </div>
-                <div>
-                    [####################]{" "}
-                    <span className="loader-text-dim">100%</span>
+                <div className="loader-actions">
+                    <div className="loader-button" />
+                    <div className="loader-button" />
+                    <div className="loader-icon-button" />
                 </div>
-                <div className="loader-text-dim">
-                    &gt; waiting_for_react...
-                    <span className="loader-blink">_</span>
+            </div>
+            <div className="loader-toolbar">
+                <div className="loader-search" />
+                <div className="loader-toolbar-actions">
+                    <div className="loader-tool" />
+                    <div className="loader-tool" />
+                    <div className="loader-tool" />
+                    <div className="loader-tool" />
+                </div>
+            </div>
+            <div className="loader-editor">
+                <div className="loader-code">
+                    <div className="loader-code-line loader-code-line-lg" />
+                    <div className="loader-code-line loader-code-line-md" />
+                    <div className="loader-code-line loader-code-line-sm" />
+                    <div className="loader-code-line loader-code-line-md" />
+                    <div className="loader-code-line loader-code-line-xs" />
                 </div>
             </div>
         </div>

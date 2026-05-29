@@ -7,7 +7,7 @@
         "build": "next build",
         "start": "next start",
         "lint": "eslint",
-        "audit:agentic": "mkdir -p .lighthouse && pnpm dlx lighthouse@latest ${LIGHTHOUSE_URL:-http://localhost:3000} --only-categories=agentic-browsing --output=html --output=json --output-path=.lighthouse/agentic --chrome-flags=\"--headless\"",
+        "audit:agentic": "mkdir -p .lighthouse && pnpm dlx lighthouse@latest ${LIGHTHOUSE_URL:-http://localhost:3000} --only-categories=agentic-browsing --output=html --output=json --output-path=.lighthouse/agentic --chrome-flags=\"--headless --enable-features=WebMCPTesting,DevToolsWebMCPSupport --categoryWebMCP\"",
         "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,css,yml,yaml}\"",
         "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,css,yml,yaml}\"",
         "typecheck": "tsc --noEmit"

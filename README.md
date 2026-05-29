@@ -84,6 +84,7 @@ JSON Forge is engineered to handle large datasets that crash typical web-based f
 - **Core**: React 19, TypeScript, Next.js 16 (App Router, Turbopack)
 - **UI**: shadcn/ui (Radix primitives), Tailwind CSS v4
 - **Editor**: `@monaco-editor/react` (Code + Diff)
+- **Agentic Browsing**: `/llms.txt` plus experimental WebMCP tools for editor automation
 - **Icons**: `@hugeicons/react`
 - **QR Codes**: `qrcode.react`
 - **AI**: NVIDIA API via `openai` SDK (model: `openai/gpt-oss-120b`)
@@ -145,6 +146,31 @@ To run JSON Forge locally:
     pnpm build
     ```
 
+## Auditing
+
+Run the standard local checks before committing:
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm format:check
+```
+
+JSON Forge also includes a Lighthouse Agentic Browsing audit. Start the app first, then run:
+
+```bash
+pnpm dev
+pnpm audit:agentic
+```
+
+If the dev server chooses another port, pass it explicitly:
+
+```bash
+LIGHTHOUSE_URL=http://localhost:3001 pnpm audit:agentic
+```
+
+The audit writes `.lighthouse/agentic.report.html` and `.lighthouse/agentic.report.json`. It checks the accessibility tree, CLS, `/llms.txt`, and experimental WebMCP registration. Current WebMCP tools are `replace_json`, `format_current_json`, `minify_current_json`, and `sort_current_json_keys`.
+
 ## API Routes
 
 | Route                      | Method | Purpose                                                                                                                                 | Rate Limited               |
@@ -164,9 +190,9 @@ Routes validate inputs and return structured JSON responses with proper HTTP sta
 app/
 ├── layout.tsx              # Root layout (ThemeProvider, Toaster, fonts, OG/SEO metadata)
 ├── page.tsx                # Home route — thin wrapper around <JsonForgeApp>
-├── loading.tsx             # ASCII pre-React loader
+├── loading.tsx             # Shell-shaped pre-React loading skeleton
 ├── globals.css             # Tailwind v4 + theme tokens (light & dark)
-├── loader.css              # ASCII loader styles
+├── loader.css              # Loading skeleton styles
 ├── apple-icon.tsx          # Dynamic Apple touch icon
 ├── icon.svg                # Favicon
 ├── sitemap.ts              # /sitemap.xml metadata route
