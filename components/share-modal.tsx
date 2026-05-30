@@ -6,7 +6,7 @@ import {
     Copy,
     LoaderCircle,
     Share05Icon,
-    CheckCircle,
+    CopyCheckIcon,
     EyeIcon,
 } from "@hugeicons/core-free-icons";
 import { QRCodeSVG } from "qrcode.react";
@@ -204,12 +204,8 @@ export function ShareModal({
                                 aria-label="Copy share link"
                             >
                                 <HugeiconsIcon
-                                    icon={copied ? CheckCircle : Copy}
-                                    className={
-                                        copied
-                                            ? "size-3.5 text-green-500"
-                                            : "size-3.5"
-                                    }
+                                    icon={copied ? CopyCheckIcon : Copy}
+                                    className="size-3.5"
                                 />
                                 <span className="hidden sm:inline">
                                     {copied ? "Copied" : "Copy"}
