@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { trackEvent } from "@/lib/utils";
 import type { ShareResult, ShareExpiry, ShareOptions } from "@/lib/share";
 
@@ -135,14 +136,8 @@ export function ShareModal({
                             </div>
                         </div>
 
-                        <label className="border-border bg-muted/40 flex cursor-pointer items-start gap-2 rounded-md border p-3">
-                            <input
-                                type="checkbox"
-                                checked={readOnly}
-                                onChange={(e) => setReadOnly(e.target.checked)}
-                                className="mt-0.5"
-                            />
-                            <span className="flex flex-col text-xs">
+                        <div className="border-border bg-muted/40 flex items-center justify-between gap-3 rounded-md border p-3">
+                            <span className="flex min-w-0 flex-col text-xs">
                                 <span className="text-foreground flex items-center gap-1.5 font-medium">
                                     <HugeiconsIcon
                                         icon={EyeIcon}
@@ -151,11 +146,16 @@ export function ShareModal({
                                     View-only mode
                                 </span>
                                 <span className="text-muted-foreground">
-                                    Recipients cannot edit, prettify, or import.
-                                    They can still view, copy, and download.
+                                    Recipients can view, copy, and download
+                                    only.
                                 </span>
                             </span>
-                        </label>
+                            <Switch
+                                checked={readOnly}
+                                onCheckedChange={setReadOnly}
+                                aria-label="Toggle view-only mode"
+                            />
+                        </div>
 
                         <div className="flex justify-end gap-2">
                             <Button variant="outline" onClick={onClose}>
