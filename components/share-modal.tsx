@@ -48,7 +48,7 @@ export function ShareModal({
     onCreate,
 }: ShareModalProps) {
     const [copied, setCopied] = useState(false);
-    const [expiresIn, setExpiresIn] = useState<ShareExpiry>("30d");
+    const [expiresIn, setExpiresIn] = useState<ShareExpiry>("1d");
     const [readOnly, setReadOnly] = useState(false);
 
     useEffect(() => {
