@@ -26,7 +26,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { Toolbar } from "@/components/toolbar";
 import { StatusBar } from "@/components/status-bar";
@@ -56,6 +55,7 @@ import { createShare, type ShareResult, type ShareOptions } from "@/lib/share";
 import { saveCurrent, loadCurrent, pushRecent } from "@/lib/storage";
 import { RecentDocsModal } from "@/components/recent-docs-modal";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { useTabsPill } from "@/lib/use-tabs-pill";
 import type { EditorStats } from "@/types";
 
 type ViewMode = "code" | "graph" | "table" | "diff";
@@ -100,6 +100,7 @@ export function JsonForgeApp({
     const currentInputRef = useRef<string>(initialJson);
     const indentationRef = useRef<number | string>(indentation);
     const readOnlyRef = useRef(sharedSnapshot?.readOnly === true);
+    const { barRef: tabsBarRef, pillRef: tabsPillRef } = useTabsPill(viewMode);
     useEffect(() => {
         currentInputRef.current = jsonInput;
     }, [jsonInput]);
@@ -782,57 +783,63 @@ export function JsonForgeApp({
                     </div>
                     <div className="bg-border mx-1 hidden h-6 w-px md:mx-2 md:block" />
 
-                    <ToggleGroup
-                        type="single"
-                        size="sm"
-                        value={viewMode}
-                        onValueChange={(val) => {
-                            if (val) {
-                                setViewMode(val as ViewMode);
-                                trackEvent("switch_view", { mode: val });
-                            }
-                        }}
-                        className="bg-muted shrink-0 rounded-md p-px sm:ml-2 md:ml-0"
+                    <div
+                        ref={tabsBarRef}
+                        role="tablist"
+                        className="t-tabs shrink-0 sm:ml-2 md:ml-0"
                     >
-                        <ToggleGroupItem
-                            value="code"
-                            aria-label="Code view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-7 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
-                        >
-                            <HugeiconsIcon icon={Code} className="size-3.5" />
-                            <span className="hidden sm:inline">Code</span>
-                        </ToggleGroupItem>
-                        <ToggleGroupItem
-                            value="graph"
-                            aria-label="Graph view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-7 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
-                        >
-                            <HugeiconsIcon
-                                icon={GitGraph}
-                                className="size-3.5"
-                            />
-                            <span className="hidden sm:inline">Graph</span>
-                        </ToggleGroupItem>
-                        <ToggleGroupItem
-                            value="table"
-                            aria-label="Table view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-7 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
-                        >
-                            <HugeiconsIcon icon={Table} className="size-3.5" />
-                            <span className="hidden sm:inline">Table</span>
-                        </ToggleGroupItem>
-                        <ToggleGroupItem
-                            value="diff"
-                            aria-label="Diff view"
-                            className="data-[state=on]:bg-foreground data-[state=on]:text-background h-7 gap-2 rounded-[calc(var(--radius-md)-1px)] px-2 text-xs data-[state=on]:shadow-sm md:px-3"
-                        >
-                            <HugeiconsIcon
-                                icon={GitCompareIcon}
-                                className="size-3.5"
-                            />
-                            <span className="hidden sm:inline">Diff</span>
-                        </ToggleGroupItem>
-                    </ToggleGroup>
+                        <span
+                            ref={tabsPillRef}
+                            className="t-tabs-pill"
+                            aria-hidden="true"
+                        />
+                        {(
+                            [
+                                { value: "code", icon: Code, label: "Code" },
+                                {
+                                    value: "graph",
+                                    icon: GitGraph,
+                                    label: "Graph",
+                                },
+                                {
+                                    value: "table",
+                                    icon: Table,
+                                    label: "Table",
+                                },
+                                {
+                                    value: "diff",
+                                    icon: GitCompareIcon,
+                                    label: "Diff",
+                                },
+                            ] as const
+                        ).map(({ value, icon, label }) => {
+                            const selected = viewMode === value;
+                            return (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={selected}
+                                    aria-label={`${label} view`}
+                                    onClick={() => {
+                                        setViewMode(value);
+                                        trackEvent("switch_view", {
+                                            mode: value,
+                                        });
+                                    }}
+                                    className="t-tab inline-flex h-7 items-center gap-2 px-2 text-xs md:px-3"
+                                >
+                                    <HugeiconsIcon
+                                        icon={icon}
+                                        className="size-3.5"
+                                    />
+                                    <span className="hidden sm:inline">
+                                        {label}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">

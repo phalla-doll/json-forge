@@ -43,6 +43,19 @@ import {
     DrawerClose,
 } from "@/components/ui/drawer";
 
+function CopyIconSwap({ copied }: { copied: boolean }) {
+    return (
+        <span className="t-icon-swap" data-state={copied ? "b" : "a"}>
+            <span className="t-icon" data-icon="a">
+                <HugeiconsIcon icon={Copy} className="size-3.5" />
+            </span>
+            <span className="t-icon" data-icon="b">
+                <HugeiconsIcon icon={CopyCheckIcon} className="size-3.5" />
+            </span>
+        </span>
+    );
+}
+
 interface ToolbarProps {
     onFormat: () => void;
     onMinify: () => void;
@@ -204,10 +217,7 @@ export function Toolbar({
                     disabled={!hasContent}
                     aria-label={copied ? "Copied" : "Copy"}
                 >
-                    <HugeiconsIcon
-                        icon={copied ? CopyCheckIcon : Copy}
-                        className="size-3.5"
-                    />
+                    <CopyIconSwap copied={copied} />
                 </Button>
 
                 <Drawer open={isMoreOpen} onOpenChange={setIsMoreOpen}>
@@ -575,10 +585,7 @@ export function Toolbar({
                         onClick={handleCopyClick}
                         disabled={!hasContent}
                     >
-                        <HugeiconsIcon
-                            icon={copied ? CopyCheckIcon : Copy}
-                            className="size-3.5"
-                        />
+                        <CopyIconSwap copied={copied} />
                         <span className="hidden lg:inline">
                             {copied ? "Copied" : "Copy"}
                         </span>
