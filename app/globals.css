@@ -185,3 +185,284 @@
 .editor-match-highlight-overview {
     background-color: rgba(234, 179, 8, 0.8) !important;
 }
+
+/* transitions-dev — selected snippets (tabs-sliding, number-pop-in,
+   icon-swap, error-state-shake, shimmer-text). Colors are wired to
+   existing theme tokens so dark/light mode follow the project. */
+:root {
+    --digit-dur: 500ms;
+    --digit-distance: 8px;
+    --digit-stagger: 70ms;
+    --digit-blur: 2px;
+    --digit-ease: cubic-bezier(0.34, 1.45, 0.64, 1);
+    --digit-dir-x: 0;
+    --digit-dir-y: 1;
+
+    --icon-swap-dur: 200ms;
+    --icon-swap-blur: 2px;
+    --icon-swap-start-scale: 0.25;
+    --icon-swap-ease: ease-in-out;
+
+    --dropdown-open-dur: 250ms;
+    --dropdown-close-dur: 150ms;
+    --dropdown-pre-scale: 0.97;
+    --dropdown-closing-scale: 0.99;
+    --dropdown-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    --shake-distance: 6px;
+    --shake-overshoot: 4px;
+    --shake-dur-a: 80ms;
+    --shake-dur-b: 60ms;
+    --shake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --revert-hold: 3000ms;
+    --revert-dur: 280ms;
+
+    --shimmer-dur: 2000ms;
+    --shimmer-base: var(--muted-foreground);
+    --shimmer-highlight: var(--foreground);
+    --shimmer-band: 400%;
+    --shimmer-ease: linear;
+
+    --tabs-dur: 200ms;
+    --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --tabs-text-muted: var(--muted-foreground);
+    --tabs-text-hover: var(--foreground);
+    --tabs-text-active: var(--background);
+    --tabs-bar-bg: var(--muted);
+    --tabs-pill-bg: var(--foreground);
+}
+
+/* Number pop-in */
+@keyframes t-digit-pop-in {
+    0% {
+        transform: translate(
+            calc(var(--digit-distance) * var(--digit-dir-x)),
+            calc(var(--digit-distance) * var(--digit-dir-y))
+        );
+        opacity: 0;
+        filter: blur(var(--digit-blur));
+    }
+    100% {
+        transform: translate(0, 0);
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+.t-digit-group {
+    display: inline-flex;
+    align-items: baseline;
+}
+/* Each .t-digit animates once when it mounts. React's keyed remount
+   (key={index-char} in NumberPop) means unchanged digits keep identity
+   and stay still; only digits whose char changed remount and replay. */
+.t-digit {
+    display: inline-block;
+    animation: t-digit-pop-in var(--digit-dur) var(--digit-ease) both;
+    will-change: transform, opacity, filter;
+}
+.t-digit[data-stagger="1"] {
+    animation-delay: var(--digit-stagger);
+}
+.t-digit[data-stagger="2"] {
+    animation-delay: calc(var(--digit-stagger) * 2);
+}
+
+/* Menu dropdown (driven by Radix data-state="open" | "closed"). The
+   transform-origin is inherited from Radix's
+   --radix-*-content-transform-origin, which already mirrors the
+   trigger's side+align. */
+.t-dropdown {
+    will-change: transform, opacity;
+}
+/* Use @keyframes (not transition) so Radix's Presence component
+   detects an animation via getComputedStyle().animationName and
+   defers unmount until the close animation finishes. A plain CSS
+   transition is not visible to Presence and the close would
+   render as an instant unmount. */
+.t-dropdown[data-state="open"] {
+    animation: t-dropdown-in var(--dropdown-open-dur) var(--dropdown-ease)
+        both;
+}
+.t-dropdown[data-state="closed"] {
+    animation: t-dropdown-out var(--dropdown-close-dur) var(--dropdown-ease)
+        both;
+}
+@keyframes t-dropdown-in {
+    from {
+        transform: scale(var(--dropdown-pre-scale));
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+@keyframes t-dropdown-out {
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+    to {
+        transform: scale(var(--dropdown-closing-scale));
+        opacity: 0;
+    }
+}
+
+/* Icon swap */
+.t-icon-swap {
+    position: relative;
+    display: inline-grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    place-items: center;
+}
+.t-icon-swap > .t-icon {
+    grid-column: 1;
+    grid-row: 1;
+    display: inline-flex;
+    transition:
+        opacity var(--icon-swap-dur) var(--icon-swap-ease),
+        filter var(--icon-swap-dur) var(--icon-swap-ease),
+        transform var(--icon-swap-dur) var(--icon-swap-ease);
+    will-change: opacity, filter, transform;
+}
+.t-icon-swap[data-state="a"] .t-icon[data-icon="a"],
+.t-icon-swap[data-state="b"] .t-icon[data-icon="b"] {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+}
+.t-icon-swap[data-state="a"] .t-icon[data-icon="b"],
+.t-icon-swap[data-state="b"] .t-icon[data-icon="a"] {
+    opacity: 0;
+    filter: blur(var(--icon-swap-blur));
+    transform: scale(var(--icon-swap-start-scale));
+}
+
+/* Error state shake (status indicator variant — no auto-revert message) */
+.t-shake.is-shaking {
+    animation: t-input-shake
+        calc(var(--shake-dur-a) * 2 + var(--shake-dur-b) * 2) linear;
+    will-change: transform;
+}
+@keyframes t-input-shake {
+    0% {
+        transform: translateX(0);
+        animation-timing-function: var(--shake-ease);
+    }
+    28.57% {
+        transform: translateX(var(--shake-distance));
+        animation-timing-function: var(--shake-ease);
+    }
+    57.14% {
+        transform: translateX(calc(var(--shake-distance) * -1));
+        animation-timing-function: var(--shake-ease);
+    }
+    78.57% {
+        transform: translateX(var(--shake-overshoot));
+        animation-timing-function: var(--shake-ease);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+/* Shimmer text */
+.t-shimmer {
+    position: relative;
+    display: inline-block;
+    color: var(--shimmer-base);
+}
+.t-shimmer::before {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent 40%,
+        var(--shimmer-highlight) 50%,
+        transparent 60%,
+        transparent 100%
+    );
+    background-size: var(--shimmer-band) 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: t-shimmer var(--shimmer-dur) var(--shimmer-ease) infinite;
+}
+@keyframes t-shimmer {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: 0% 0;
+    }
+}
+
+/* Tabs sliding */
+.t-tabs {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px;
+    border-radius: calc(var(--radius-md));
+    background: var(--tabs-bar-bg);
+}
+.t-tab {
+    position: relative;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--tabs-text-muted);
+    cursor: pointer;
+    border-radius: calc(var(--radius-md) - 1px);
+    z-index: 1;
+    transition: color var(--tabs-dur) var(--tabs-ease);
+}
+.t-tab:not([aria-selected="true"]):hover {
+    color: var(--tabs-text-hover);
+}
+.t-tab[aria-selected="true"] {
+    color: var(--tabs-text-active);
+}
+.t-tabs-pill {
+    position: absolute;
+    top: 3px;
+    left: 0;
+    height: calc(100% - 6px);
+    width: 0;
+    background: var(--tabs-pill-bg);
+    border-radius: calc(var(--radius-md) - 1px);
+    transform: translateX(0);
+    transition:
+        transform var(--tabs-dur) var(--tabs-ease),
+        width var(--tabs-dur) var(--tabs-ease);
+    will-change: transform, width;
+    z-index: 0;
+    pointer-events: none;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* Neutralize motion only — do NOT reset `transform` on .t-tabs-pill,
+       whose inline translateX encodes the active tab's position. */
+    .t-digit-group .t-digit,
+    .t-icon-swap .t-icon,
+    .t-shake,
+    .t-tab,
+    .t-dropdown {
+        animation: none !important;
+        transition: none !important;
+    }
+    .t-tabs-pill {
+        transition: none !important;
+    }
+    .t-shimmer::before {
+        animation: none !important;
+    }
+}
