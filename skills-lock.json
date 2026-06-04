@@ -13,6 +13,12 @@
             "skillPath": "skills/shadcn/SKILL.md",
             "computedHash": "80a6226e78f6d1fe464214ae0ef449d49d8ffaa3e7704f011e9b418c678ad4d1"
         },
+        "transitions-dev": {
+            "source": "Jakubantalik/transitions.dev",
+            "sourceType": "github",
+            "skillPath": "skills/transitions-dev/SKILL.md",
+            "computedHash": "3849b47b846e2d49935487799c6eb9340dcfe3c1defb2e93fbc59d18df589af2"
+        },
         "vercel-composition-patterns": {
             "source": "vercel-labs/agent-skills",
             "sourceType": "github",
