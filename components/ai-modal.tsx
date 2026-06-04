@@ -97,7 +97,12 @@ export function AiModal({
                                             icon={LoaderCircle}
                                             className="size-4 animate-spin"
                                         />
-                                        Generating...
+                                        <span
+                                            className="t-shimmer"
+                                            data-text="Generating..."
+                                        >
+                                            Generating...
+                                        </span>
                                     </>
                                 ) : (
                                     <>

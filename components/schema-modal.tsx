@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTabsPill } from "@/lib/use-tabs-pill";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
     DocumentCodeIcon,
@@ -49,6 +50,10 @@ export function SchemaModal({
     >({});
     const [loading, setLoading] = useState<SchemaTarget | null>(null);
     const [copied, setCopied] = useState(false);
+    const { barRef: tabsBarRef, pillRef: tabsPillRef } = useTabsPill(
+        target,
+        isOpen,
+    );
 
     const code = results[target];
 
@@ -114,21 +119,31 @@ export function SchemaModal({
 
                 <ResponsiveModalBody>
                     <div className="flex flex-col gap-3">
-                        <div className="border-border bg-muted flex items-center gap-1 rounded-md border p-0.5">
-                            {TARGETS.map((t) => (
-                                <button
-                                    key={t.value}
-                                    type="button"
-                                    onClick={() => setTarget(t.value)}
-                                    className={`flex-1 rounded-[calc(var(--radius-md)-2px)] px-3 py-1.5 text-xs font-medium transition-colors ${
-                                        target === t.value
-                                            ? "bg-foreground text-background shadow-sm"
-                                            : "text-muted-foreground hover:text-foreground"
-                                    }`}
-                                >
-                                    {t.label}
-                                </button>
-                            ))}
+                        <div
+                            ref={tabsBarRef}
+                            role="tablist"
+                            className="t-tabs border-border flex w-full border"
+                        >
+                            <span
+                                ref={tabsPillRef}
+                                className="t-tabs-pill"
+                                aria-hidden="true"
+                            />
+                            {TARGETS.map((t) => {
+                                const selected = target === t.value;
+                                return (
+                                    <button
+                                        key={t.value}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={selected}
+                                        onClick={() => setTarget(t.value)}
+                                        className="t-tab flex-1 px-3 py-1.5 text-xs font-medium"
+                                    >
+                                        {t.label}
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         <div className="border-border bg-muted/30 min-h-[14rem] rounded-md border p-3">
@@ -138,7 +153,12 @@ export function SchemaModal({
                                         icon={LoaderCircle}
                                         className="size-4 animate-spin"
                                     />
-                                    <span className="ml-2">Generating…</span>
+                                    <span
+                                        className="t-shimmer ml-2"
+                                        data-text="Generating…"
+                                    >
+                                        Generating…
+                                    </span>
                                 </div>
                             ) : code ? (
                                 <pre className="text-foreground max-h-80 overflow-auto font-mono text-xs leading-relaxed break-all whitespace-pre-wrap">
@@ -200,7 +220,12 @@ export function SchemaModal({
                                                 icon={LoaderCircle}
                                                 className="size-4 animate-spin"
                                             />
-                                            Generating
+                                            <span
+                                                className="t-shimmer"
+                                                data-text="Generating"
+                                            >
+                                                Generating
+                                            </span>
                                         </>
                                     ) : (
                                         <>

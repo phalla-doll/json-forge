@@ -99,8 +99,10 @@ export function RecentDocsModal({
                 </DialogHeader>
 
                 {loading ? (
-                    <div className="text-muted-foreground flex h-24 items-center justify-center text-sm">
-                        Loading…
+                    <div className="flex h-24 items-center justify-center text-sm">
+                        <span className="t-shimmer" data-text="Loading…">
+                            Loading…
+                        </span>
                     </div>
                 ) : (recents ?? []).length === 0 ? (
                     <div className="text-muted-foreground flex h-24 flex-col items-center justify-center gap-2 text-sm">
